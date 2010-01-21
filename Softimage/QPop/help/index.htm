@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Win32)">
+	<META NAME="CREATED" CONTENT="20090830;17014200">
+	<META NAME="CHANGED" CONTENT="20090911;3021500">
+	<STYLE TYPE="text/css">
+	<!--
+		P { margin-bottom: 0.21cm; direction: ltr; color: #000000; text-align: left; widows: 0; orphans: 0 }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: de-AT }
+		P.cjk { font-family: "Lucida Sans Unicode"; font-size: 12pt; so-language: zxx }
+		P.ctl { font-family: "Tahoma"; font-size: 12pt; so-language: zxx }
+		A:link { so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="de-AT" TEXT="#000000" DIR="LTR">
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<FONT SIZE=4><U><B>QPop for Softimage</B></U></FONT></P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>Stefan Kubicek &amp; Eugen Sares</FONT></P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<A HREF="http://www.tidbit-images.com/tools/xsi/qpop/QpopConfigurator_MainSettings.jpg"><IMG SRC="http://www.tidbit-images.com/tools/xsi/qpop/QpopConfigurator_MainSettings.jpg" NAME="graphics1" ALIGN=BOTTOM WIDTH=680 HEIGHT=454 BORDER=0></A>
+ 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+QPop is a custom quad-menu system for Softimage similar to 3dsMax's
+quad menu system. The goal  is to create a quad menu system that can
+be configured in a user friendly way. That is: through clicking only.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+To keep QPop as flexible as possible, several aspects of QPop are
+script based so that is easily extendable without having to change
+the actual plugin source code. 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+When QPop will be released, a large enough set of existing
+configuration scripts should exist so that the casual user can use it
+without ever having to script anything. At that point it shall
+provide the same ease of use as 3dsMax's quad menu system.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<FONT SIZE=4><U><B>Features Overview</B></U></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>Qpop Views</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+Each window and view in Softimage can have it's own menu set (s) (see
+below on menu sets). Theoretically an unlimited amount of menu sets
+can be configured for any view. In practice, since menu sets can be
+context sensitive (e.g. sensitive to what is currently selected, or
+pretty much anything else that can be queried through scruipting in
+any way), we assume that four (4) menu sets per view should be
+enough. This number can be increased easily whenever needed.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+Menu set invocation is command based &ndash; Currently we have four
+commands implemented to display menu set 0 -3 per view
+(QpopDisplayMenuSet_1 to QpopDisplayMenuSet_3, assignable to hot
+keys)</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>QPop Menu Sets</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+A menu set can contain any number of menus, of which alyways a
+maximum of four main menus (besides their submenus ) are displayed.
+Which menus actually get displayed can be configured using display
+contexts (see below on display contexts). In above figure a menu set
+displaying 2 menus is visible, the other two slots are not in use
+because no menu was assigned to them in the current context and view.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>QPop Display Contexts</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+These are user-editable scripts assigned to menu sets which evaluate
+to True or False. All scripting languages are supported. 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+For example, a display context script may evaluate to True if the
+selected object is a polygon point, as illustrated in avove figure.
+The menu associated with the context is configured so it contains
+only operations suitable for point editing.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+If there are more than one display contexts evaluating to True for
+the current view, the menu associated with the first display context
+evaluating to True will be displayed. Therefore, 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+the order in which display contexts are defined for a given view does
+matter. This order can be changed at any time. 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>QPop Menus</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+A Qpop menu contains the actual menu items a user can click.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+Menu items can be:</P>
+<UL>
+	<LI><P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+	Softimage commands (native or custom)</P>
+	<LI><P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+	Other Qpop menus, which are displayed as sub-menus (but no native
+	Softimage menus (yet?))</P>
+	<LI><P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+	Scripted menu items (all scripting languages supported)</P>
+</UL>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 2.5cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+Qpop menus can contain fixed menu items that are saved to the config
+file, and temporary menu items which do not get saved. A menu may
+have associated script code (all scripting languages supported) which
+gets executed before the menu is displayed. This is useful to fill in
+menu content on the fly depending on context or certain conditions.
+For example, a menu could display a list of existing lights in the
+scene for quick selection. Since such menu items are only meaningful
+in the current scene, they can be stored int the menu's temporary
+menu items list so they don't get saved in the current configuration
+file by accident once it is saved.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>Command repetition</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+To repeat the last operation performed by Qpop the command
+&bdquo;QpopRepeatLastCommand&ldquo; can be bound to a hotkey.
+Alternatively, the last command can be repeated by clicking on one of
+the quad menus's menu titles. Currently, the last executed Qpop menu
+item is repeated independant of the clicked menu title the user
+clicks. In future versions, this could be changed so that the last
+executed menu item of the respective menu's title upon which the user
+has clicked, is executed (3dsMax-style).</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<U>Saveable configuration</U></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+At any time the current Qpop configuration can be saved to an xml
+file. 
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+This file (or any other config file ) can be specified in preferences
+to be automatically loaded next time Softimage starts.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+An import feature with duplicates and name clash handling is planned
+to make it easier to manage and share config files them, with other
+users.</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<FONT SIZE=4><U><B>Installation</B></U></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>0.) </FONT>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>Exit Softimage</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>1.) </FONT>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>Make sure Python with pywin and Mocrosoft's .NET 3.5
+framework are installed on your machine. (Qpop menu rendering makes
+use of .Net, the Qpop Configurator is written in Python and uses some
+pywin functions)</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>2.) </FONT>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; line-height: 100%">
+<SPAN STYLE="text-decoration: none"><FONT SIZE=3><SPAN STYLE="font-weight: normal">Download
+the xsi addon </SPAN></FONT></SPAN><FONT COLOR="#000080"><SPAN LANG="zxx"><U><A HREF="http://www.tidbit-images.com/tools/xsi/qpop/QPopPreview_20090905.xsiaddon"><SPAN STYLE="text-decoration: none"><FONT SIZE=3><SPAN STYLE="font-weight: normal">Qpop
+&amp; QpopConfigurator (right-click to save linked content as...) </SPAN></FONT></SPAN></A></U></SPAN></FONT><FONT SIZE=3><SPAN STYLE="font-weight: normal">and
+install it, e.g. through drag &amp; drop into XSI.</SPAN></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>3.)</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Start Softimage and, click
+File-&gt;Preferences...-&gt;Custom-&gt;QPop to open the
+QpopConfigurator PPG.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Note: We've seen display problems with complex PPG's
+displayed inside the Preferences window.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>If the QPop PPG looks corrupted after having been
+resized, click on the orange custom preference icon left of the Qpop
+entry to open the Qpop configurator in a separate property page
+independant of the preferences window. But be careful not to open 2
+instances of the qpop preferences, neither separate nor inside
+another preferences window. This would cause an update cycle. This is
+currently a limitation.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Alternatively, resizing the right side pane of the
+preferences window by slightly moving the thin separator on the left
+also results in correct rendering of the PPG. This needs to be done
+every time the PPG has been resized, but  seems to happen only on 64
+bit systems. Since we are not doing anything unusual in the PPG
+script we believe this is a Softimage problem (bug?) that we can't do
+anything about. Please let me know if you know of a solution to this
+problem (stefan@tidbit-images.com)</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>4.)</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Optional, but recommened for a start: Set the Qpop
+Configuration file path to the provided demo configuration file at</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>C:\users\&lt;YourUserName&gt;\Autodesk\Softimage_7.5\Addons\QPop\Data\Preferences\QPopConfiguration_Default.xml</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>and load the file by pressing the &bdquo;Load&ldquo;
+button left of the file path. It file contains some demo menus and
+contexts defined for the main 3D Views.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Update: Qpop should find the default config xml at first
+startup automatically now. Please let me know if it does not
+(stefan@tidbit-images.com).</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>5.) </FONT>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3>Assign the QPopDisplayMenuSet_0 command to a hotkey of
+your choice. You could do the same for QpopDisplayMenuSet_1 &ndash;
+3, but it is unlikely you will need them yet. </FONT>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%">
+<FONT SIZE=3><U>Testing your Qpop installation</U></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>If you had no errors so far it is very likely that Qpop
+will work.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>To do a quick test, create any polymesh object, move
+your mouse over one of the 3D views and press the hotkey associated
+with the QpopDisplayMenuSet_0 command.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>A menu should come up that looks smilar to the one
+visible in the illustration on the top of this page.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>Select one or more points on the mesh, and invoke the
+Qpop menu as before. A different menu showing some commands relevant
+to point editing should become visible.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<SPAN STYLE="text-decoration: none"><FONT SIZE=3><SPAN STYLE="font-weight: normal">If
+you encounter any errors at any stage of installation or testing,
+please write an email to </SPAN></FONT></SPAN><FONT COLOR="#000080"><SPAN LANG="zxx"><U><A HREF="mailto:stefan@tidbit-images.com"><SPAN STYLE="text-decoration: none"><FONT SIZE=3><SPAN STYLE="font-weight: normal">stefan@tidbit-images.com</SPAN></FONT></SPAN></A></U></SPAN></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<FONT SIZE=4><U><B>Configuring QPop</B></U></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+WIP</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm; line-height: 100%">
+<FONT SIZE=4><U><B>Technical details</B></U></FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>WIP</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<BR>
+</P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>QPop consists of two components</FONT></P>
+<OL>
+	<LI><P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+	<FONT SIZE=3>Qpop.dll  C++ plugin by Eugen Sares, compiled for both
+	Softimage 7.5 &ndash; 32 and 64 bit.</FONT></P>
+</OL>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>A version for Softimage 7.0 will also be available
+later.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+<FONT SIZE=3>This plugin implements the Qpop command, which renders
+the menu set described by a string. It returns the menu number and
+item number clicked by the user.</FONT></P>
+<P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; line-height: 100%">
+<BR>
+</P>
+<OL START=2>
+	<LI><P CLASS="western" ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal; line-height: 100%; text-decoration: none">
+	<FONT SIZE=3>The QpopConfigurator.py Python plugin by Stefan
+	Kubicek, which allows for menu configuration and deals with
+	interpreting and executing menu items etc. It embeds the
+	configurator as a PPG in custom preferences.</FONT></P>
+</OL>
+</BODY>
+</HTML>
