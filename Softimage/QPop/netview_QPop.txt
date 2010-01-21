@@ -1,0 +1,2 @@
+QPop: A C++ plugin that displays quad menus
+QPopConfigurator: A custom preference PPG that allows for easy configuration of Quad menus that QPop can display
