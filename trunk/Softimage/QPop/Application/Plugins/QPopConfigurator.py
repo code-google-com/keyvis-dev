@@ -1,11 +1,12 @@
 # Script Name: QPopConfigurator
 # Host Application: Plugin for Softimage
-# Last changed: 2009-11-19 
+# Last changed: 2010-01-21 
 # Author: Stefan Kubicek
 # Mail: stefan@tidbit-images.com
 
-#Fix: oMenu argument causes menu script error in line 3775 when not using Python (e.g. JScript)
-#Fix: Selecting a command does not update insert Item button after a fresh start
+#TODO: Desktop.getWindowHandle is useful/faster?
+#TODO: Add number in front of MenuSets in Selector 
+#Fix: Update config file path in PPG when loading a congif file on first startup, it might still point to an old file on first startup
 #Fix: Changing view does not update Menu and MenuItems (should be empty) when no Menu is assigned to the current menu sets context
 #Fix: Menu selector is updated even when auto-update checkmark is not set
 #TryOut: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
@@ -40,7 +41,7 @@
 if ( !originalsetting ) { 
    prefs.SetPreferenceValue( "scripting.cmdlog", false ); 
 """
-#AppInstallCustomPreferences("QPopConfigurator","QPop")
+#Application.InstallCustomPreferences("QPopConfigurator","QPop")
 #============================== Plugin Code Start =============================================
 import win32com.client
 import win32com.server
@@ -723,7 +724,7 @@ def QPopConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("DisplayEventKeyMask",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("DisplayEventKeys_Record",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("ShowQpopMenuString",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	oCustomProperty.AddParameter2("IncludeWindowHandle",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	oCustomProperty.AddParameter2("ShowQPopTimes",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 
 	
 def QPopConfigurator_DefineLayout( in_ctxt ):
@@ -1012,8 +1013,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddButton ("Refresh", "Reset/Delete everything")
 	oLayout.AddGroup("Debug Options")
 	oQPopConfigFile = oLayout.AddItem("FirstStartup", "First Startup")
-	oLayout.AddItem("ShowQpopMenuString","Show Qpop Menu String")
-	oLayout.AddItem("IncludeWindowHandle","Append Window Handle to Qpop Menu String")
+	oLayout.AddItem("ShowQpopMenuString","Print Qpop Menu String")
+	oLayout.AddItem("ShowQPopTimes","Print QPop preparation times")
 	oLayout.EndGroup()
 	
 	
@@ -1658,7 +1659,7 @@ def QPopConfigurator_ViewSignatureName_OnChanged():
 					oCurrentSignature.name = newSignatureName
 
 					RefreshViewSignaturesList()
-					RefreshViewSelector()
+					#RefreshViewSelector()
 					PPG.View.Value = newSignatureName
 					PPG.ViewSignatures.Value = oCurrentSignature.name
 					PPG.ViewSignatureName.Value = oCurrentSignature.name
@@ -2882,13 +2883,18 @@ def RefreshViewMenuSets():
 		for oSignature in globalQPopViewSignatures.items:
 			if oSignature.name == CurrentViewSignatureName:
 				oCurrentViewSignature = oSignature
+				break
 		if oCurrentViewSignature != None:
 			CurrentViewMenuSets = oCurrentViewSignature.menuSets
-		#if len(CurrentViewMenuSets) > 0:
-		for oMenuSet in CurrentViewMenuSets:
-			CurrentViewMenuSetsEnum.append("(ms) " + oMenuSet.name)
-			CurrentViewMenuSetsEnum.append(oMenuSet.name)
-		PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
+		if (len(CurrentViewMenuSets) > 0):
+			Print(oCurrentViewSignature.name + " contains " + str(len(CurrentViewMenuSets)) +" menusets")
+			for oMenuSet in CurrentViewMenuSets:
+				CurrentViewMenuSetsEnum.append("(ms) " + oMenuSet.name)
+				CurrentViewMenuSetsEnum.append(oMenuSet.name)
+			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
+		else:
+			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
+			
 			
 		
 				
@@ -3625,10 +3631,10 @@ def RefreshDisplayEvents():
 
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQPopMenuSet_Execute called", c.siVerbose)
-	#t1 = time.clock()
+	t0 = time.clock() #Record time before getting current window under mouse
 	ViewSignature = GetView()
-	#t3 = time.clock()
-	#Print ("Found View Signature under mouse: " + str(ViewSignature))
+	t1 = time.clock() #Record time after getting current window under mouse and before assembling menu string
+
 	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
 	
 	if globalQPopViewSignatures != None:
@@ -3723,7 +3729,6 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			oMenus.append(oDMenu) #Add the found menu to the Menus list
 			
-			#t4 = time.clock()
 						
 			#Find Submenus
 			NewMenuFound = True
@@ -3757,6 +3762,8 @@ def DisplayMenuSet( MenuSetIndex ):
 
 						
 						CheckedMenus.append(oMenu)
+			
+			t2 = time.clock() #Finished assembling list of all menus
 			
 			#============ Build the QPop Menu string from found menus and submenus	==========================
 			QPopString = str()
@@ -3810,24 +3817,23 @@ def DisplayMenuSet( MenuSetIndex ):
 					MenuString = MenuString + "]" #Close the menu string
 					MenuCounter +=1
 				
-				"""
-				if App.GetValue("Preferences.QPop.IncludeWindowHandle") == True:
-					XSIWinHandle = getXSITopLevelWindow()
-					MenuString = MenuString + "[" + str(XSIWinHandle) + "]"
 
-				if App.GetValue("Preferences.QPop.ShowQpopMenuString") == True:
+				t3 = time.clock() #Time 
+				
+				if App.Preferences.GetPreferenceValue("QPop.ShowQpopMenuString") == True:
 					Print(MenuString) #Debug option to actually print out the string that will be passed to the Qpop menu renderer
 				
+				if App.Preferences.GetPreferenceValue("QPop.ShowQPopTimes") == True:
+				
+					Print("Time taken to get view signature was " + str(t1 - t0) + " seconds.")
+					Print("Time taken to assemble the list of menu without duplicates was " + str(t2 - t1) + " seconds.")
+					Print("Time taken to prepare the QPop menu string from the menu list was " + str(t3 - t2) + " seconds.")
+					Print("Total Qpop preparation time was " + str(t3 - t0) + " seconds.")
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
-				t2 = time.clock()
-				
-				Print("Time taken to get view signature was " + str(t3 - t1) + " seconds.")
-				Print("Time taken to evaluate the 4 main menu's contexts was " + str(t4 - t1) + " seconds.")
-				Print("Time taken to prepare whole menu string so far was " + str(t2 - t1) + " seconds.")
-				"""
-				
 				MenuItemToExecute = App.QPop(MenuString)
+				
+				
 
 				
 				#===========  Find the clicked menu item from the returned value ===========
