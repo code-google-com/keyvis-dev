@@ -4,8 +4,10 @@
 # Author: Stefan Kubicek
 # Mail: stefan@tidbit-images.com
 
+#Report bug: Pasting into the text editor causes \n charcters to be replacd with \n\r
+#Try: Use attribute on minidom menu node to store code instead of using a separate code node. Currently empty code in menus cannot be read back from xml
 #TODO: Desktop.getWindowHandle is useful/faster?
-#TODO: Add number in front of MenuSets in Selector 
+#TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
 #Fix: Update config file path in PPG when loading a congif file on first startup, it might still point to an old file on first startup
 #Fix: Changing view does not update Menu and MenuItems (should be empty) when no Menu is assigned to the current menu sets context
 #TryOut: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
@@ -58,8 +60,8 @@ import win32process #, pythoncom
 import xml.dom.minidom as DOM
 
 null = None
-false = 0
-true = 1
+false = False
+true = True
 True = 1
 False = 0
 
@@ -150,6 +152,7 @@ class QPopMenuItem:
 		self.language = "Python"
 		self.code = str()
 		self.type = "QPopMenuItem"
+		self.switch = False
 
 class QPopMenuItems:
  # Declare list of exported functions:
@@ -201,7 +204,7 @@ class QPopMenu:
 		self.name = str()
 		self.items = list()
 		self.tempItems = list()
-		self.code = str()
+		self.code = unicode()
 		self.language = "Python"
 		self.itemLastExecuted = list()
 		self.type = "QPopMenu"
@@ -729,8 +732,7 @@ def QPopConfigurator_Define( in_ctxt ):
 
 	
 def QPopConfigurator_DefineLayout( in_ctxt ):
-	oLayout = in_ctxt.Source
-	
+	oLayout = in_ctxt.Source	
 	oLayout.Clear()
 	oLayout.SetAttribute( c.siUIHelpFile, "http://www.tidbit-images.com/tools/xsi/qpop")
 	
@@ -750,10 +752,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	oLayout.EndGroup()
 	
-	
-	#oLayout.AddRow() #Main Interface Row
 	oSC = oLayout.AddGroup("Menu Set Configuration") #Second column for  menu sets editing start#=======================================
-	
 	oViews = oLayout.AddEnumControl ("View", None, "Configure QPop for",c.siControlCombo)
 	oViews.SetAttribute(c.siUILabelMinPixels,100 )
 	
@@ -764,9 +763,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oMSChooser.SetAttribute(c.siUINoLabel, True)
 
 	aUIitems = (CustomGFXFilesPath + "QPopMenuA.bmp", 0, CustomGFXFilesPath + "QPopMenuB.bmp", 1, CustomGFXFilesPath + "QPopMenuD.bmp", 3, CustomGFXFilesPath + "QPopMenuC.bmp",2)
-	#oLayout.AddSpacer()
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("       Select Quadrant")
+	oLayout.AddStaticText("Select a Quadrant")
 	oMenuSelector = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
@@ -780,17 +778,19 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oMenuContexts = oLayout.AddEnumControl ("MenuContexts", None, "",c.siControlListBox)
 	oMenuContexts.SetAttribute(c.siUINoLabel, True)
 	oMenuContexts.SetAttribute(c.siUICY, 135)
-	oLayout.AddRow()
+	#oLayout.AddRow()
 	oLayout.AddButton ("AssignMenu", "Assign Menu to Context")
 	oLayout.AddButton ("RemoveMenu", "Remove Menu from Context")
-	oLayout.EndRow()
+	#oLayout.EndRow()
 	oLayout.EndGroup()
 
 	oLayout.AddGroup("Menu Items in QPop Menu")
 	oLayout.AddRow()
+	oAuto = oLayout.AddItem ("AutoSelectMenu", "Auto-select")
 	oItems = oLayout.AddEnumControl ("MenuChooser", None, "Menu",c.siControlCombo)
-	#oItems.SetAttribute(c.siUICY, 200)
-	oLayout.AddItem ("AutoSelectMenu", "Auto-select from context")
+	#oItems.SetAttribute(c.siUIWidthPercentage, 70)
+	#oItems.SetAttribute(c.siUICX, 200)
+	#oAuto.SetAttribute(c.siUILabelPercentage, 10)
 	oLayout.EndRow()
 	
 	oLayout.AddRow()
@@ -833,7 +833,6 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	oLayout.EndGroup()
 
-
 	oLayout.AddGroup("Existing QPop Menus")
 	oLayout.AddSpacer()
 	oLayout.AddSpacer()
@@ -859,11 +858,12 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	oLayout.EndGroup()
 	
-	
 	oLayout.AddGroup("Edit Menu or Script Item properties")
 	oLayout.AddItem("MenuItem_Name", "Item Name", c.siControlString)
-	oLayout.AddItem("MenuItem_CategoryChooser", "Category", c.siControlCombo)
-	oLayout.AddItem("NewMenuItem_Category", "Change Category", c.siControlString)
+	oLayout.AddItem("MenuItem_CategoryChooser", "Select a Category", c.siControlCombo)
+	oLayout.AddItem("NewMenuItem_Category", "Or type a (new) Category", c.siControlString)
+	oLayout.AddItem("MenuItem_Switch", "Item is a switch")
+
 	oLayout.EndGroup()
 	oLayout.EndRow()
 
@@ -1451,6 +1451,22 @@ def QPopConfigurator_NewMenuItem_Category_OnChanged():
 	PPG.NewMenuItem_Category.Value = menuItem.category
 	PPG.Refresh()
 
+def QPopConfigurator_MenuItem_Switch_OnChanged():
+	Print("QPopConfigurator_NewMenuItem_Category_OnChanged called", c.siVerbose)
+	CurrentMenuItem_Name = PPG.MenuItemList.Value
+	MenuItem_Switch = PPG.MenuItem_Switch.Value
+	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	
+	for menuItem in globalQPopMenuItems.items:
+		if menuItem.name == CurrentMenuItem_Name:
+			menuItem.switch = MenuItem_Switch
+
+	#RefreshMenuItemList()
+	#PPG.MenuItemList.Value = CurrentMenuItem_Name
+	#RefreshMenuItemDetailsWidgets()
+	#PPG.Refresh()
+
+	
 def QPopConfigurator_MenuItem_ScriptLanguage_OnChanged():
 	Print("QPopConfigurator_MenuItem_ScriptLanguage_OnChanged called", c.siVerbose)
 	NewScriptLanguage = str(PPG.MenuItem_ScriptLanguage.Value)
@@ -1468,6 +1484,12 @@ def QPopConfigurator_MenuItem_ScriptLanguage_OnChanged():
 def QPopConfigurator_MenuItem_Code_OnChanged():
 	Print("QPopConfigurator_MenuItem_Code_OnChanged called", c.siVerbose)
 	
+	#Let's replace nasty linefeed \r characters that can occur when pasting code into the editor
+	Code = PPG.MenuItem_Code.Value
+	Code = Code.replace("\r","")
+	PPG.MenuItem_Code.Value = Code
+	
+	#Lets set the code data on the menu or item
 	if PPG.MenuItemList.Value != "":
 		oMenuItem = getQPopMenuItemByName(PPG.MenuItemList.Value)
 		if oMenuItem != None:
@@ -2630,7 +2652,7 @@ def RefreshMenuItemDetailsWidgets():
 	PPG.MenuItem_Name.SetCapabilityFlag (c.siReadOnly,True)
 	PPG.MenuItem_ScriptLanguage.SetCapabilityFlag (c.siReadOnly,True)
 	PPG.MenuItem_Code.SetCapabilityFlag (c.siReadOnly,True)
-	#PPG.Menus.SetCapabilityFlag (c.siReadOnly,True)
+	PPG.MenuItem_Switch.SetCapabilityFlag (c.siReadOnly,True)
 	
 #Empty input fields
 	PPG.MenuItem_Name.Value = ""
@@ -2665,6 +2687,7 @@ def RefreshMenuItemDetailsWidgets():
 			PPG.MenuItem_CategoryChooser.Value = oItem.category
 			PPG.MenuItem_Code.Value = oItem.code
 			PPG.MenuItem_ScriptLanguage.Value = oItem.language
+			PPG.MenuItem_Switch.Value = oItem.switch
 			
 			PPG.PPGLayout.Item("ExecuteCode").SetAttribute (c.siUIButtonDisable, False)
 			PPG.MenuItem_Name.SetCapabilityFlag (c.siReadOnly,False)
@@ -2672,6 +2695,7 @@ def RefreshMenuItemDetailsWidgets():
 			PPG.MenuItem_CategoryChooser.SetCapabilityFlag (c.siReadOnly,False)
 			PPG.MenuItem_ScriptLanguage.SetCapabilityFlag (c.siReadOnly,False)
 			PPG.MenuItem_Code.SetCapabilityFlag (c.siReadOnly,False)
+			PPG.MenuItem_Switch.SetCapabilityFlag (c.siReadOnly,False)
 			
 			#PPG.PPGLayout.Item("CreateNewScriptItem").SetAttribute (c.siUIButtonDisable, False)
 			PPG.PPGLayout.Item("DeleteScriptItem").SetAttribute (c.siUIButtonDisable, False)			
@@ -2703,6 +2727,7 @@ def ResetToDefaultValues():
 	PPG.CommandList.Value = "_ALL_"
 	PPG.Menus.Value = ""
 	PPG.MenuItem_Category.Value = "_ALL_"
+	PPG.MenuItem_Switch.Value = 0
 	PPG.MenuItemList.Value = "_ALL_"
 	PPG.MenuItem_Code = ""
 	PPG.MenuSetChooser.Value = ""
@@ -2896,9 +2921,6 @@ def RefreshViewMenuSets():
 		else:
 			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
 			
-			
-		
-				
 	
 def RefreshMenuDisplayContextsList():
 	Print("Qpop: RefreshMenuDisplayContextsList called", c.siVerbose)
@@ -2916,8 +2938,7 @@ def RefreshMenuDisplayContextsList():
 		
 	PPG.PPGLayout.Item("MenuDisplayContexts").UIItems = DisplayContextEnum
 	
-	
-	
+
 def RefreshMenuDisplayContextDetailsWidgets():
 	Print("Qpop: RefreshMenuDisplayContextDetailsWidgets called", c.siVerbose)
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
@@ -3251,6 +3272,49 @@ def RefreshCommandList():
 		CommandListEnum.append(oEntry[1])
 	PPG.PPGLayout.Item ("CommandList").UIItems = CommandListEnum
 	
+
+def RefreshDisplayEventsKeys():
+	Print("Qpop: RefreshDisplayEventsKeys called", c.siVerbose)
+	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+	if len(globalQPopDisplayEvents) > 0:
+		oSelectedEvent = globalQPopDisplayEvents[PPG.DisplayEvent.Value]
+	else:
+		#Print("An error occured trying to determine currently selected event...")
+		oSelectedEvent = None
+	
+	if oSelectedEvent != None:
+		#Print("Selected event is not None...")
+		PPG.DisplayEventKey.Value = oSelectedEvent.key
+		PPG.DisplayEventKeyMask.Value = oSelectedEvent.keyMask
+		
+		PPG.DisplayEventKey.SetCapabilityFlag (c.siReadOnly,False)
+		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,False)
+		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,False)
+				
+	else:
+		PPG.DisplayEventKey.Value = 0
+		PPG.DisplayEventKeyMask = 0
+		
+		PPG.DisplayEventKey.SetCapabilityFlag (c.siReadOnly,True)
+		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,True)
+		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,True)
+
+
+def RefreshDisplayEvents():
+	Print("Qpop: RefreshDisplayEvents called", c.siVerbose)
+	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+	DisplayEventsEnumList = list()
+	Counter = 0
+	for oDisplayEvent in globalQPopDisplayEvents:
+		DisplayEventsEnumList.append ("Display Qpop Menu Set " + str(Counter))
+		DisplayEventsEnumList.append (Counter)
+		Counter +=1
+	
+	PPG.PPGLayout.Item("DisplayEvent").UIItems = DisplayEventsEnumList
+	if len(globalQPopDisplayEvents) == 0:
+		PPG.DisplayEvent.Value = -1
+	
+	
 def QPopSaveConfiguration(fileName):
 	Print("Qpop: QPopSaveConfiguration called", c.siVerbose)
 	
@@ -3290,8 +3354,13 @@ def QPopSaveConfiguration(fileName):
 			MenuItemNode.setAttribute("type", oMenuItem.type)
 			MenuItemNode.setAttribute("category", oMenuItem.category)
 			MenuItemNode.setAttribute("language", oMenuItem.language)
+			if oMenuItem.switch:
+				MenuItemNode.setAttribute("switch", "True")
+			else:
+				MenuItemNode.setAttribute("switch", "False")
 			oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.code)
-			oMenuItemCode.nodeValue = str(oMenuItem.code)
+			#oMenuItemCode.nodeValue = str(oMenuItem.code)
+			oMenuItemCode.nodeValue = oMenuItem.code
 			MenuItemNode.appendChild(oMenuItemCode)	
 			MenuItemsNode.appendChild(MenuItemNode)	
 		
@@ -3302,7 +3371,8 @@ def QPopSaveConfiguration(fileName):
 			MenuNode.setAttribute("type", oMenu.type)
 			MenuNode.setAttribute("language", oMenu.language)
 			oMenuCode = oConfigDoc.createTextNode (oMenu.code)
-			oMenuCode.nodeValue = str(oMenu.code)
+			#oMenuCode.nodeValue = str(oMenu.code)
+			oMenuCode.nodeValue = oMenu.code
 			MenuNode.appendChild(oMenuCode)	
 			
 			MenuItems = getattr(oMenu, "items")
@@ -3418,8 +3488,11 @@ def QPopLoadConfiguration(fileName):
 							NewMenuItem.name = MenuItem.getAttribute("name")
 							NewMenuItem.category = MenuItem.getAttribute("category")
 							NewMenuItem.language = MenuItem.getAttribute("language")
+							if MenuItem.getAttribute("switch") == "True":
+								NewMenuItem.switch = True
 							CodeNode = MenuItem.childNodes[0]
-							NewMenuItem.code = str(CodeNode.nodeValue)
+							#NewMenuItem.code = str(CodeNode.nodeValue)
+							NewMenuItem.code = CodeNode.nodeValue
 							globalQPopMenuItems.addMenuItem(NewMenuItem)
 
 			for Component in Components[0].childNodes:			
@@ -3434,7 +3507,7 @@ def QPopLoadConfiguration(fileName):
 							oNewMenu.name = Menu.getAttribute("name")
 							oNewMenu.language = Menu.getAttribute("language")
 							CodeNode = Menu.childNodes[0]
-							oNewMenu.code = str(CodeNode.nodeValue)
+							oNewMenu.code = unicode(CodeNode.nodeValue)
 					
 					#Then fill the menus with menu items, menus, commands and separators
 					for Menu in QPopMenus: 
@@ -3586,47 +3659,7 @@ def QPopLoadConfiguration(fileName):
 
 
 
-def RefreshDisplayEventsKeys():
-	Print("Qpop: RefreshDisplayEventsKeys called", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
-	if len(globalQPopDisplayEvents) > 0:
-		oSelectedEvent = globalQPopDisplayEvents[PPG.DisplayEvent.Value]
-	else:
-		#Print("An error occured trying to determine currently selected event...")
-		oSelectedEvent = None
 	
-	if oSelectedEvent != None:
-		#Print("Selected event is not None...")
-		PPG.DisplayEventKey.Value = oSelectedEvent.key
-		PPG.DisplayEventKeyMask.Value = oSelectedEvent.keyMask
-		
-		PPG.DisplayEventKey.SetCapabilityFlag (c.siReadOnly,False)
-		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,False)
-		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,False)
-				
-	else:
-		PPG.DisplayEventKey.Value = 0
-		PPG.DisplayEventKeyMask = 0
-		
-		PPG.DisplayEventKey.SetCapabilityFlag (c.siReadOnly,True)
-		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,True)
-		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,True)
-
-
-def RefreshDisplayEvents():
-	Print("Qpop: RefreshDisplayEvents called", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
-	DisplayEventsEnumList = list()
-	Counter = 0
-	for oDisplayEvent in globalQPopDisplayEvents:
-		DisplayEventsEnumList.append ("Display Qpop Menu Set " + str(Counter))
-		DisplayEventsEnumList.append (Counter)
-		Counter +=1
-	
-	PPG.PPGLayout.Item("DisplayEvent").UIItems = DisplayEventsEnumList
-	if len(globalQPopDisplayEvents) == 0:
-		PPG.DisplayEvent.Value = -1
-		
 
 
 #===================================== Plugin Command Callbacks ==========================================================
@@ -3739,12 +3772,11 @@ def DisplayMenuSet( MenuSetIndex ):
 				NewMenuFound = False
 				for oMenu in oMenus: #Search for submenus in  menus A to D, if any
 					if oMenu != None and oMenu not in CheckedMenus:
-						Language = oMenu.language
 						Code = oMenu.code
 						if Code != "":
-							ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
+							#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
 							try:
-								App.ExecuteScriptCode(Code, Language,"QPopMenu_Eval",ArgList) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
+								App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
 							except:
 								Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
 												
@@ -3784,9 +3816,25 @@ def DisplayMenuSet( MenuSetIndex ):
 							#Add regular menu items to the display string
 							for oItem in oMenu.items:
 								if oItem.type == "Command":
-									MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[5]" + "]" 
-								if oItem.type == "QPopMenuItem":
 									MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[1]" + "]" 
+								if oItem.type == "QPopMenuItem":
+									#Print(oItem.name + " is a switch: " + str(oItem.switch))
+									if oItem.switch == True:
+										#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
+										try:
+											ArgList = []
+											result = App.ExecuteScriptCode(oItem.code, oItem.language, "Switch_Init",ArgList)
+											#Print ("Switch '" + oItem.name + "' returned " + str(result))
+											if result[0] == True:
+												MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[5]" + "]"
+											else:
+												MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[1]" + "]"
+										except:
+											Print ("An Error occured evaluating the Switch_Eval function of menu item '" + oItem.name + "'. Please see script editor for details", c.siVerbose)	
+											raise
+									else:
+										MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[1]" + "]"
+										
 								if oItem.type == "QPopMenu":
 									#try:
 									MenuIndex = oMenus.index(oItem)
@@ -3813,31 +3861,27 @@ def DisplayMenuSet( MenuSetIndex ):
 							#Add the title at the end of the menu in case it's menu 0 or 1
 							if MenuCounter == 0 or MenuCounter == 1:
 								MenuString = MenuString + "[[" + oMenu.name + "]"  + "[-1]" + "[3]" + "]" 
-
-							
+				
 					MenuString = MenuString + "]" #Close the menu string
 					MenuCounter +=1
 				
-
 				t3 = time.clock() #Time 
 				
 				if App.Preferences.GetPreferenceValue("QPop.ShowQpopMenuString") == True:
 					Print(MenuString) #Debug option to actually print out the string that will be passed to the Qpop menu renderer
 				
-				if App.Preferences.GetPreferenceValue("QPop.ShowQPopTimes") == True:
-				
+				if App.Preferences.GetPreferenceValue("QPop.ShowQPopTimes"):
 					Print("Time taken to get view signature was " + str(t1 - t0) + " seconds.")
-					Print("Time taken to assemble the list of menu without duplicates was " + str(t2 - t1) + " seconds.")
-					Print("Time taken to prepare the QPop menu string from the menu list was " + str(t3 - t2) + " seconds.")
+					Print("Time taken to assemble the list of menus without duplicates was " + str(t2 - t1) + " seconds.")
+					Print("Time taken to prepare the QPop menu string from the menus list was " + str(t3 - t2) + " seconds.")
 					Print("Total Qpop preparation time was " + str(t3 - t0) + " seconds.")
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
 				MenuItemToExecute = App.QPop(MenuString)
 				
-				
-
-				
+				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
+				#===========================================================================
 				oClickedMenuItem = None
 				if ((MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1)):
 					#Print("MenuItemToExecute is: " + str(MenuItemToExecute))
@@ -3998,7 +4042,7 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 				#oQPopMenuItemNew.Execute()
 				oQPopMenuItem.Execute()
 				SucessfullyExecuted = True	
-				globalQPopLastUsedItem.set(oQPopMenuItem.name) #Just set the name of commands for safety
+				globalQPopLastUsedItem.set(oQPopMenuItem.name) #Just set the name of commands for safety (Commands cannot be executed anymore after undo)
 			except:
 				SucessfullyExecuted = False
 				raise
@@ -4007,14 +4051,24 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 			Code = (oQPopMenuItem.code)
 			if Code != "":
 				Language = (oQPopMenuItem.language)
-				#TODO: ExecuteScriptCode should execute a specific function that can return objects to inspect
-				try:
-					App.ExecuteScriptCode( Code, Language) #, [ProcName], [Params] )
-					globalQPopLastUsedItem.set(oQPopMenuItem)
-					SucessfullyExecuted = True
-				except:
-					SucessfullyExecuted = False
-					raise
+				if oQPopMenuItem.switch == True:
+					try:
+						App.ExecuteScriptCode( Code, Language, "Switch_Execute", [] )
+						globalQPopLastUsedItem.set(oQPopMenuItem)
+						SucessfullyExecuted = True
+					except:
+						SucessfullyExecuted = False
+						raise
+					
+				else:
+					#TODO: ExecuteScriptCode should execute a specific function that can return objects to inspect
+					try:
+						App.ExecuteScriptCode( Code, Language) #, [ProcName], [Params] )
+						globalQPopLastUsedItem.set(oQPopMenuItem)
+						SucessfullyExecuted = True
+					except:
+						SucessfullyExecuted = False
+						raise
 			else:
 				Print("QPop Menu item '" + oQPopMenuItem.name + "' has no code to execute!",c.siWarning)
 		
