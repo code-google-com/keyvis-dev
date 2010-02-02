@@ -4,15 +4,18 @@
 # Author: Stefan Kubicek
 # Mail: stefan@tidbit-images.com
 
-#Report bug: Pasting into the text editor causes \n charcters to be replacd with \n\r
+#TODO: Add Execute flag to menu items and menus to disable execution of code for early out/speed optimisation, ->code field need not be empty for good speed
+#TODO: test if config file is found (due to old pref setting) after reinstalling QPop to another folder
+#TODO: Claenup code fragmnts in prefs (or avoid putting in prefs first hand?) before shutdown or each time a different item is chosen (to prevent bypass when xsi crashes)
 #Try: Use attribute on minidom menu node to store code instead of using a separate code node. Currently empty code in menus cannot be read back from xml
 #TODO: Desktop.getWindowHandle is useful/faster?
 #TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
 #Fix: Update config file path in PPG when loading a congif file on first startup, it might still point to an old file on first startup
 #Fix: Changing view does not update Menu and MenuItems (should be empty) when no Menu is assigned to the current menu sets context
-#TryOut: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
-
+#Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
+
+#Report bug: Pasting into the text editor causes "\n" charcters to be replacd with "\n\r"
 #Report When executing context script error is thrown when last character is a whitespace or return char (Problem with text widget?) or comment
 #Report Bug: Strange bug in XSI7.01: When a command allows notifications and is executed and undone, it causes itself or other commands to be unfindable through App.Commands("Commandname") (-> returns none)
 #Report Bug: Local subdivision _does_ work when assigned to a key! Currently is flagged as not.
@@ -204,7 +207,8 @@ class QPopMenu:
 		self.name = str()
 		self.items = list()
 		self.tempItems = list()
-		self.code = unicode()
+		self.code = str()
+		#self.code = unicode()
 		self.language = "Python"
 		self.itemLastExecuted = list()
 		self.type = "QPopMenu"
@@ -569,6 +573,21 @@ class QPopConfigStatus:
 		 # Initialize exported attributes:
 		self.changed = False
 
+
+class QPopMissingCommand:
+ # Declare list of exported functions:
+	_public_methods_ = []
+	 # Declare list of exported attributes
+	_public_attrs_ = ['type','name','UID']
+	 # Declare list of exported read-only attributes:
+	_readonly_attrs_ = []
+	
+	def __init__(self):
+		 # Initialize exported attributes:
+		self.type = "MissingCommand"
+		self.name = ""
+		self.UID = ""
+		
 class QPopCommandPlaceholder:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -709,7 +728,7 @@ def QPopConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("MenuItem_ScriptLanguage",c.siString,"Python",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuItem_CategoryChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("NewMenuItem_Category",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	
+	oCustomProperty.AddParameter2("MenuItem_IsActive",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
 
 	oCustomProperty.AddParameter2("MenuDisplayContexts",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuDisplayContext_Code",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -869,9 +888,10 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 
 	oLayout.AddGroup("Edit selected QPop Menu or Script Item")
 	oLayout.AddRow()
-	oLayout.AddButton("ExecuteCode", "Execute")
-	oSpacer = oLayout.AddSpacer(10,1)
 	oLanguage = oLayout.AddEnumControl("MenuItem_ScriptLanguage", ("Python","Python","JScript","JScript","VBasic","VBScript","Perl","Perl"), "      Scripting Language", c.siControlCombo)
+	oSpacer = oLayout.AddSpacer(10,1)
+	oLayout.AddItem("MenuItem_IsActive", "Allow code execution")
+	oLayout.AddButton("ExecuteCode", "Execute")
 	oLayout.EndRow()
 	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
@@ -1131,15 +1151,17 @@ def QPopConfigurator_CreateNewScriptItem_OnClicked():
 	newMenuItem = App.CreateQPop("MenuItem")
 	
 	#Find the Category for the new menu item
-	MenuItem_Category = ""
-	try:
-		#try to get the current menuItemCategory for the new menu item's category
-		if (str(MenuItem_Category) == "") or (str(MenuItem_Category) == "_ALL_"):
-			MenuItem_Category = "Miscellaneous"	
-		else:
-			MenuItem_Category = (str(PPG.MenuItem_Category.Value))
-	except:
+	MenuItem_Category = str()
+	MenuItem_Category = PPG.MenuItem_Category.Value
+	
+	#try:
+	#try to get the current menuItemCategory for the new menu item's category
+	if (MenuItem_Category == "") or (MenuItem_Category == "_ALL_"):
 		MenuItem_Category = "Miscellaneous"	
+	#else:
+		#MenuItem_Category = (str(PPG.MenuItem_Category.Value))
+	#except:
+		#MenuItem_Category = "Miscellaneous"	
 	
 	#Find a unique name for the new menu item
 	listKnownMenuItem_Names = list()
@@ -1201,16 +1223,15 @@ def QPopConfigurator_DeleteScriptItem_OnClicked():
 	Print("QPopConfigurator_DeleteMenuItem_OnClicked called", c.siVerbose)
 	CurrentMenuItemName = str(PPG.MenuItemList.Value)
 	if CurrentMenuItemName != "":
-		#deleteQPopMenuItem(CurrentMenuItemName)
 		globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
 		
 		CurrentMenuItemIndex = None
-		MenuItemsEnum = PPG.PPGLayout.Item("MenuItemList").UIItems
+		MenuItemsEnum = list(PPG.PPGLayout.Item("MenuItemList").UIItems)
 		CurrentMenuItemIndex = MenuItemsEnum.index(CurrentMenuItemName)
 		
 		deleteQPopMenuItem(CurrentMenuItemName)
-		#RefreshMenuItems()
-			
+
+		#Select the next logial menu item in the list for convenience
 		if CurrentMenuItemIndex != None:
 			if CurrentMenuItemIndex < 2: #The first menuItem was selected?
 				if len(MenuItemsEnum) > 2: # and more than 1 menu items in the enum list left?
@@ -1486,7 +1507,8 @@ def QPopConfigurator_MenuItem_Code_OnChanged():
 	
 	#Let's replace nasty linefeed \r characters that can occur when pasting code into the editor
 	Code = PPG.MenuItem_Code.Value
-	Code = Code.replace("\r","")
+	Code = Code.rstrip() #Lets get rid of trailling whitespaces
+	Code = Code.replace("\r","") #Lets get rid of carriage returns as these result in extra lines when read back from the config file
 	PPG.MenuItem_Code.Value = Code
 	
 	#Lets set the code data on the menu or item
@@ -1915,10 +1937,10 @@ def QPopConfigurator_MenuDisplayContext_Code_OnChanged():
 	oCurrentMenuDisplayContext = None
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 	Code = PPG.MenuDisplayContext_Code.Value
+
 	
-	#while Code[len(Code)-1] == " ":
-	
-	Code = Code.rstrip()
+	Code = Code.rstrip() #Lets get rid of trailling whitespaces
+	Code = Code.replace("\r","") #Lets get rid of carriage returns as these result in extra lines when read back from the config file
 
 	for oDisplayContext in globalQPopMenuDisplayContexts.items:
 		if oDisplayContext.name == CurrentMenuDisplayContextName:
@@ -1926,10 +1948,8 @@ def QPopConfigurator_MenuDisplayContext_Code_OnChanged():
 	
 	if oCurrentMenuDisplayContext != None:
 		oCurrentMenuDisplayContext.code = Code
-
-	PPG.MenuDisplayContext_Code.Value = oCurrentMenuDisplayContext.code
+		PPG.MenuDisplayContext_Code.Value = oCurrentMenuDisplayContext.code
 		
-	
 
 def QPopConfigurator_InsertMenuContext_OnClicked():
 	Print("QPopConfigurator_InsertMenuContext_OnClicked called", c.siVerbose)
@@ -3116,7 +3136,7 @@ def RefreshMenuItems():
 		Counter = 0
 		for oItem in listMenuItems:
 			prefix = "      "
-			if str(oItem.type) == "Command" or str(oItem.type) == "CommandPlaceholder":
+			if str(oItem.type) == "CommandPlaceholder" or str(oItem.type) == "MissingCommand":
 				prefix = "(c)  "
 			if str(oItem.type) == "QPopMenuItem":
 				prefix = "(s)  "
@@ -3327,7 +3347,6 @@ def QPopSaveConfiguration(fileName):
 		globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts").items
 		globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures").items
 		globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
-		
 
 		oConfigDoc = DOM.Document()
 		RootNode = oConfigDoc.createElement("QPopComponents") #Create Root level node
@@ -3358,10 +3377,13 @@ def QPopSaveConfiguration(fileName):
 				MenuItemNode.setAttribute("switch", "True")
 			else:
 				MenuItemNode.setAttribute("switch", "False")
+			
 			oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.code)
-			#oMenuItemCode.nodeValue = str(oMenuItem.code)
-			oMenuItemCode.nodeValue = oMenuItem.code
-			MenuItemNode.appendChild(oMenuItemCode)	
+			if oMenuItem.code == "": oMenuItemCode.nodeValue = " "
+			MenuItemNode.appendChild(oMenuItemCode)
+			
+			#Test setting code as an attribute...
+			#MenuItemNode.setAttribute("code", oMenuItem.code)
 			MenuItemsNode.appendChild(MenuItemNode)	
 		
 	# === Save Menus ===
@@ -3372,16 +3394,18 @@ def QPopSaveConfiguration(fileName):
 			MenuNode.setAttribute("language", oMenu.language)
 			oMenuCode = oConfigDoc.createTextNode (oMenu.code)
 			#oMenuCode.nodeValue = str(oMenu.code)
-			oMenuCode.nodeValue = oMenu.code
+			if oMenu.code == "": oMenuCode.nodeValue = " "
 			MenuNode.appendChild(oMenuCode)	
 			
 			MenuItems = getattr(oMenu, "items")
 			NameList = list()
 			for MenuItem in MenuItems:
-				if MenuItem.type == "CommandPlaceholder":
+				if MenuItem.type == "MissingCommand":
+					NameList.append("Command")
+				elif MenuItem.type == "CommandPlaceholder":
 					NameList.append("Command")
 				else:
-					NameList.append(str(MenuItem.type))
+					NameList.append(str(MenuItem.type)) #Finally this could only be a command or a scripted menu item
 				NameList.append(str(MenuItem.name))
 				NameList.append(str(MenuItem.UID))
 			
@@ -3411,16 +3435,18 @@ def QPopSaveConfiguration(fileName):
 			MenuSetsNode.appendChild(MenuSetNode)
 	
 	# === Save Menu Contexts ===
-		for oMenuContext in globalQPopMenuDisplayContexts:
-			MenuContextNode = oConfigDoc.createElement("QPopMenuDisplayContext")
-			MenuContextNode.setAttribute("name", str(oMenuContext.name))
-			MenuContextNode.setAttribute("type", str(oMenuContext.type))
-			MenuContextNode.setAttribute("language", str(oMenuContext.language))	
-			#MenuContextNode.setAttribute("code", str(oMenuContext.code))	
-			oMenuContextCode = oConfigDoc.createTextNode ("code")
-			oMenuContextCode.nodeValue = str(oMenuContext.code)
-			MenuContextNode.appendChild(oMenuContextCode)
-			MenuDisplayContextsNode.appendChild(MenuContextNode)
+		for oDisplayContext in globalQPopMenuDisplayContexts:
+			DisplayContextNode = oConfigDoc.createElement("QPopMenuDisplayContext")
+			DisplayContextNode.setAttribute("name", oDisplayContext.name)
+			DisplayContextNode.setAttribute("type", oDisplayContext.type)
+			DisplayContextNode.setAttribute("language", oDisplayContext.language)
+			#DisplayContextNode.setAttribute("code", str(oDisplayContext.code))	
+			
+			
+			oDisplayContextCode = oConfigDoc.createTextNode (oDisplayContext.code)
+			if oDisplayContext.code == "": oDisplayContextCode.nodeValue = " "
+			DisplayContextNode.appendChild(oDisplayContextCode)
+			MenuDisplayContextsNode.appendChild(DisplayContextNode)
 		
 	# === Save View Signatures ===
 		for oSignature in globalQPopViewSignatures:
@@ -3490,9 +3516,14 @@ def QPopLoadConfiguration(fileName):
 							NewMenuItem.language = MenuItem.getAttribute("language")
 							if MenuItem.getAttribute("switch") == "True":
 								NewMenuItem.switch = True
+							
 							CodeNode = MenuItem.childNodes[0]
-							#NewMenuItem.code = str(CodeNode.nodeValue)
-							NewMenuItem.code = CodeNode.nodeValue
+							if CodeNode.nodeValue != " ":
+								NewMenuItem.code = CodeNode.nodeValue
+							
+							#Test reading code from code attribute
+							#NewMenuItem.code = MenuItem.getAttribute("code")
+	
 							globalQPopMenuItems.addMenuItem(NewMenuItem)
 
 			for Component in Components[0].childNodes:			
@@ -3507,7 +3538,8 @@ def QPopLoadConfiguration(fileName):
 							oNewMenu.name = Menu.getAttribute("name")
 							oNewMenu.language = Menu.getAttribute("language")
 							CodeNode = Menu.childNodes[0]
-							oNewMenu.code = unicode(CodeNode.nodeValue)
+							if CodeNode.nodeValue != " ":
+								oNewMenu.code = CodeNode.nodeValue
 					
 					#Then fill the menus with menu items, menus, commands and separators
 					for Menu in QPopMenus: 
@@ -3532,14 +3564,18 @@ def QPopLoadConfiguration(fileName):
 									#oMenuItem = App.GetCommandByUID(MenuItemNamesList[i+2]) #Get Command by UID through custom c++ command, which is much faster than Python but still slow
 									
 									if oMenuItem != None:
-										oNewMenu.insertMenuItem (len(oNewMenu.items), oMenuItem)
-									else: #Command could not be found? Insert Dummy command instead, it might become available at a later session
-										#Print("A command named '" + str(MenuItemNamesList[i+1]) + "' could not be found!", c.siWarning)
 										oDummyCmd = App.CreateQPop("CommandPlaceholder")
 										oDummyCmd.name = (MenuItemNamesList[i+1])
 										
 										oDummyCmd.UID = (MenuItemNamesList[i+2])
 										oNewMenu.insertMenuItem (len(oNewMenu.items), oDummyCmd)
+									else: #Command could not be found? Insert Dummy command instead, it might become available at a later session
+										#Print("A command named '" + str(MenuItemNamesList[i+1]) + "' could not be found!", c.siWarning)
+										oMissingCmd = App.CreateQPop("MissingCommand")
+										oMissingCmd.name = (MenuItemNamesList[i+1])
+										
+										oMissingCmd.UID = (MenuItemNamesList[i+2])
+										oNewMenu.insertMenuItem (len(oNewMenu.items), oMissingCmd)
 										
 								if MenuItemNamesList[i] == "QPopSeparator":
 									oMenuItem = getQPopSeparatorByName(MenuItemNamesList[i+1])
@@ -3556,7 +3592,8 @@ def QPopLoadConfiguration(fileName):
 							oNewContext.name = Context.getAttribute("name")
 							oNewContext.language = Context.getAttribute("language")
 							CodeNode = Context.childNodes[0]
-							oNewContext.code = str(CodeNode.nodeValue)
+							if CodeNode.nodeValue != " ":
+								oNewContext.code = CodeNode.nodeValue
 							result = globalQPopMenuDisplayContexts.addContext(oNewContext)
 
 								
@@ -3815,7 +3852,7 @@ def DisplayMenuSet( MenuSetIndex ):
 							
 							#Add regular menu items to the display string
 							for oItem in oMenu.items:
-								if oItem.type == "Command":
+								if oItem.type == "CommandPlaceholder":
 									MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[1]" + "]" 
 								if oItem.type == "QPopMenuItem":
 									#Print(oItem.name + " is a switch: " + str(oItem.switch))
@@ -3897,7 +3934,8 @@ def DisplayMenuSet( MenuSetIndex ):
 								#Was one of the temp menu items clicked on?
 								if MenuItemToExecute[1] > (len(oClickedMenu.items)): 
 									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.items)+1)] #get the clicked temp menu item
-								else:
+								#No, one of the normal menu items was selected...
+								else: 
 									oClickedMenuItem = oClickedMenu.items[MenuItemToExecute[1]-1] #Subtract the menu title entry 
 							#if oClickedMenuItem.type == "Command" or oClickedMenuItem.type == "QPopMenuItem":
 								#return oClickedMenuItem
@@ -3911,7 +3949,8 @@ def DisplayMenuSet( MenuSetIndex ):
 								#Was one of the temp menu items clicked on?
 								if MenuItemToExecute[1] > (len(oClickedMenu.items)-1): 
 									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.items))]
-								else:
+								#No, one of the normal menu items was selected...
+								else: 
 									oClickedMenuItem = oClickedMenu.items[MenuItemToExecute[1]]
 						
 						#Was any of the sub-menus selected?
@@ -3944,10 +3983,6 @@ def QPopRepeatLastCommand_Execute():
 	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
 	oQPopMenuItem = globalQPopLastUsedItem.item
 	if oQPopMenuItem != None:
-		if str(type(oQPopMenuItem)) == "<type 'str'>":
-			oQPopMenuItem = App.Commands(oQPopMenuItem)
-	
-	if oQPopMenuItem != None:		
 		App.QPopExecuteMenuItem ( oQPopMenuItem )
 
 def QPopDisplayMenuSet_0_Init( in_Ctxt ):
@@ -4025,7 +4060,7 @@ def QPopExecuteMenuItem_Init( in_ctxt ):
 def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 	Print("QPopExecuteMenuItem_Execute called", c.siVerbose)
 	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
-
+	
 	if oQPopMenuItem != None:
 		SucessfullyExecuted = False
 		#Instead of the actual command only it's name is given because Softimage has the tendency to forget commands (not always the
@@ -4033,16 +4068,12 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 		#Therefore we only work with command names instead and look up the command for execution again,
 		#which imposes a neglectable speed penalty.
 
-		if str(type(oQPopMenuItem)) == "<type 'unicode'>": #If we get a string then we're executing a previous command
-			oQPopMenuItem = App.Commands(oQPopMenuItem)
-
-		if oQPopMenuItem.type == "Command":
-			#oQPopMenuItemNew = App.Commands(oQPopMenuItem.name) #To prevent the command from operating in the previous objects context we get the original command object from Softimage again
+		if oQPopMenuItem.type == "CommandPlaceholder": #If we get a string then we're executing a previous command
+			oCmd= App.Commands(oQPopMenuItem.name) #We use the name to identify the command becasue finding by UID would be too slow 
 			try:
-				#oQPopMenuItemNew.Execute()
-				oQPopMenuItem.Execute()
+				oCmd.Execute()
 				SucessfullyExecuted = True	
-				globalQPopLastUsedItem.set(oQPopMenuItem.name) #Just set the name of commands for safety (Commands cannot be executed anymore after undo)
+				globalQPopLastUsedItem.set(oQPopMenuItem) #Just set the name of commands for safety (Commands cannot be executed anymore after undo)
 			except:
 				SucessfullyExecuted = False
 				raise
@@ -4054,17 +4085,14 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 				if oQPopMenuItem.switch == True:
 					try:
 						App.ExecuteScriptCode( Code, Language, "Switch_Execute", [] )
-						globalQPopLastUsedItem.set(oQPopMenuItem)
 						SucessfullyExecuted = True
 					except:
 						SucessfullyExecuted = False
-						raise
-					
+						raise	
 				else:
 					#TODO: ExecuteScriptCode should execute a specific function that can return objects to inspect
 					try:
 						App.ExecuteScriptCode( Code, Language) #, [ProcName], [Params] )
-						globalQPopLastUsedItem.set(oQPopMenuItem)
 						SucessfullyExecuted = True
 					except:
 						SucessfullyExecuted = False
@@ -4073,7 +4101,7 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 				Print("QPop Menu item '" + oQPopMenuItem.name + "' has no code to execute!",c.siWarning)
 		
 		if SucessfullyExecuted == True:
-			#globalQPopLastUsedItem.set(oQPopMenuItem) #Is this problematic with commands? (cannot be found after Undo?)
+			globalQPopLastUsedItem.set(oQPopMenuItem)
 			return True
 		else:	
 			Print("An error occured executing QPop menu item '" + oQPopMenuItem.name + "! Please see scripteditor for details.", c.siError)
@@ -4123,6 +4151,8 @@ def CreateQPop_Execute( QPopType ):
 		QPopElement = QPopSeparator()
 	if QPopType == "Separators":
 		QPopElement = QPopSeparators()
+	if QPopType == "MissingCommand":
+		QPopElement = QPopMissingCommand()
 	if QPopType == "CommandPlaceholder":
 		QPopElement = QPopCommandPlaceholder()
 	
@@ -4175,7 +4205,7 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
 # =================================== Plugin Event Callbacks =============================================
 
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
-	Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
+	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
  	KeyPressed = in_ctxt.GetAttribute("KeyCode")
 	KeyMask = in_ctxt.GetAttribute("ShiftMask")
 
