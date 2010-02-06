@@ -4,10 +4,9 @@
 # Author: Stefan Kubicek
 # Mail: stefan@tidbit-images.com
 
-#TODO: Add Execute flag to menu items and menus to disable execution of code for early out/speed optimisation, ->code field need not be empty for good speed
+#TODO: Add categorisation to menus (like script items)
 #TODO: test if config file is found (due to old pref setting) after reinstalling QPop to another folder
-#TODO: Claenup code fragmnts in prefs (or avoid putting in prefs first hand?) before shutdown or each time a different item is chosen (to prevent bypass when xsi crashes)
-#Try: Use attribute on minidom menu node to store code instead of using a separate code node. Currently empty code in menus cannot be read back from xml
+#TODO: Claenup code fragments in prefs (or avoid putting in prefs first hand?) before shutdown or each time a different item is chosen (to prevent bypass when xsi crashes)
 #TODO: Desktop.getWindowHandle is useful/faster?
 #TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
 #Fix: Update config file path in PPG when loading a congif file on first startup, it might still point to an old file on first startup
@@ -142,7 +141,7 @@ class QPopMenuItem:
  # Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','UID', 'name', 'category', 'file', 'language', 'code', 'switch']
+	_public_attrs_ = ['type','UID', 'name', 'category', 'file', 'language', 'code', 'switch','isEnabled']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['type']
 	
@@ -156,6 +155,7 @@ class QPopMenuItem:
 		self.code = str()
 		self.type = "QPopMenuItem"
 		self.switch = False
+		self.isEnabled = True
 
 class QPopMenuItems:
  # Declare list of exported functions:
@@ -197,12 +197,13 @@ class QPopMenu:
  # Declare list of exported functions:
 	_public_methods_ = ['insertMenuItem','removeMenuItem','removeAllMenuItems','removeMenuItemAtIndex','insertTempMenuItem','removeTempMenuItem','removeTempMenuItemAtIndex','removeAllTempMenuItems']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','UID', 'name', 'items', 'tempItems','code','language','menuItemLastExecuted']
+	_public_attrs_ = ['type','UID', 'name', 'items', 'tempItems','code','language','menuItemLastExecuted', 'executeCode']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['type']
 	
 	def __init__(self):
 		 # Initialize exported attributes:
+		self.type = "QPopMenu"
 		self.UID = XSIFactory.CreateGuid()
 		self.name = str()
 		self.items = list()
@@ -210,8 +211,8 @@ class QPopMenu:
 		self.code = str()
 		#self.code = unicode()
 		self.language = "Python"
-		self.itemLastExecuted = list()
-		self.type = "QPopMenu"
+		self.menuItemLastExecuted = list()
+		self.executeCode = False #By default menu code is not getting execute. Most menus won't need any executable code anyway.
 		
 	def insertMenuItem (self, index, menuItem):
 		items = self.items
@@ -277,13 +278,14 @@ class QPopMenus:
  # Declare list of exported functions:
 	_public_methods_ = ['addMenu','deleteMenu']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['items']
+	_public_attrs_ = ['items', 'execute']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = []
 	
 	def __init__(self):
 		 # Initialize exported attributes:
 		self.items = list()
+		self.execute = False #By default menu code should not be executed due to performance reasons (most menus won't have meaningful code anyway)
 
 	def addMenu (self, menu):
 		items = self.items
@@ -682,7 +684,14 @@ def QPopConfigurator_OnClosed():
 	Print ("QPopConfigurator_OnClosed called",c.siVerbose)
 	App.Preferences.SetPreferenceValue("QPop.DisplayEventKeys_Record", False)
 	App.Preferences.SetPreferenceValue("QPop.RecordViewSignature", False)
-
+	
+	#To keep the Aoftimage preference file tidy we don't want to stuff it full with potentially lengthy code nobody needs there anyway, so we empty
+	#the text widget fields when the PPG closes. The only thing that could happen is that Softimage crashes while the PPG is still open, in which case the
+	#code might still end up in the preference file (which might not happen when XSI crashes anyway). 
+	PPG.MenuItem_Code.Value = ""
+	PPG.MenuDisplayContext_Code = ""
+	#Application.Preferences.SetPreferenceValue("QPop.MenuItem_Code","")
+	#Application.Preferences.SetPreferenceValue("QPop.MenuDisplayCOntext_Code","")
 def QPopConfigurator_Define( in_ctxt ):
 	# Warning! !!Don't set capability flags here (e.g.siReadOnly), it causes errros when copying the property from one object to another (e.g. <parameter>.SetCapabilityFlag (c.siReadOnly,true)   )
 	Print ("QPopConfigurator_Define called", c.siVerbose)
@@ -881,8 +890,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddItem("MenuItem_Name", "Item Name", c.siControlString)
 	oLayout.AddItem("MenuItem_CategoryChooser", "Select a Category", c.siControlCombo)
 	oLayout.AddItem("NewMenuItem_Category", "Or type a (new) Category", c.siControlString)
-	oLayout.AddItem("MenuItem_Switch", "Item is a switch")
-
+	oLayout.AddItem("MenuItem_Switch", "Script Item is a switch")
+	oLayout.AddItem("MenuItem_IsActive", "Allow menu code execution")
 	oLayout.EndGroup()
 	oLayout.EndRow()
 
@@ -890,7 +899,6 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddRow()
 	oLanguage = oLayout.AddEnumControl("MenuItem_ScriptLanguage", ("Python","Python","JScript","JScript","VBasic","VBScript","Perl","Perl"), "      Scripting Language", c.siControlCombo)
 	oSpacer = oLayout.AddSpacer(10,1)
-	oLayout.AddItem("MenuItem_IsActive", "Allow code execution")
 	oLayout.AddButton("ExecuteCode", "Execute")
 	oLayout.EndRow()
 	
@@ -1207,7 +1215,7 @@ def QPopConfigurator_CreateNewMenu_OnClicked():
 		Language = "Python"
 	oNewMenu.language = Language
 	
-	oNewMenu.Code = ("def QPopMenu_Eval(oMenu):\t#This function must not be renamed!\n\t#Add your script code here\n\tDoNothing = True")
+	oNewMenu.Code = ("def QPopMenu_Eval(oMenu):\t#Don't rename this function!\n\t#Add your script code here\n\tpass")
 	globalQPopMenus.addMenu(oNewMenu)
 
 	PPG.Menus.Value = UniqueMenuName
@@ -1406,7 +1414,7 @@ def QPopConfigurator_MenuItem_Name_OnChanged():
 			oItem = getQPopMenuItemByName(PPG.MenuItemList.Value)
 			Done = True
 		
-		#A Script item was not selected, lets see if a menus was selected
+		#A Script item was not selected, lets see if a menu was selected
 		if Done == False:
 			KnownMenuItemNames = list()
 			if PPG.Menus.Value != "":
@@ -1482,11 +1490,6 @@ def QPopConfigurator_MenuItem_Switch_OnChanged():
 		if menuItem.name == CurrentMenuItem_Name:
 			menuItem.switch = MenuItem_Switch
 
-	#RefreshMenuItemList()
-	#PPG.MenuItemList.Value = CurrentMenuItem_Name
-	#RefreshMenuItemDetailsWidgets()
-	#PPG.Refresh()
-
 	
 def QPopConfigurator_MenuItem_ScriptLanguage_OnChanged():
 	Print("QPopConfigurator_MenuItem_ScriptLanguage_OnChanged called", c.siVerbose)
@@ -1547,6 +1550,34 @@ def QPopConfigurator_MenuItem_Category_OnChanged():
 	RefreshMenuItemList()
 	RefreshMenuItemDetailsWidgets()
 	PPG.Refresh()
+
+def QPopConfigurator_MenuItem_IsActive_OnChanged():
+	Print("QPopConfigurator_MenuItem_IsActive_OnChanged called", c.siVerbose)
+	
+	#globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	
+	oItem = None
+	RefreshRequired = False
+	
+	#Done = False
+	#Lets see if a Script Item is selected which should be set to inactive
+	#if PPG.MenuItemList.Value != "":
+		#oItem = getQPopMenuItemByName(PPG.MenuItemList.Value)
+		#if oItem != None:
+			#oItem.isActive = PPG.MenuItem_IsActive.Value
+		#Done = True
+	
+	#A Script item was not selected, lets see if a menu	was selected
+	#if Done == False:
+	if PPG.Menus.Value != "":
+		oItem = getQPopMenuByName(PPG.Menus.Value)
+		
+		if oItem != None:
+			Print("Attempting to set Menu's executeCode flag to " + str(PPG.MenuItem_IsActive.Value))
+			oItem.executeCode = PPG.MenuItem_IsActive.Value
+			Print("Menu executeCode flag set to " + str(oItem.executeCode))
+
 
 def QPopConfigurator_CreateMenuSet_OnClicked():
 	Print("QPopConfigurator_CreateMenuSet_OnClicked called", c.siVerbose)
@@ -2584,6 +2615,7 @@ def QPopConfigurator_MainSettings_OnTab():
 	PPG.DisplayEventKeys_Record.Value = False
 	
 	
+
 #=============== Misc. QPopConfigurator Functions ===============================
 
 def RefreshMenuSetDetailsWidgets():
@@ -2673,6 +2705,7 @@ def RefreshMenuItemDetailsWidgets():
 	PPG.MenuItem_ScriptLanguage.SetCapabilityFlag (c.siReadOnly,True)
 	PPG.MenuItem_Code.SetCapabilityFlag (c.siReadOnly,True)
 	PPG.MenuItem_Switch.SetCapabilityFlag (c.siReadOnly,True)
+	PPG.MenuItem_IsActive.SetCapabilityFlag (c.siReadOnly,True)
 	
 #Empty input fields
 	PPG.MenuItem_Name.Value = ""
@@ -2680,6 +2713,8 @@ def RefreshMenuItemDetailsWidgets():
 	PPG.MenuItem_CategoryChooser.Value = ""
 	PPG.MenuItem_Code.Value = ""
 	PPG.MenuItem_ScriptLanguage.Value = ""
+	PPG.MenuItem_Switch.Value = False
+	PPG.MenuItem_IsActive.Value = False
 
 					
 #Check if a command was selected:
@@ -2733,12 +2768,14 @@ def RefreshMenuItemDetailsWidgets():
 			PPG.MenuItem_ScriptLanguage.Value = ""
 			PPG.MenuItem_ScriptLanguage.Value = oItem.language
 			PPG.MenuItem_Code.Value = oItem.code
+			PPG.MenuItem_IsActive.Value = oItem.executeCode
 			
 			PPG.PPGLayout.Item("DeleteMenu").SetAttribute (c.siUIButtonDisable, False)	
 			PPG.PPGLayout.Item("ExecuteCode").SetAttribute (c.siUIButtonDisable, False)
 			PPG.MenuItem_Name.SetCapabilityFlag (c.siReadOnly,False)
 			PPG.MenuItem_ScriptLanguage.SetCapabilityFlag (c.siReadOnly,False)
 			PPG.MenuItem_Code.SetCapabilityFlag (c.siReadOnly,False)
+			PPG.MenuItem_IsActive.SetCapabilityFlag (c.siReadOnly,False)
 
 
 def ResetToDefaultValues():
@@ -3392,6 +3429,11 @@ def QPopSaveConfiguration(fileName):
 			MenuNode.setAttribute("name", str(oMenu.name))
 			MenuNode.setAttribute("type", oMenu.type)
 			MenuNode.setAttribute("language", oMenu.language)
+			if oMenu.executeCode == True:
+				MenuNode.setAttribute("executeCode", "True")
+			if oMenu.executeCode == False:
+				MenuNode.setAttribute("executeCode", "False")
+				
 			oMenuCode = oConfigDoc.createTextNode (oMenu.code)
 			#oMenuCode.nodeValue = str(oMenu.code)
 			if oMenu.code == "": oMenuCode.nodeValue = " "
@@ -3537,6 +3579,11 @@ def QPopLoadConfiguration(fileName):
 							globalQPopMenus.addMenu(oNewMenu)
 							oNewMenu.name = Menu.getAttribute("name")
 							oNewMenu.language = Menu.getAttribute("language")
+							executeCode = Menu.getAttribute("executeCode")
+							if executeCode == "True":
+								oNewMenu.executeCode = True
+							if executeCode == "False":
+								oNewMenu.executeCode = False
 							CodeNode = Menu.childNodes[0]
 							if CodeNode.nodeValue != " ":
 								oNewMenu.code = CodeNode.nodeValue
@@ -3812,11 +3859,12 @@ def DisplayMenuSet( MenuSetIndex ):
 						Code = oMenu.code
 						if Code != "":
 							#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
-							try:
-								App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
-							except:
-								Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
-												
+							if oMenu.executeCode == True:
+								try:
+									App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
+								except:
+									Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
+									
 						for oMenuItem in oMenu.items:
 							if oMenuItem.type == "QPopMenu":
 								if not (oMenuItem in oMenus):
@@ -4279,8 +4327,7 @@ def InitQPop_OnEvent (in_ctxt):
 		except:
 			Print("Loading QPop Configuration from " + str(QPopConfigFile) + " failed!", c.siError)
 
-	#Print("QPop First call!")
-	#App.QPop()
+	App.QPop() #Call Qpop to load the required .Net components to avoid having to wait when it's actually called for the first time after Startup
 	
 def DestroyQPop_OnEvent (in_ctxt): 
 	globalQPopConfigStatus = App.GetGlobal("globalQPopConfigStatus")
