@@ -5,12 +5,9 @@
 # Mail: stefan@tidbit-images.com
 
 #TODO: Add categorisation to menus (like script items)
-#TODO: test if config file is found (due to old pref setting) after reinstalling QPop to another folder
-#TODO: Claenup code fragments in prefs (or avoid putting in prefs first hand?) before shutdown or each time a different item is chosen (to prevent bypass when xsi crashes)
-#TODO: Desktop.getWindowHandle is useful/faster?
+#TODO: Add create switch button
+#TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
 #TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
-#Fix: Update config file path in PPG when loading a congif file on first startup, it might still point to an old file on first startup
-#Fix: Changing view does not update Menu and MenuItems (should be empty) when no Menu is assigned to the current menu sets context
 #Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 
@@ -22,13 +19,12 @@
 #Report duplicate commands (Invert Polygons, Invert All Normals, Invert Selected Polygons; Delete Components vs Delete Component)
 #Report (custom?) commands not supporting key assignment are still listed in the keyboard mapping command list (should better not be listed?) 
 
+
 #TODO: Correctly set default script code when creating Script Items and menus Items with other language than Python.
 #TODO: Cleanup function do delete empty script items and menus
 
 #TODO: Reverse menu entry display order for menus C & D? or make it an option?
 #TODO: How to find out the currently selected mesh object when in sunComponent selection mode and no component is selected?
-#TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
-#TODO: Add a checkbox to enable/disable automatic loading of the config file at startup. What for?
 
 #Cleanup: Rename QpopMenuItem class and related functions (e.g. getQpopMenuItemByName) to "ScriptItem"
 #Cleanup: Make all class attributes start with upper-case characters to  
@@ -150,7 +146,7 @@ class QPopMenuItem:
 		self.UID = XSIFactory.CreateGuid()
 		self.name = str()
 		self.category = str()
-		self.file = str()
+		#self.file = str()
 		self.language = "Python"
 		self.code = str()
 		self.type = "QPopMenuItem"
@@ -195,7 +191,7 @@ class QPopMenuItems:
 
 class QPopMenu:
  # Declare list of exported functions:
-	_public_methods_ = ['insertMenuItem','removeMenuItem','removeAllMenuItems','removeMenuItemAtIndex','insertTempMenuItem','removeTempMenuItem','removeTempMenuItemAtIndex','removeAllTempMenuItems']
+	_public_methods_ = ['insertMenuItem','removeMenuItem','removeAllMenuItems','removeMenuItemAtIndex','insertTempMenuItem','appendTempMenuItem','removeTempMenuItem','removeTempMenuItemAtIndex','removeAllTempMenuItems']
 	 # Declare list of exported attributes
 	_public_attrs_ = ['type','UID', 'name', 'items', 'tempItems','code','language','menuItemLastExecuted', 'executeCode']
 	 # Declare list of exported read-only attributes:
@@ -212,7 +208,7 @@ class QPopMenu:
 		#self.code = unicode()
 		self.language = "Python"
 		self.menuItemLastExecuted = list()
-		self.executeCode = False #By default menu code is not getting execute. Most menus won't need any executable code anyway.
+		self.executeCode = False #By default menu code is not getting execute. Most menus won't need any executable code.
 		
 	def insertMenuItem (self, index, menuItem):
 		items = self.items
@@ -229,20 +225,11 @@ class QPopMenu:
 			Print("QPop Menu '" + str(self.name) + "' does not have a menu item called " + str(menuItem.name) + " that could be removed!!", c.siError)
 	
 	def removeAllMenuItems (self):
-		items = self.items
-		try:
-			for oItem in items:
-				items.remove (oItem)
-		except:
-			Print("QPop Menu '" + str(self.name) + "' does not contain any menu items that could be removed!!", c.siError)
+		self.items = list()
+
 	
 	def removeAllTempMenuItems (self):
-		items = self.tempItems
-		try:
-			for oItem in items:
-				items.remove (oItem)
-		except:
-			Print("QPop Menu '" + str(self.name) + "' does not contain any temporary menu items that could be removed!!", c.siError)	
+		self.tempItems = list()
 	
 	def removeMenuItemAtIndex (self, index):
 		items = self.items
@@ -256,8 +243,12 @@ class QPopMenu:
 		items = self.tempItems
 		
 		if index == None:
-			index = 0
+			index = 0 #len(tempItems)-1)
 		items.insert (index,menuItem)
+	
+	def appendTempMenuItem (self, menuItem):
+		items = self.tempItems
+		items.append (menuItem)
 	
 	def removeTempMenuItem (self, menuItem):
 		items = self.tempItems
@@ -657,17 +648,21 @@ def XSIUnloadPlugin( in_reg ):
 def QPopConfigurator_OnInit( ):
 	Print ("QPopConfigurator_OnInit called",c.siVerbose)
 	globalQPopConfigStatus = App.GetGlobal("globalQPopConfigStatus")
-	globalQPopConfigStatus.changed = True
+	globalQPopConfigStatus.changed = True #When opening the PPG we assume that changes are made. This is a somewhat bold assumption but checking every value for changes is too laborious 
 	
-	#Lets seee if this is the first time the QPop PPG is inspected
-	bFirstStart = False
+	#Lets see if this is the first time the QPop PPG is inspected
+	#THis is now done at startup. When no config file path is defined we assume it's the first startup. If one is found it's either not the first startup order
+	#the Plugin has been reinstalled, in which case the existing file will be loaded.
+	
+	"""bFirstStart = False
 	try:	
-		bFirstStart = str(App.GetValue("preferences.QPop.FirstStartup")) #We need to use GetValue GetPreferenceValue because the custom preference might not yet be known
-	except: #If the preference cannot be found we assume it has never been used before
+		bFirstStart = str(App.GetValue("preferences.QPop.FirstStartup")) #We need to use GetValue 
+		Print("QpopFirstStart is: " + str(bFirstStart))
+	except: #If the value cannot be found we assume it has never been used before
 		bFirstStart = "True"
 	
 	if bFirstStart == "True": #On very first startup... 
-		Print("Qpop First Startup detected, trying to find default config file!", c.siVerbose)
+		Print("Qpop Configurator first startup detected, trying to find default config file!", c.siVerbose)
 		#... build and set the default config file path from the plugin location
 		DefaultConfigFile = GetDefaultConfigFilePath()
 		if DefaultConfigFile != "": #Fomally set PPG values and Preference values for FirstStartup and ConfigFile and save them
@@ -676,7 +671,8 @@ def QPopConfigurator_OnInit( ):
 			App.Preferences.SetPreferenceValue("QPop.FirstStartup", False)
 			PPG.FirstStartup.Value = False
 			App.Preferences.SaveChanges()
-			
+	"""
+	
 	RefreshQPopConfigurator()
 	PPG.Refresh()
 
@@ -685,13 +681,15 @@ def QPopConfigurator_OnClosed():
 	App.Preferences.SetPreferenceValue("QPop.DisplayEventKeys_Record", False)
 	App.Preferences.SetPreferenceValue("QPop.RecordViewSignature", False)
 	
-	#To keep the Aoftimage preference file tidy we don't want to stuff it full with potentially lengthy code nobody needs there anyway, so we empty
+	#To keep the Softimage preference file tidy we don't want to stuff it full with potentially lengthy code nobody needs there anyway, so we empty
 	#the text widget fields when the PPG closes. The only thing that could happen is that Softimage crashes while the PPG is still open, in which case the
-	#code might still end up in the preference file (which might not happen when XSI crashes anyway). 
+	#code might still end up in the preference file (which might not happen when XSI crashes anyway because then even the preference file is not written). 
 	PPG.MenuItem_Code.Value = ""
 	PPG.MenuDisplayContext_Code = ""
 	#Application.Preferences.SetPreferenceValue("QPop.MenuItem_Code","")
 	#Application.Preferences.SetPreferenceValue("QPop.MenuDisplayCOntext_Code","")
+	Application.Preferences.SaveChanges()
+	
 def QPopConfigurator_Define( in_ctxt ):
 	# Warning! !!Don't set capability flags here (e.g.siReadOnly), it causes errros when copying the property from one object to another (e.g. <parameter>.SetCapabilityFlag (c.siReadOnly,true)   )
 	Print ("QPopConfigurator_Define called", c.siVerbose)
@@ -792,7 +790,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 
 	aUIitems = (CustomGFXFilesPath + "QPopMenuA.bmp", 0, CustomGFXFilesPath + "QPopMenuB.bmp", 1, CustomGFXFilesPath + "QPopMenuD.bmp", 3, CustomGFXFilesPath + "QPopMenuC.bmp",2)
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("Select a Quadrant")
+	oLayout.AddStaticText("Select Quad")
 	oMenuSelector = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
@@ -813,28 +811,28 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndGroup()
 
 	oLayout.AddGroup("Menu Items in QPop Menu")
-	oLayout.AddRow()
-	oAuto = oLayout.AddItem ("AutoSelectMenu", "Auto-select")
-	oItems = oLayout.AddEnumControl ("MenuChooser", None, "Menu",c.siControlCombo)
+	#oLayout.AddRow()
+	oAuto = oLayout.AddItem ("AutoSelectMenu", "Auto-select menu of selected context")
+	oItems = oLayout.AddEnumControl ("MenuChooser", None, "Menu to edit",c.siControlCombo)
 	#oItems.SetAttribute(c.siUIWidthPercentage, 70)
 	#oItems.SetAttribute(c.siUICX, 200)
 	#oAuto.SetAttribute(c.siUILabelPercentage, 10)
-	oLayout.EndRow()
+	#oLayout.EndRow()
 	
 	oLayout.AddRow()
 	oMenuItems = oLayout.AddEnumControl ("MenuItems", None, "Menu Items",c.siControlListBox)
 	oMenuItems.SetAttribute(c.siUINoLabel, True)
-	oMenuItems.SetAttribute(c.siUICY, 135)
+	oMenuItems.SetAttribute(c.siUICY, 113)
 	oMenuItems.SetAttribute(c.siUIWidthPercentage, 20)
 	oLayout.EndRow()
 	oLayout.AddRow()
 
 	oInsertCommandButton = oLayout.AddButton ("ItemInsert", "Insert Item")
-	oLayout.AddButton ("ItemUp", "Move Up    ")
+	oLayout.AddButton ("ItemUp", "Move Up")
 	oLayout.AddButton ("ItemDown", "Move Down")
-	oLayout.AddButton ("RemoveMenuItem", "Remove     ")
+	oLayout.AddButton ("RemoveMenuItem", "Remove")
 	
-	oLayout.AddButton ("FindItem", "Find Selected Item")
+	oLayout.AddButton ("FindItem", "Find selected Item")
 	oLayout.AddButton("InsertSeparator","Insert Separator")
 	oLayout.EndRow()
 	oLayout.EndGroup()
@@ -990,8 +988,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	
 	oQG = oLayout.AddGroup("", False, 25)
 	#oQG.SetAttribute(c.siUIWidthPercentage, 25)
-	oLayout.AddStaticText("       Select Quadrant")
-	oMenuSelector2 = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Select Quadrant", c.siControlIconList)
+	oLayout.AddStaticText("Select Quad")
+	oMenuSelector2 = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Select a Context", c.siControlIconList)
 	oMenuSelector2.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector2.SetAttribute(c.siUIColumnCnt,2)
 	oMenuSelector2.SetAttribute(c.siUILineCnt,2)
@@ -1014,8 +1012,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow() #New Row of Groups
 	oLayout.EndGroup() #Manage QPopMenuSets
 	
-	oLayout.AddGroup("Existing QPop Menu Display Contexts")
-	oDisplayContexts = oLayout.AddEnumControl ("MenuDisplayContexts", None, "Menu Display Contexts", c.siControlListBox)
+	oLayout.AddGroup("Existing QPop Menu Contexts")
+	oDisplayContexts = oLayout.AddEnumControl ("MenuDisplayContexts", None, "Menu Contexts", c.siControlListBox)
 	oDisplayContexts.SetAttribute(c.siUINoLabel, True)
 	oLayout.AddRow()
 	oLayout.AddButton("CreateNewDisplayContext","Create New Context")
@@ -1039,10 +1037,10 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	
 	#================================ Debugging Options Tab ============================================================================================
 	oLayout.AddTab("Debug Options")
-	oLayout.AddButton ("Refresh", "Reset/Delete everything")
+	oLayout.AddButton ("Refresh", "Reset/Delete all QPop configuration data")
 	oLayout.AddGroup("Debug Options")
-	oQPopConfigFile = oLayout.AddItem("FirstStartup", "First Startup")
-	oLayout.AddItem("ShowQpopMenuString","Print Qpop Menu String")
+	#oLayout.AddItem("FirstStartup", "First Startup")
+	oLayout.AddItem("ShowQpopMenuString","Print Qpop Menu String on menu invokation")
 	oLayout.AddItem("ShowQPopTimes","Print QPop preparation times")
 	oLayout.EndGroup()
 	
@@ -3864,14 +3862,15 @@ def DisplayMenuSet( MenuSetIndex ):
 									App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
 								except:
 									Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
-									
+						
+						#Lets find regular submenus					
 						for oMenuItem in oMenu.items:
 							if oMenuItem.type == "QPopMenu":
 								if not (oMenuItem in oMenus):
 									oMenus.append(oMenuItem)
 									NewMenuFound = True
 
-						
+						#Lets find temporary submenus	
 						for oMenuItem in oMenu.tempItems:
 							if oMenuItem.type == "QPopMenu":
 								if not (oMenuItem in oMenus):
@@ -3892,7 +3891,7 @@ def DisplayMenuSet( MenuSetIndex ):
 					MenuString = MenuString + "[" #Start the menu string
 
 					if oMenu != None:
-						if len(oMenu.items) == 0:
+						if (len(oMenu.items) == 0) and (len(oMenu.tempItems) == 0):
 							MenuString = MenuString + "[[Empty]" +  "[-1]" + "[3]" + "]"
 						else:
 							if MenuCounter == 2 or MenuCounter == 3: #Add the title at the beginning of the menu in case it's menu 2 or 3
@@ -4312,39 +4311,40 @@ def InitQPop_OnEvent (in_ctxt):
 	#Load the QPop Config File
 	QPopConfigFile = ""
 	try:
+		#QPopConfigFile = App.GetValue("preferences.QPop.QPopConfigurationFile") #Does not work, QPopConfigurator custom property not yet established, need to read from preferences directly instead of using GetValue...
 		QPopConfigFile = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
 	except:
-		Print("Could not retrieve QpopConfigFile from Preferences, must be first startup -> using Munchausen function to find it",c.siVerbose)
+		Print("Could not retrieve QpopConfigFile from Preferences, must be first startup -> trying to find it...",c.siVerbose)
 		QPopConfigFile = GetDefaultConfigFilePath()
-		#Print("GetDefaultConfigFilePath returned: " + str(QPopConfigFile))
 	if QPopConfigFile != "":
 		Print("QPopConfigFile is: " + str(QPopConfigFile), c.siVerbose)
 		try:
 			Print("Attempting to load QPop Configuration from " + str(QPopConfigFile), c.siVerbose)
 			result = QPopLoadConfiguration(QPopConfigFile)
-			if result == True:
+			if result:
 				Print("Loading QPop Configuration from " + str(QPopConfigFile) + " succeeded.", c.siVerbose)
+				QPopConfigFile = App.Preferences.SetPreferenceValue("QPop.QPopConfigurationFile",QPopConfigFile)
 		except:
 			Print("Loading QPop Configuration from " + str(QPopConfigFile) + " failed!", c.siError)
-
-	App.QPop() #Call Qpop to load the required .Net components to avoid having to wait when it's actually called for the first time after Startup
+	else:
+		Print("No QPop configuration file could be found!", c.siVerbose)
+	
+	App.Preferences.SaveChanges()
+	App.QPop("") #Call Qpop to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def DestroyQPop_OnEvent (in_ctxt): 
 	globalQPopConfigStatus = App.GetGlobal("globalQPopConfigStatus")
 	if globalQPopConfigStatus.changed == True:
 		Message = ("The QPop configuration has been changed - would you like to save it?")
-		Caption = ("Save QPop Configuration?")
+		Caption = ("Save QPop configuration?")
 		DoSaveFile = XSIUIToolkit.MsgBox( Message, 36, Caption )
 		if DoSaveFile == True:
 			QPopConfigFile = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
 			Result = QPopSaveConfiguration(QPopConfigFile)
 			if Result == False:  #Something went wrong
-				Message = ("The QPop configuration file could not be written - would you like to save to the dafaule backup file?")
+				Message = ("The QPop configuration file could not be written - would you like to save to the dafault backup file?")
 				Caption = ("Saving failed, save a QPop Configuration backup file?")
 				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
-
-	
-	
 
 #===================================== Custom Property Menu callbacks  ============================================================
 
@@ -4627,8 +4627,7 @@ def getUniqueSpacedName (name, listOfNames):
 	if unique == True:
 		return uniqueName
 
-		
-		
+	
 def CollectHandles( handle , winList ):
 	winList.append(handle)
 	return True
