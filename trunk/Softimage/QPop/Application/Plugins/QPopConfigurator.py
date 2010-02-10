@@ -4,6 +4,7 @@
 # Author: Stefan Kubicek
 # Mail: stefan@tidbit-images.com
 
+#Upper right menu does not return the correct temp menu item number (thinks it was title)
 #TODO: Add categorisation to menus (like script items)
 #TODO: Add create switch button
 #TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
@@ -1372,7 +1373,10 @@ def QPopConfigurator_ItemInsert_OnClicked():
 		oItemToInsert = None
 	#Insert a command in case it was selected
 		if PPG.CommandList.Value != "":
-			oItemToInsert = getCommandByUID(PPG.CommandList.Value)
+			oCmdToInsert = getCommandByUID(PPG.CommandList.Value)
+			oItemToInsert = App.CreateQPop("CommandPlaceholder")
+			oItemToInsert.name = oCmdToInsert.name
+			oItemToInsert.UID = oCmdToInsert.UID
 
 	#Insert a script item in case it was selected	
 		if PPG.MenuItemList.Value != "":
@@ -3859,8 +3863,9 @@ def DisplayMenuSet( MenuSetIndex ):
 							#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
 							if oMenu.executeCode == True:
 								try:
-									App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code to give it the chance to fill itself with whatever items (maybe even more submenus)
+									App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
 								except:
+									raise
 									Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
 						
 						#Lets find regular submenus					
