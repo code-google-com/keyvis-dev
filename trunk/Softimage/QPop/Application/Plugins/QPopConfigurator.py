@@ -12,8 +12,10 @@
 #Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 
+#Report bug: When calling executeScriptCode for the first time on code sored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
+#Report bug: Execute Script Code is insanely slow compare to executing the code directly
 #Report bug: Pasting into the text editor causes "\n" charcters to be replacd with "\n\r"
-#Report When executing context script error is thrown when last character is a whitespace or return char (Problem with text widget?) or comment
+#Report bug: When executing context script error is thrown when last character is a whitespace or return char (Problem with text widget?) or comment
 #Report Bug: Strange bug in XSI7.01: When a command allows notifications and is executed and undone, it causes itself or other commands to be unfindable through App.Commands("Commandname") (-> returns none)
 #Report Bug: Local subdivision _does_ work when assigned to a key! Currently is flagged as not.
 #Report duplicate commands (Dice Polygons, Dice Object & Dice Object/Polygons does the same)
@@ -902,10 +904,26 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
+	
 	#TODO: Implement Text Editor features as a custom JScript or VBS command, Python does not work
-	oCodeEditor.SetAttribute(c.siUIToolbar, True )
-	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
-	oCodeEditor.SetAttribute(c.siUIFolding, True )
+	#oCodeEditor.SetAttribute(c.siUIToolbar, True )
+	#oCodeEditor.SetAttribute(c.siUILineNumbering, True )
+	#oCodeEditor.SetAttribute(c.siUIFolding, True )
+	
+	"""
+	#JScript snippets for later use
+	A = Application.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" )
+	Application.LogMessage (A.items(2))
+	QPC = A.items(2)
+	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIType, siControlTextEditor )
+	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUILineNumbering, true)
+	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIToolbar, true)
+	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIFolding, true)
+	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIKeywordFile, "D:/projects/Scripting Projects/XSI/QPop/Data/Preferences/Python.keywords")
+	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIKeywords, "def pass")
+	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUICommentColor, 0xFF00FF)
+	"""
+	
 	oLayout.EndGroup()
 	
 	#================================== Display Events Tab =======================================================================================
@@ -1127,7 +1145,11 @@ def QPopConfigurator_MenuChooser_OnChanged():
 def QPopConfigurator_SaveConfig_OnClicked ():
 	Print("QPopConfigurator_SaveConfig_OnClicked called",c.siVerbose)
 	fileName = PPG.QPopConfigurationFile.Value
-	QPopSaveConfiguration(fileName)
+	result = QPopSaveConfiguration(fileName)
+	if result == False:
+		Print("Saving QPop Configuration to '" + fileName + "' failed! Please check write permissions and try again.",c.siError)
+	else:
+		Print("Successfully saved QPop Configuration to '" + fileName + "' ")
 	
 def QPopConfigurator_LoadConfig_OnClicked():
 	Print("QPopConfigurator_LoadConfig_OnClicked called",c.siVerbose)
@@ -1512,7 +1534,7 @@ def QPopConfigurator_MenuItem_Code_OnChanged():
 	
 	#Let's replace nasty linefeed \r characters that can occur when pasting code into the editor
 	Code = PPG.MenuItem_Code.Value
-	Code = Code.rstrip() #Lets get rid of trailling whitespaces
+	#Code = Code.rstrip() #Lets get rid of trailling whitespaces
 	Code = Code.replace("\r","") #Lets get rid of carriage returns as these result in extra lines when read back from the config file
 	PPG.MenuItem_Code.Value = Code
 	
@@ -3524,10 +3546,10 @@ def QPopSaveConfiguration(fileName):
 			ConfigDocFile.close()
 			return True
 		except:
-			Print("Saving QPop Configuration to '" + fileName + "' failed! Please check write permissions and try again.",c.siError)
+			#Print("Saving QPop Configuration to '" + fileName + "' failed! Please check write permissions and try again.",c.siError)
 			return False
 	else:
-		Print("Saving QPop Configuration to '" + fileName + "' failed because the folder does not exist. Check the path and try again.", c.siError)
+		Print("Cannot save QPop Configuration to '" + fileName + "' because the folder does not exist. Please correct the file path and try again.", c.siError)
 	
 def QPopLoadConfiguration(fileName):
 	Print("Qpop: QPopLoadConfiguration called", c.siVerbose)
@@ -3859,14 +3881,13 @@ def DisplayMenuSet( MenuSetIndex ):
 				for oMenu in oMenus: #Search for submenus in  menus A to D, if any
 					if oMenu != None and oMenu not in CheckedMenus:
 						Code = oMenu.code
-						if Code != "":
+						if Code != "" and oMenu.executeCode == True:
 							#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Eval function takes it's own menu as an argument 
-							if oMenu.executeCode == True:
-								try:
-									App.ExecuteScriptCode(Code, oMenu.language,"QPopMenu_Eval",[oMenu]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
-								except:
-									raise
-									Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
+							#try:
+							Application.ExecuteScriptCode(Code, oMenu.language, "QPopMenu_Eval", [oMenu]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
+							#except:
+								#raise
+								#Print("An Error occured executing QPop Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
 						
 						#Lets find regular submenus					
 						for oMenuItem in oMenu.items:
@@ -3972,11 +3993,24 @@ def DisplayMenuSet( MenuSetIndex ):
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
 				oClickedMenuItem = None
-				if ((MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1)):
-					#Print("MenuItemToExecute is: " + str(MenuItemToExecute))
+				if ((MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1)): #Was something clicked in any of the menus?
+					Print("MenuItemToExecute is: " + str(MenuItemToExecute))
 					oClickedMenu = oMenus[MenuItemToExecute[0]] #get the clicked QpopMenu object
 					if oClickedMenu != None:
 						
+						#Was one of the upper two menus selected?
+						if MenuItemToExecute[0] == 0 or MenuItemToExecute[0] == 1: 
+							if MenuItemToExecute[1] == len(oClickedMenu.items) + len(oClickedMenu.tempItems): #Was the menu Title selected?
+								globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+								oClickedMenuItem = globalQPopLastUsedItem.item #When clicking on any of the Menu Titles repeat the last command
+							else:
+								#Was one of the temp menu items clicked on? (Temp menu items are always listed after permanent menu items)
+								if MenuItemToExecute[1] > (len(oClickedMenu.items)-1): 
+									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.items))]
+								#No, one of the normal menu items was selected...
+								else: 
+									oClickedMenuItem = oClickedMenu.items[MenuItemToExecute[1]]
+									
 						#Was one of the lower two menus selected?
 						if MenuItemToExecute[0] == 2 or MenuItemToExecute[0] == 3: 
 							if MenuItemToExecute[1] == 0: #Was the menu Title selected?
@@ -3989,21 +4023,6 @@ def DisplayMenuSet( MenuSetIndex ):
 								#No, one of the normal menu items was selected...
 								else: 
 									oClickedMenuItem = oClickedMenu.items[MenuItemToExecute[1]-1] #Subtract the menu title entry 
-							#if oClickedMenuItem.type == "Command" or oClickedMenuItem.type == "QPopMenuItem":
-								#return oClickedMenuItem
-							
-						#Was one of the upper two menus selected?
-						if MenuItemToExecute[0] == 0 or MenuItemToExecute[0] == 1: 
-							if MenuItemToExecute[1] == (len(oClickedMenu.items) ): #Was the menu Title selected?
-								globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
-								oClickedMenuItem = globalQPopLastUsedItem.item #When clicking on any of the Menu Titles repeat the last command
-							else:
-								#Was one of the temp menu items clicked on?
-								if MenuItemToExecute[1] > (len(oClickedMenu.items)-1): 
-									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.items))]
-								#No, one of the normal menu items was selected...
-								else: 
-									oClickedMenuItem = oClickedMenu.items[MenuItemToExecute[1]]
 						
 						#Was any of the sub-menus selected?
 						if MenuItemToExecute[0] > 3:
@@ -4335,6 +4354,7 @@ def InitQPop_OnEvent (in_ctxt):
 		Print("No QPop configuration file could be found!", c.siVerbose)
 	
 	App.Preferences.SaveChanges()
+	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
 	App.QPop("") #Call Qpop to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def DestroyQPop_OnEvent (in_ctxt): 
