@@ -157,8 +157,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory=".\Application\Plugins"
+			IntermediateDirectory=".\temp"
 			ConfigurationType="2"
 			InheritedPropertySheets="C:\Softimage\XSI_7.01_x64\XSISDK\mkfiles\Release-x86.vsprops"
 			UseOfMFC="0"
@@ -182,7 +182,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				RuntimeTypeInfo="true"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -195,7 +197,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="GetCommandByUID.dll"
+				OutputFile=".\Application\Plugins\keyvisCommands.32.dll"
+				Version="0.1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -263,7 +266,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				ShowProgress="2"
+				ShowProgress="0"
 				OutputFile=".\Application\Plugins\keyvisCommands.64.dll"
 				Version="0.1"
 				RandomizedBaseAddress="1"
