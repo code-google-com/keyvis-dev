@@ -1,10 +1,10 @@
-# Script Name: QPopConfigurator
-# Host Application: Plugin for Softimage
+# Script Name: QPopConfigurator Plugin
+# Host Application: Softimage
 # Last changed: 2010-01-21 
 # Author: Stefan Kubicek
-# Mail: stefan@tidbit-images.com
+# Mail: stefan@keyvis.at
 
-#Upper right menu does not return the correct temp menu item number (thinks it was title)
+#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature
 #TODO: Add categorisation to menus (like script items)
 #TODO: Add create switch button
 #TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
@@ -12,6 +12,8 @@
 #Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 
+#Report: it is not possible to set more than one shader ball model at a time
+#Report: How to query name of currently active window?
 #Report bug: When calling executeScriptCode for the first time on code sored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
 #Report bug: Execute Script Code is insanely slow compare to executing the code directly
 #Report bug: Pasting into the text editor causes "\n" charcters to be replacd with "\n\r"
@@ -75,13 +77,15 @@ class QPopLastUsedItem:
  # Declare list of exported functions:
 	_public_methods_ = ['set']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['item']
+	_public_attrs_ = ['item', 'ViewSignatureLong', 'ViewSignatureNice']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = []
 
 	def __init__(self):
 	 # Initialize exported attributes:
 		self.item = None
+		self.ViewSignatureLong = str()
+		self.ViewSignatureNice = str()
 	
 	def set (self, menuItem):
 		self.item = menuItem
@@ -4391,14 +4395,27 @@ def QPopConfiguratorMenuClicked( in_ctxt ):
 def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
 	#Print ("Cursor Position is " + str(CursorPos))
+	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
-	WindowSignature = getDS_ChildName(WinUnderMouse)
+	WindowSignature = getDS_ChildName(WinUnderMouse, True)
+	WindowSignatureLong = getDS_ChildName (WinUnderMouse, False)
 	WindowSignatureString = str()
+	WindowSignatureStringLong = str()
 	for sig in WindowSignature:
 		WindowSignatureString = (WindowSignatureString + sig + ";")
+	globalQPopLastUsedItem.ViewSignatureNice = WindowSignatureString
+	#Print(WindowSignatureString)
+	
+	for sigLong in WindowSignatureLong:
+		WindowSignatureStringLong = (WindowSignatureStringLong + sigLong + ";")
+	globalQPopLastUsedItem.ViewSignatureLong = WindowSignatureStringLong
+	#Print(WindowSignatureStringLong)
+	
 	if Silent != True:
 		Print ("Picked Window has the following QPop View Signature: " + str(WindowSignatureString), c.siVerbose)
 	return WindowSignatureString
+	
 def GetDefaultConfigFilePath():
 	DefaultConfigFile = ""
 	for plug in App.Plugins:
@@ -4541,23 +4558,27 @@ def ListToString(List):
 	return String
 
 
-def getDS_ChildName( hwnd):
-	Signature = list()
+def getDS_ChildName( hwnd, clean = True):
+	ViewSignature = list()
 	finished = False
-	while finished == false:
+	while finished == False:
 		WindowTitle = win32gui.GetWindowText(hwnd)
 		if WindowTitle.find ("SOFTIMAGE") == -1 and WindowTitle.find ("Softimage") == -1:  #Check if we haven'te clicked on or reached the top level window
 			if WindowTitle != "":
-				cleanWindowTitle = ""
-				for char in WindowTitle:
-					if not char.isdigit():
-						if char != " ":
-							cleanWindowTitle += char
-				Signature.append (cleanWindowTitle)
+				WindowSignature = ""
+				if clean == True:
+					for char in WindowTitle:
+						if not char.isdigit(): #Lets get rid of numbers, the View Signature should alwas be the same no matter how many copies of a window are floating around
+							if char != " ": #We're not interested in Spaces either
+								WindowSignature += char
+				if clean == False:
+					for char in WindowTitle:
+						WindowSignature += char
+				ViewSignature.append (WindowSignature)
 			hwnd = win32gui.GetParent(hwnd)
 		else:
 			finished = True
-	return Signature
+	return ViewSignature
 
 def fGetSelection():
     sel = XSIFactory.CreateActiveXObject( "XSI.Collection" )
