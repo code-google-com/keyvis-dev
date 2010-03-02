@@ -53,10 +53,9 @@ import win32com.server
 import time
 from win32com.client import constants as c
 from win32com.client import dynamic as d
-#import D:\projects\Scripting Projects\XSI\QPop\Application\Plugins\QPopFunctions.py as QF
 
 import os
-import os.path
+#import os.path
 import win32gui
 #import win32con
 import win32process #, pythoncom
@@ -602,8 +601,39 @@ class QPopCommandPlaceholder:
 		self.name = ""
 		self.UID = ""
 
+"""
+class QPopGlobals:
+ # Declare list of exported functions:
+	_public_methods_ = ['GetGlobal','SetGlobalObject', 'IsKnown']
+	 # Declare list of exported attributes
+	_public_attrs_ = ['globals','']
+	 # Declare list of exported read-only attributes:
+	_readonly_attrs_ = ['type']
+	
+	def __init__(self):
+		 # Initialize exported attributes:
+		self.type = "QPopGlobals"
+		self.globals = dict()
+		
+	def IsKnown(self, key):
+		globals = self.globals
+		if key in globals:
+			return True
+		else: 
+			return False
+	
+	def GetGlobal (self, key):
+		globals = self.globals
+		if key in globals:
+			return globals[key]
+		else: 
+			return False
+	
+	def SetGlobalObject (self, key, value):
+		globals = self.globals
+		globals[key] = value
 
-
+"""
 #==================Plugin Initialisation ====================================	
 
 def XSILoadPlugin( in_reg ):
@@ -654,31 +684,9 @@ def XSIUnloadPlugin( in_reg ):
 
 def QPopConfigurator_OnInit( ):
 	Print ("QPopConfigurator_OnInit called",c.siVerbose)
-	globalQPopConfigStatus = App.GetGlobal("globalQPopConfigStatus")
+	initQPopGlobals(True)
+	globalQPopConfigStatus = GetGlobalObject("globalQPopConfigStatus")
 	globalQPopConfigStatus.changed = True #When opening the PPG we assume that changes are made. This is a somewhat bold assumption but checking every value for changes is too laborious 
-	
-	#Lets see if this is the first time the QPop PPG is inspected
-	#THis is now done at startup. When no config file path is defined we assume it's the first startup. If one is found it's either not the first startup order
-	#the Plugin has been reinstalled, in which case the existing file will be loaded.
-	
-	"""bFirstStart = False
-	try:	
-		bFirstStart = str(App.GetValue("preferences.QPop.FirstStartup")) #We need to use GetValue 
-		Print("QpopFirstStart is: " + str(bFirstStart))
-	except: #If the value cannot be found we assume it has never been used before
-		bFirstStart = "True"
-	
-	if bFirstStart == "True": #On very first startup... 
-		Print("Qpop Configurator first startup detected, trying to find default config file!", c.siVerbose)
-		#... build and set the default config file path from the plugin location
-		DefaultConfigFile = GetDefaultConfigFilePath()
-		if DefaultConfigFile != "": #Fomally set PPG values and Preference values for FirstStartup and ConfigFile and save them
-			App.Preferences.SetPreferenceValue("QPop.QPopConfigurationFile",DefaultConfigFile)
-			PPG.QPopConfigurationFile.Value = DefaultConfigFile	
-			App.Preferences.SetPreferenceValue("QPop.FirstStartup", False)
-			PPG.FirstStartup.Value = False
-			App.Preferences.SaveChanges()
-	"""
 	
 	RefreshQPopConfigurator()
 	PPG.Refresh()
@@ -1179,7 +1187,7 @@ def QPopConfigurator_CommandCategory_OnChanged():
 
 def QPopConfigurator_CreateNewScriptItem_OnClicked():
 	Print ("QPopConfigurator_CreateNewMenuItem_OnClicked called",c.siVerbose)
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	#Print("Found globalQPopMenuItems: " + str(globalQPopMenuItems) + " of type" + str(type(globalQPopMenuItems)))
 	newMenuItem = App.CreateQPop("MenuItem")
 	
@@ -1226,7 +1234,7 @@ def QPopConfigurator_CreateNewScriptItem_OnClicked():
 	
 def QPopConfigurator_CreateNewMenu_OnClicked():
 	Print ("QPopConfigurator_CreateNewMenu_OnClicked called",c.siVerbose)
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	listKnownQPopMenuNames = list()
 	for menu in globalQPopMenus.items:
 		listKnownQPopMenuNames.append(menu.name)
@@ -1256,7 +1264,7 @@ def QPopConfigurator_DeleteScriptItem_OnClicked():
 	Print("QPopConfigurator_DeleteMenuItem_OnClicked called", c.siVerbose)
 	CurrentMenuItemName = str(PPG.MenuItemList.Value)
 	if CurrentMenuItemName != "":
-		globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+		globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 		
 		CurrentMenuItemIndex = None
 		MenuItemsEnum = list(PPG.PPGLayout.Item("MenuItemList").UIItems)
@@ -1290,7 +1298,7 @@ def QPopConfigurator_DeleteMenu_OnClicked():
 	Print("QPopConfigurator_DeleteMenu_OnClicked called", c.siVerbose)
 	CurrentMenuName = PPG.Menus.Value
 	if str(CurrentMenuName) != "":
-		globalQPopMenus = App.GetGlobal("globalQPopMenus")
+		globalQPopMenus = GetGlobalObject("globalQPopMenus")
 		CurrentMenuIndex = None
 		
 		MenusEnum = PPG.PPGLayout.Item("Menus").UIItems
@@ -1327,7 +1335,7 @@ def QPopConfigurator_RemoveMenu_OnClicked():
 		oCurrentMenuSet = getQPopMenuSetByName(CurrentMenuSetName)
 		
 		if oCurrentMenuSet != None: #The menu set was found?
-			globalQPopMenus = App.GetGlobal("globalQPopMenus")
+			globalQPopMenus = GetGlobalObject("globalQPopMenus")
 			
 			if PPG.MenuSelector.Value == 0: CurrentMenus = "A"
 			if PPG.MenuSelector.Value == 1: CurrentMenus = "B"
@@ -1345,7 +1353,7 @@ def QPopConfigurator_RemoveMenu_OnClicked():
 					
 def QPopConfigurator_AssignMenu_OnClicked():
 	Print ("QPopConfigurator_AssignMenu_OnClicked called",c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	CurrentMenuSetName = str(PPG.MenuSetChooser.Value)
 		
 	if CurrentMenuSetName != "":
@@ -1354,7 +1362,7 @@ def QPopConfigurator_AssignMenu_OnClicked():
 		oCurrentMenuSet = getQPopMenuSetByName(CurrentMenuSetName)
 		
 		if oCurrentMenuSet != None:
-			globalQPopMenus = App.GetGlobal("globalQPopMenus")
+			globalQPopMenus = GetGlobalObject("globalQPopMenus")
 			
 			if PPG.MenuSelector.Value == 0: CurrentMenus = "A"
 			if PPG.MenuSelector.Value == 1: CurrentMenus = "B"
@@ -1425,8 +1433,8 @@ def QPopConfigurator_MenuItem_Name_OnChanged():
 	Print("QPopConfigurator_MenuItem_Name_OnChanged called", c.siVerbose)
 	
 	if PPG.MenuItem_Name.Value != "":
-		globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
-		globalQPopMenus = App.GetGlobal("globalQPopMenus")
+		globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
+		globalQPopMenus = GetGlobalObject("globalQPopMenus")
 		
 		NewMenuItem_Name = ""
 		Done = False
@@ -1490,7 +1498,7 @@ def QPopConfigurator_NewMenuItem_Category_OnChanged():
 	Print("QPopConfigurator_NewMenuItem_Category_OnChanged called", c.siVerbose)
 	CurrentMenuItem_Name = PPG.MenuItemList.Value
 	CurrentMenuItem_Category = PPG.MenuItem_Category.Value
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	
 	NewMenuItem_Category = PPG.NewMenuItem_Category.Value.replace(";","_")
 
@@ -1512,7 +1520,7 @@ def QPopConfigurator_MenuItem_Switch_OnChanged():
 	Print("QPopConfigurator_NewMenuItem_Category_OnChanged called", c.siVerbose)
 	CurrentMenuItem_Name = PPG.MenuItemList.Value
 	MenuItem_Switch = PPG.MenuItem_Switch.Value
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	
 	for menuItem in globalQPopMenuItems.items:
 		if menuItem.name == CurrentMenuItem_Name:
@@ -1560,7 +1568,7 @@ def QPopConfigurator_MenuItem_CategoryChooser_OnChanged():
 	CurrentMenuItem_Category = PPG.MenuItem_Category.Value
 	NewMenuItem_Category = PPG.MenuItem_CategoryChooser.Value
 	
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	for menuItem in globalQPopMenuItems.items:
 		if menuItem.name == CurrentMenuItem_Name:
 			menuItem.category = NewMenuItem_Category 
@@ -1582,8 +1590,8 @@ def QPopConfigurator_MenuItem_Category_OnChanged():
 def QPopConfigurator_MenuItem_IsActive_OnChanged():
 	Print("QPopConfigurator_MenuItem_IsActive_OnChanged called", c.siVerbose)
 	
-	#globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	#globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	
 	oItem = None
 	RefreshRequired = False
@@ -1609,7 +1617,7 @@ def QPopConfigurator_MenuItem_IsActive_OnChanged():
 
 def QPopConfigurator_CreateMenuSet_OnClicked():
 	Print("QPopConfigurator_CreateMenuSet_OnClicked called", c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	globalQPopMenuSetNamesList = list()
 	for Set in globalQPopMenuSets.items:
 		globalQPopMenuSetNamesList.append(Set.name)
@@ -1660,7 +1668,7 @@ def QPopConfigurator_MenuSetName_OnChanged():
 
 	if NewMenuSetName != "" :
 		if NewMenuSetName != CurrentMenuSetName:		
-			globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+			globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 			globalQPopMenuSetNames = list()
 			for oMenuSet in globalQPopMenuSets.items:
 				globalQPopMenuSetNames.append(oMenuSet.name)
@@ -1684,8 +1692,8 @@ def QPopConfigurator_MenuSetName_OnChanged():
 
 def QPopConfigurator_DeleteMenuSet_OnClicked():
 	Print("QPopConfigurator_DeleteMenuSet_OnClicked called", c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	currentMenuSetName = str(PPG.MenuSets.Value)
 	menuSetNamesEnum = PPG.PPGLayout.Item ("MenuSets").UIItems
 	currentMenuSetIndex = None
@@ -1724,7 +1732,7 @@ def QPopConfigurator_DeleteMenuSet_OnClicked():
 
 def QPopConfigurator_ViewSignature_OnChanged():
 	Print("QPopConfigurator_ViewSignature_OnChanged", c.siVerbose)
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	currentSignatureName = str(PPG.ViewSignatures.Value)
 	
 	if currentSignatureName != "":
@@ -1748,7 +1756,7 @@ def QPopConfigurator_ViewSignatureName_OnChanged():
 	
 	if newSignatureName != "" :
 		if currentSignatureName != newSignatureName:
-			globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+			globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 			listKnownViewSignatureNames = list()
 			
 			currentSignatureName = PPG.ViewSignatures.Value
@@ -1776,7 +1784,7 @@ def QPopConfigurator_ViewSignatureName_OnChanged():
 
 def QPopConfigurator_AddQPopViewSignature_OnClicked():
 	Print("QPopConfigurator_AddQPopViewSignature_OnClicked called", c.siVerbose)
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	
 	newSignature = App.CreateQPop("ViewSignature")
 	listKnownViewSignatureNames = list()
@@ -1800,7 +1808,7 @@ def QPopConfigurator_DelQPopViewSignature_OnClicked():
 	Print("QPopConfigurator_DelQPopViewSignature_OnClicked called", c.siVerbose)
 	
 	if str(PPG.ViewSignatures.Value) != "":
-		globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+		globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 		currentSignatureName = PPG.ViewSignatures.Value
 		currentViewIndex = None
 		viewSignatureNamesEnum = list()
@@ -1836,7 +1844,7 @@ def QPopConfigurator_RecordViewSignature_OnChanged():
 		
 def QPopConfigurator_CreateNewDisplayContext_OnClicked():
 	Print("QPopConfigurator_CreateNewDisplayContext_OnClicked called", c.siVerbose)
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	
 	uniqueDisplayContextName = "NewDisplayContext"
 	DisplayContextNames = list()
@@ -1860,8 +1868,8 @@ def QPopConfigurator_DeleteDisplayContext_OnClicked():
 	Print("QPopConfigurator_DeleteDisplayContext_OnClicked called", c.siVerbose)
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 	if str(CurrentMenuDisplayContextName) != "":
-		globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
-		globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+		globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
+		globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 
 		CurrentContextIndex = None
 		MenuDisplayContextsEnum = PPG.PPGLayout.Item("MenuDisplayContexts").UIItems
@@ -1924,7 +1932,7 @@ def QPopConfigurator_DeleteDisplayContext_OnClicked():
 	
 def QPopConfigurator_MenuDisplayContexts_OnChanged():
 	Print("QPopConfigurator_MenuDisplayContexts_OnChanged called", c.siVerbose)
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	oCurrentMenuDisplayContext = None
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 
@@ -1945,7 +1953,7 @@ def QPopConfigurator_MenuDisplayContext_Name_OnChanged():
 	
 	if str(NewMenuDisplayContextName) != "":
 		if NewMenuDisplayContextName != CurrentMenuDisplayContextName:
-			globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+			globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 			oCurrentMenuDisplayContext = None
 			CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 			DisplayContextNames = list()
@@ -1972,7 +1980,7 @@ def QPopConfigurator_MenuDisplayContext_Name_OnChanged():
 
 def QPopConfigurator_MenuDisplayContext_ScriptLanguage_OnChanged():
 	Print("QPopConfigurator_MenuDisplayContext_ScriptLanguage_OnChanged called", c.siVerbose)
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	oCurrentMenuDisplayContext = None
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 	MenuDisplayContextLanguage = PPG.MenuDisplayContext_ScriptLanguage.Value
@@ -1992,7 +2000,7 @@ def QPopConfigurator_MenuDisplayContext_ScriptLanguage_OnChanged():
 
 def QPopConfigurator_MenuDisplayContext_Code_OnChanged():
 	Print("QPopConfigurator_MenuDisplayContext_Code_OnChanged called", c.siVerbose)
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	oCurrentMenuDisplayContext = None
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 	Code = PPG.MenuDisplayContext_Code.Value
@@ -2064,8 +2072,8 @@ def QPopConfigurator_InsertMenuContext_OnClicked():
 
 def QPopConfigurator_RemoveMenuContext_OnClicked():
 	Print("QPopConfigurator_RemoveMenuContext_OnClicked called", c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	
 	CurrentMenuSetName = PPG.MenuSets.Value
 	CurrentMenuDisplayContextName = PPG.ContextConfigurator.Value
@@ -2128,8 +2136,8 @@ def QPopConfigurator_RemoveMenuContext_OnClicked():
 	
 def QPopConfigurator_InsertSetInView_OnClicked():
 	Print("QPopConfigurator_InsertSetInView_OnClicked called", c.siVerbose)
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	CurrentViewSignatureName = str(PPG.ViewSignatures.Value)
 	CurrentMenuSetName = str(PPG.ViewMenuSets.Value)
 	oCurrentMenuSet = None
@@ -2175,8 +2183,8 @@ def QPopConfigurator_InsertSetInView_OnClicked():
 			
 def QPopConfigurator_RemoveSetInView_OnClicked():
 	Print("QPopConfigurator_RemoveSetInView_OnClicked called", c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	
 	CurrentViewSignatureName = str(PPG.ViewSignatures.Value)
 	CurrentMenuSetName = str(PPG.ViewMenuSets.Value)
@@ -2239,7 +2247,7 @@ def QPopConfigurator_InspectCommand_OnClicked():
 
 		
 def QPopConfigurator_ConvertCommandToMenuItem_OnClicked():
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	CurrentCommandUID = PPG.CommandList.Value
 	CurrentCommand = getCommandByUID(CurrentCommandUID)
 	CurrentCommandName = ""
@@ -2520,7 +2528,7 @@ def QPopConfigurator_CtxDown_OnClicked():
 def QPopConfigurator_InsertSeparator_OnClicked():
 	Print("QPopConfigurator_InsertSeparator_OnClicked called", c.siVerbose)
 	oCurrentMenu = getQPopMenuByName(PPG.MenuChooser.Value)
-	oGlobalSeparators = App.GetGlobal("globalQPopSeparators")
+	oGlobalSeparators = GetGlobalObject("globalQPopSeparators")
 	oGlobalSeparator = oGlobalSeparators.items[0]
 			
 	if oCurrentMenu != None:
@@ -2544,7 +2552,7 @@ def QPopConfigurator_Refresh_OnClicked():
 
 def QPopConfigurator_AddDisplayEvent_OnClicked():
 	Print("QPopConfigurator_AddDisplayEvent_OnClicked called", c.siVerbose)
-	oGlobalQpopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+	oGlobalQpopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 	globalQPopDisplayEvents = oGlobalQpopDisplayEvents.items
 	#Find the Display event with the highest number
 	HighestNumber = (len(globalQPopDisplayEvents)) -1
@@ -2559,7 +2567,7 @@ def QPopConfigurator_AddDisplayEvent_OnClicked():
 	
 def QPopConfigurator_DeleteDisplayEvent_OnClicked():
 	Print("QPopConfigurator_DeleteDisplayEvent_OnClicked called", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 	EventIndex = PPG.DisplayEvent.Value
 	oDisplayEvent = None
 	globalQPopDisplayEvents.deleteEvent(EventIndex)
@@ -2578,7 +2586,7 @@ def QPopConfigurator_DeleteDisplayEvent_OnClicked():
 	
 def QPopConfigurator_DisplayEvent_OnChanged():
 	Print("QPopConfigurator_DisplayEvent_OnCanged", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 
 	if PPG.DisplayEvent.Value > -1:
 		oSelectedEvent = globalQPopDisplayEvents.items[PPG.DisplayEvent.Value]
@@ -2593,7 +2601,7 @@ def QPopConfigurator_DisplayEventKey_OnChanged():
 	Print("QPopConfigurator_DisplayEventKey_OnCanged", c.siVerbose)
 	if (str(PPG.DisplayEventKey.Value) != None):
 		#Print("Display event key code entered is: " + str(PPG.DisplayEventKey.Value))
-		globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+		globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 		try:
 			oSelectedEvent = globalQPopDisplayEvents.items[PPG.DisplayEvent.Value]
 		except:
@@ -2609,7 +2617,7 @@ def QPopConfigurator_DisplayEventKey_OnChanged():
 def QPopConfigurator_DisplayEventKeyMask_OnChanged():
 	Print("QPopConfigurator_DisplayEventKey_OnCanged", c.siVerbose)
 	if (str(PPG.DisplayEventKey.Value) != None):
-		globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+		globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 		try:
 			oSelectedEvent = globalQPopDisplayEvents.items[PPG.DisplayEvent.Value]
 		except:
@@ -2862,7 +2870,7 @@ def RefreshQPopConfigurator():
 
 def RefreshMenus():
 	Print("Qpop: RefreshMenus called", c.siVerbose)
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	MenusEnum = list()
 	
 	for oMenu in globalQPopMenus.items:
@@ -2874,7 +2882,7 @@ def RefreshMenus():
 
 def RefreshMenuChooser():
 	Print("Qpop: RefreshMenuChooser called", c.siVerbose)
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	MenusEnum = list()
 
 	for oMenu in globalQPopMenus.items:
@@ -2957,7 +2965,7 @@ def RefreshMenuSetChooser():
 	MenuSetChooserEnum = list()
 	
 	if CurrentViewName != "":
-		globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+		globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 		for oViewSignature in globalQPopViewSignatures.items:
 			if oViewSignature.name == CurrentViewName:
 				oCurrentViewSignature = oViewSignature
@@ -2981,7 +2989,7 @@ def RefreshMenuSetChooser():
 	
 def RefreshViewMenuSets():
 	Print("Qpop: RefreshViewMenuSets called", c.siVerbose)
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	CurrentViewSignatureName = str(PPG.ViewSignatures.Value)
 	oCurrentViewSignature = None
 	CurrentViewMenuSets = list()
@@ -3009,7 +3017,7 @@ def RefreshViewMenuSets():
 	
 def RefreshMenuDisplayContextsList():
 	Print("Qpop: RefreshMenuDisplayContextsList called", c.siVerbose)
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	DisplayContextList = list()
 	DisplayContextEnum = list()
 	for oDisplayContext in globalQPopMenuDisplayContexts.items:
@@ -3040,7 +3048,7 @@ def RefreshMenuDisplayContextDetailsWidgets():
 
 def RefreshContextConfigurator():
 	Print("Qpop: RefreshContextConfigurator called", c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	
 	oCurrentMenuSet = None
 	CurrentContexts = None
@@ -3067,7 +3075,7 @@ def RefreshContextConfigurator():
 	
 def RefreshViewSignaturesList():
 	Print("Qpop: RefreshViewSignaturesList called", c.siVerbose)
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	viewSignatureNameListEnum = list()
 	
 	for signature in globalQPopViewSignatures.items:
@@ -3120,7 +3128,7 @@ def RefreshViewSelector():
 	CurrentViewName = PPG.View.Value
 	CurrentViewSignature = ""
 	oCurrentView = None
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	viewSelectorEnumList = list()
 	KnownViews = globalQPopViewSignatures.items
 	FirstKnownViewName = ""
@@ -3148,7 +3156,7 @@ def RefreshMenuItem_CategoryList():
 	Print("Qpop: RefreshMenuItem_CategoryList called",c.siVerbose)
 	listMenuItemCategories = list()
 	listMenuItemCategoriesEnum = list()
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	#Print ("globalQPopMenuItems knows those menuItems: " + str(globalQPopMenuItems.items))
 	
 	for menuItem in globalQPopMenuItems.items:
@@ -3169,7 +3177,7 @@ def RefreshMenuItem_CategoryList():
 
 def RefreshMenuItem_CategoryChooserList(): #This refreshes the widget that lets you change a Qpop script items category
 	Print("Qpop: RefreshMenuItem_CategoryChooserList called",c.siVerbose)
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	
 	listMenuItemCategories = list()
 	listMenuItemCategoriesEnum = list()
@@ -3189,7 +3197,7 @@ def RefreshMenuItem_CategoryChooserList(): #This refreshes the widget that lets 
 		
 def RefreshMenuItems():
 	Print ("Qpop: RefreshMenuItems called",c.siVerbose)
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	CurrentMenuItemNumber= str(PPG.MenuItems.Value)
 	CurrentMenuName = str(PPG.MenuChooser.Value)
 	listMenuItemsEnum = list()
@@ -3231,7 +3239,7 @@ def RefreshMenuItems():
 
 def RefreshMenuSets():
 	Print ("Qpop: RefreshMenuSets called",c.siVerbose)
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	MenuSetsNameList = list()
 	MenuSetsNameListEnum = list()
 	
@@ -3251,7 +3259,7 @@ def RefreshMenuSets():
 def RefreshMenuItemList():
 	Print("Qpop: RefreshMenuItemList called",c.siVerbose)
 	#knownMenuItems = globalQPopMenuItems.items
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	#Print("globalQPopMenuItems has " + str(len(globalQPopMenuItems.items)) + " menu items: "  )
 	listKnownMenuItems = list(globalQPopMenuItems.items)
 	#Print ("listKnownMenuItems is: " + str(listKnownMenuItems))
@@ -3360,7 +3368,7 @@ def RefreshCommandList():
 
 def RefreshDisplayEventsKeys():
 	Print("Qpop: RefreshDisplayEventsKeys called", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
 	if len(globalQPopDisplayEvents) > 0:
 		oSelectedEvent = globalQPopDisplayEvents[PPG.DisplayEvent.Value]
 	else:
@@ -3387,7 +3395,7 @@ def RefreshDisplayEventsKeys():
 
 def RefreshDisplayEvents():
 	Print("Qpop: RefreshDisplayEvents called", c.siVerbose)
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
 	DisplayEventsEnumList = list()
 	Counter = 0
 	for oDisplayEvent in globalQPopDisplayEvents:
@@ -3406,12 +3414,12 @@ def QPopSaveConfiguration(fileName):
 	#Lets check if the path exists
 	folderName = os.path.dirname (fileName) #.rsplit("\\")
 	if os.path.exists(folderName):
-		globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems").items
-		globalQPopMenus = App.GetGlobal("globalQPopMenus").items
-		globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets").items
-		globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts").items
-		globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures").items
-		globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+		globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems").items
+		globalQPopMenus = GetGlobalObject("globalQPopMenus").items
+		globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets").items
+		globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts").items
+		globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures").items
+		globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
 
 		oConfigDoc = DOM.Document()
 		RootNode = oConfigDoc.createElement("QPopComponents") #Create Root level node
@@ -3563,13 +3571,13 @@ def QPopLoadConfiguration(fileName):
 			QPopConfigFile = DOM.parse(fileName)
 			#In case the file could be loaded and parsed we can destroy the existing configuration in memory and refill it with the new data from the file
 			initQPopGlobals(True)
-			globalQPopSeparators = App.GetGlobal("globalQPopSeparators")
-			globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
-			globalQPopMenus = App.GetGlobal("globalQPopMenus")
-			globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
-			globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
-			globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
-			globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents")
+			globalQPopSeparators = GetGlobalObject("globalQPopSeparators")
+			globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
+			globalQPopMenus = GetGlobalObject("globalQPopMenus")
+			globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
+			globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
+			globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
+			globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
 			
 		#=== Start creating QPop objects from the file data ===
 			Components = QPopConfigFile.getElementsByTagName("QPopComponents")
@@ -3782,7 +3790,7 @@ def DisplayMenuSet( MenuSetIndex ):
 	ViewSignature = GetView()
 	t1 = time.clock() #Record time after getting current window under mouse and before assembling menu string
 
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	
 	if globalQPopViewSignatures != None:
 		oCurrentView = None
@@ -4005,7 +4013,7 @@ def DisplayMenuSet( MenuSetIndex ):
 						#Was one of the upper two menus selected?
 						if MenuItemToExecute[0] == 0 or MenuItemToExecute[0] == 1: 
 							if MenuItemToExecute[1] == len(oClickedMenu.items) + len(oClickedMenu.tempItems): #Was the menu Title selected?
-								globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+								globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 								oClickedMenuItem = globalQPopLastUsedItem.item #When clicking on any of the Menu Titles repeat the last command
 							else:
 								#Was one of the temp menu items clicked on? (Temp menu items are always listed after permanent menu items)
@@ -4018,7 +4026,7 @@ def DisplayMenuSet( MenuSetIndex ):
 						#Was one of the lower two menus selected?
 						if MenuItemToExecute[0] == 2 or MenuItemToExecute[0] == 3: 
 							if MenuItemToExecute[1] == 0: #Was the menu Title selected?
-								globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+								globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 								oClickedMenuItem = globalQPopLastUsedItem.item 
 							else:
 								#Was one of the temp menu items clicked on?
@@ -4055,7 +4063,7 @@ def QPopRepeatLastCommand_Init(in_Ctxt):
 
 def QPopRepeatLastCommand_Execute():
 	Print("QPopRepeatLastCommand_Execute called", c.siVerbose)
-	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	oQPopMenuItem = globalQPopLastUsedItem.item
 	if oQPopMenuItem != None:
 		App.QPopExecuteMenuItem ( oQPopMenuItem )
@@ -4070,7 +4078,7 @@ def QPopDisplayMenuSet_0_Init( in_Ctxt ):
 
 def QPopDisplayMenuSet_0_Execute():
 	Print("QPopDisplayMenuSet_0_Execute called", c.siVerbose)
-	if App.GetValue("Preferences.QPop.QPopEnabled") == true:
+	if App.GetValue("Preferences.QPop.QPopEnabled") == True:
 		oQPopMenuItem = DisplayMenuSet(0)
 		if oQPopMenuItem != None:
 			App.QPopExecuteMenuItem(oQPopMenuItem)
@@ -4134,7 +4142,7 @@ def QPopExecuteMenuItem_Init( in_ctxt ):
 	
 def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 	Print("QPopExecuteMenuItem_Execute called", c.siVerbose)
-	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	
 	if oQPopMenuItem != None:
 		SucessfullyExecuted = False
@@ -4230,6 +4238,8 @@ def CreateQPop_Execute( QPopType ):
 		QPopElement = QPopMissingCommand()
 	if QPopType == "CommandPlaceholder":
 		QPopElement = QPopCommandPlaceholder()
+	if QPopType == "Globals":
+		QPopElement = QPopGlobals()
 	
 	# Class MUST be wrapped before being returned:
 	if QPopElement != None:
@@ -4284,7 +4294,7 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
  	KeyPressed = in_ctxt.GetAttribute("KeyCode")
 	KeyMask = in_ctxt.GetAttribute("ShiftMask")
 
-	globalQPopDisplayEvents = App.GetGlobal("globalQPopDisplayEvents").items
+	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
 	Consumed = False
 	
 	#try:
@@ -4334,7 +4344,7 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 
 def InitQPop_OnEvent (in_ctxt):
 	Print ("QPop Startup event called",c.siVerbose)
-	initQPopGlobals(True)
+	#initQPopGlobals(True)
 	
 	#Load the QPop Config File
 	QPopConfigFile = ""
@@ -4362,7 +4372,7 @@ def InitQPop_OnEvent (in_ctxt):
 	App.QPop("") #Call Qpop to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def DestroyQPop_OnEvent (in_ctxt): 
-	globalQPopConfigStatus = App.GetGlobal("globalQPopConfigStatus")
+	globalQPopConfigStatus = GetGlobalObject("globalQPopConfigStatus")
 	if globalQPopConfigStatus.changed == True:
 		Message = ("The QPop configuration has been changed - would you like to save it?")
 		Caption = ("Save QPop configuration?")
@@ -4395,7 +4405,7 @@ def QPopConfiguratorMenuClicked( in_ctxt ):
 def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
 	#Print ("Cursor Position is " + str(CursorPos))
-	globalQPopLastUsedItem = App.GetGlobal("globalQPopLastUsedItem")
+	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
 	WindowSignature = getDS_ChildName(WinUnderMouse, True)
@@ -4434,55 +4444,55 @@ def GetCustomGFXFilesPath():
 def initQPopGlobals(force = False):
 	Print("Qpop: initQPopGlobals called", c.siVerbose)
 	if force == False:
-		if App.GetGlobal ("globalQPopLastUsedItem") == None:
-			App.SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
+		if GetGlobalObject ("globalQPopLastUsedItem") == None:
+			SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
 
-		if App.GetGlobal ("globalQPopSeparators") == None:
-			App.SetGlobalObject ("globalQPopSeparator",App.CreateQPop("Separators"))
-			oGlobalSeparators = App.GetGlobal("globalQPopSeparators")
+		if GetGlobalObject ("globalQPopSeparators") == None:
+			SetGlobalObject ("globalQPopSeparator",App.CreateQPop("Separators"))
+			oGlobalSeparators = GetGlobalObject("globalQPopSeparators")
 			oGlobalSeparators.addSeparator(App.CreateQPop("Separator"))
 			
 			
-		if (App.GetGlobal ("globalQPopMenuItems") == None):
-			App.SetGlobalObject ("globalQPopMenuItems", App.CreateQPop("MenuItems"))	
+		if (GetGlobalObject ("globalQPopMenuItems") == None):
+			SetGlobalObject ("globalQPopMenuItems", App.CreateQPop("MenuItems"))	
 
-		if (App.GetGlobal ("globalQPopMenus") == None):
-			App.SetGlobalObject ("globalQPopMenus", App.CreateQPop("Menus"))	
+		if (GetGlobalObject ("globalQPopMenus") == None):
+			SetGlobalObject ("globalQPopMenus", App.CreateQPop("Menus"))	
 
-		if (App.GetGlobal ("globalQPopMenuSets") == None):
-			App.SetGlobalObject ("globalQPopMenuSets", App.CreateQPop("MenuSets"))
+		if (GetGlobalObject ("globalQPopMenuSets") == None):
+			SetGlobalObject ("globalQPopMenuSets", App.CreateQPop("MenuSets"))
 			
-		if (App.GetGlobal ("globalQPopMenuDisplayContexts") == None):
-			App.SetGlobalObject ("globalQPopMenuDisplayContexts", App.CreateQPop("MenuDisplayContexts"))
+		if (GetGlobalObject ("globalQPopMenuDisplayContexts") == None):
+			SetGlobalObject ("globalQPopMenuDisplayContexts", App.CreateQPop("MenuDisplayContexts"))
 			
-		if (App.GetGlobal ("globalQPopViewSignatures") == None):
-			App.SetGlobalObject ("globalQPopViewSignatures", App.CreateQPop("ViewSignatures"))
+		if (GetGlobalObject ("globalQPopViewSignatures") == None):
+			SetGlobalObject ("globalQPopViewSignatures", App.CreateQPop("ViewSignatures"))
 			
-		if (App.GetGlobal ("globalQPopDisplayEvents") == None):
-			App.SetGlobalObject ("globalQPopDisplayEvents", App.CreateQPop("DisplayEvents"))
+		if (GetGlobalObject ("globalQPopDisplayEvents") == None):
+			SetGlobalObject ("globalQPopDisplayEvents", App.CreateQPop("DisplayEvents"))
 
-		if (App.GetGlobal ("globalQPopConfigStatus") == None):
-			App.SetGlobalObject ("globalQPopConfigStatus", App.CreateQPop("ConfigStatus"))
+		if (GetGlobalObject ("globalQPopConfigStatus") == None):
+			SetGlobalObject ("globalQPopConfigStatus", App.CreateQPop("ConfigStatus"))
 			
 	
 	if force == True:
-		App.SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
+		SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
 		
-		App.SetGlobalObject ("globalQPopSeparators",App.CreateQPop("Separators"))
-		oGlobalSeparators = App.GetGlobal("globalQPopSeparators")
+		SetGlobalObject ("globalQPopSeparators",App.CreateQPop("Separators"))
+		oGlobalSeparators = GetGlobalObject("globalQPopSeparators")
 		oGlobalSeparators.addSeparator(App.CreateQPop("Separator"))	
 		
-		App.SetGlobalObject ("globalQPopMenuItems", App.CreateQPop("MenuItems"))	
-		App.SetGlobalObject ("globalQPopMenus", App.CreateQPop("Menus"))	
-		App.SetGlobalObject ("globalQPopMenuSets", App.CreateQPop("MenuSets"))
-		App.SetGlobalObject ("globalQPopMenuDisplayContexts", App.CreateQPop("MenuDisplayContexts"))
-		App.SetGlobalObject ("globalQPopViewSignatures", App.CreateQPop("ViewSignatures"))
-		App.SetGlobalObject ("globalQPopDisplayEvents", App.CreateQPop("DisplayEvents"))
-		App.SetGlobalObject ("globalQPopConfigStatus", App.CreateQPop("ConfigStatus"))
+		SetGlobalObject ("globalQPopMenuItems", App.CreateQPop("MenuItems"))	
+		SetGlobalObject ("globalQPopMenus", App.CreateQPop("Menus"))	
+		SetGlobalObject ("globalQPopMenuSets", App.CreateQPop("MenuSets"))
+		SetGlobalObject ("globalQPopMenuDisplayContexts", App.CreateQPop("MenuDisplayContexts"))
+		SetGlobalObject ("globalQPopViewSignatures", App.CreateQPop("ViewSignatures"))
+		SetGlobalObject ("globalQPopDisplayEvents", App.CreateQPop("DisplayEvents"))
+		SetGlobalObject ("globalQPopConfigStatus", App.CreateQPop("ConfigStatus"))
 
 def deleteQPopMenu(MenuName):
 	if MenuName != "":
-		globalQPopMenus = App.GetGlobal("globalQPopMenus")
+		globalQPopMenus = GetGlobalObject("globalQPopMenus")
 		oMenuToDelete = getQPopMenuByName(MenuName)
 		
 		#Delete Menu from global QPop menus
@@ -4492,7 +4502,7 @@ def deleteQPopMenu(MenuName):
 			
 		
 		#Delete Menu from global QPop menu Sets too (Python does not allow for global object destruction :-( )
-		globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets").items
+		globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets").items
 		for oMenuSet in globalQPopMenuSets:
 			for oMenu in oMenuSet.AMenus:
 				if oMenu == oMenuToDelete:
@@ -4534,8 +4544,8 @@ def deleteQPopMenu(MenuName):
 def deleteQPopMenuItem(MenuItemName):				
 	Print ("Qpop: deleteQPopMenuItem called",c.siVerbose)
 
-	globalQPopMenuItems = App.GetGlobal("globalQPopMenuItems")
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	
 	for oMenuItem in globalQPopMenuItems.items:
 		if oMenuItem.name == MenuItemName:
@@ -4696,41 +4706,41 @@ def getXSITopLevelWindow():
 
 
 def getQPopMenuByName (menuName):
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	for menu in globalQPopMenus.items:
 		if menu.name == menuName:
 			return menu
 def getQPopMenuByUID (menuUID):
-	globalQPopMenus = App.GetGlobal("globalQPopMenus")
+	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	for menu in globalQPopMenus.items:
 		if menu.UID == menuUID:
 			return menu
 def getQPopMenuSetByName (menuSetName):
-	globalQPopMenuSets = App.GetGlobal("globalQPopMenuSets")
+	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
 	for oMenuSet in globalQPopMenuSets.items:
 		if oMenuSet.name == menuSetName:
 			return oMenuSet
 def getQPopMenuDisplayContextByName (menuDisplayContextName):
-	globalQPopMenuDisplayContexts = App.GetGlobal("globalQPopMenuDisplayContexts")
+	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
 	for oContext in globalQPopMenuDisplayContexts.items:
 		if oContext.name == menuDisplayContextName:
 			return oContext
 			
 def getQPopMenuItemByName (menuItemName):
-	globalQPopMenus = App.GetGlobal("globalQPopMenuItems")
+	globalQPopMenus = GetGlobalObject("globalQPopMenuItems")
 	for menuItem in globalQPopMenus.items:
 		if menuItem.name == menuItemName:
 			return menuItem
 
 def getQPopSeparatorByName (separatorName):
-	globalQPopSeparators = App.GetGlobal("globalQPopSeparators")
+	globalQPopSeparators = GetGlobalObject("globalQPopSeparators")
 	for oItem in globalQPopSeparators.items:
 		if oItem.name == separatorName:
 			return oItem
 			
 			
 def getQPopViewSignatureByName(signatureName):
-	globalQPopViewSignatures = App.GetGlobal("globalQPopViewSignatures")	
+	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")	
 	for oSignature in globalQPopViewSignatures.items:
 		if oSignature.name == signatureName:
 			return oSignature
@@ -4743,3 +4753,90 @@ def getCommandByUID(UID):
 	return None
 
 #====================== Old and experimental Stuff ==============================
+"""
+def GetGlobalObject ( in_VariableName ):
+
+	if len(in_VariableName) == 0:
+		Print("Invalid argument to GetGlobal", c.siError)
+
+	dic = GetDictionary()
+	
+	if dic.IsKnown(in_VariableName):
+		return dic.GetGlobal[in_VariableName]
+	else:
+		return None
+
+
+
+def SetGlobal( in_VariableName, in_Value ):
+
+	if len(in_VariableName) == 0:
+		Print("Invalid argument to SetGlobal", c.siError)
+
+	dic = GetDictionary()		
+	dic.SetGlobal[in_VariableName] = in_Value		
+
+
+
+def GetDictionary():
+	#global g_dictionary
+	#if g_dictionary == None:
+
+	thisPlugin = Application.Plugins("QPopConfigurator")
+	if thisPlugin.UserData == None:
+
+		# Create the dictionary on the fly.  Once created
+		# it will remain active as long as Softimage is running.
+		# (Unless you manually Unload or Reload this plugin)
+
+		# Using the built-in JScript/VBScript dictionary object
+		# which is not to be confused with XSIApplication.Dictionary
+		# thisPlugin.UserData = ActiveXObject("Scripting.Dictionary");
+		
+		thisPlugin.UserData = App.CreateQPop("Globals")
+	g_dictionary = thisPlugin.UserData
+
+	return g_dictionary
+"""
+def GetGlobalObject ( in_VariableName ):
+
+	if len(in_VariableName) == 0:
+		Print("Invalid argument to GetGlobal", c.siError)
+
+	dic = GetDictionary()
+	
+	if in_VariableName in dic:
+		return dic[in_VariableName]
+	else:
+		return None
+
+
+
+def SetGlobalObject( in_VariableName, in_Value ):
+
+	if len(in_VariableName) == 0:
+		Print("Invalid argument to SetGlobal", c.siError)
+
+	dic = GetDictionary()		
+	dic[in_VariableName] = in_Value		
+
+
+
+def GetDictionary():
+
+	thisPlugin = Application.Plugins("QPopConfigurator")
+	if thisPlugin.UserData == None:
+		Application.LogMessage("UserData is None")
+		# Create the dictionary on the fly.  Once created
+		# it will remain active as long as Softimage is running.
+		# (Unless you manually Unload or Reload this plugin)
+
+		# Using the built-in JScript/VBScript dictionary object
+		# which is not to be confused with XSIApplication.Dictionary
+		# thisPlugin.UserData = ActiveXObject("Scripting.Dictionary");
+		dict = d.Dispatch( "Scripting.Dictionary" )
+		thisPlugin.UserData = dict
+
+	g_dictionary = thisPlugin.UserData
+	#Application.LogMessage(g_dictionary)
+	return g_dictionary
