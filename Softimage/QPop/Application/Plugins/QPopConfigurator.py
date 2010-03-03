@@ -684,7 +684,7 @@ def XSIUnloadPlugin( in_reg ):
 
 def QPopConfigurator_OnInit( ):
 	Print ("QPopConfigurator_OnInit called",c.siVerbose)
-	initQPopGlobals(True)
+	initQPopGlobals(False)
 	globalQPopConfigStatus = GetGlobalObject("globalQPopConfigStatus")
 	globalQPopConfigStatus.changed = True #When opening the PPG we assume that changes are made. This is a somewhat bold assumption but checking every value for changes is too laborious 
 	
@@ -4352,18 +4352,17 @@ def InitQPop_OnEvent (in_ctxt):
 		#QPopConfigFile = App.GetValue("preferences.QPop.QPopConfigurationFile") #Does not work, QPopConfigurator custom property not yet established, need to read from preferences directly instead of using GetValue...
 		QPopConfigFile = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
 	except:
-		Print("Could not retrieve QpopConfigFile from Preferences, must be first startup -> trying to find it...",c.siVerbose)
+		Print("Could not retrieve QpopConfigFile from Preferences, must be first startup -> trying to find default file...",c.siVerbose)
 		QPopConfigFile = GetDefaultConfigFilePath()
 	if QPopConfigFile != "":
-		Print("QPopConfigFile is: " + str(QPopConfigFile), c.siVerbose)
 		try:
-			Print("Attempting to load QPop Configuration from " + str(QPopConfigFile), c.siVerbose)
+			Print("Attempting to load QPop Configuration from: " + str(QPopConfigFile), c.siVerbose)
 			result = QPopLoadConfiguration(QPopConfigFile)
 			if result:
-				Print("Loading QPop Configuration from " + str(QPopConfigFile) + " succeeded.", c.siVerbose)
+				Print("Successfully loaded QPop Config file from: " + str(QPopConfigFile) , c.siVerbose)
 				QPopConfigFile = App.Preferences.SetPreferenceValue("QPop.QPopConfigurationFile",QPopConfigFile)
 		except:
-			Print("Loading QPop Configuration from " + str(QPopConfigFile) + " failed!", c.siError)
+			Print("Failed loading QPop Config file from: " + str(QPopConfigFile) , c.siError)
 	else:
 		Print("No QPop configuration file could be found!", c.siVerbose)
 	
@@ -4753,51 +4752,7 @@ def getCommandByUID(UID):
 	return None
 
 #====================== Old and experimental Stuff ==============================
-"""
-def GetGlobalObject ( in_VariableName ):
 
-	if len(in_VariableName) == 0:
-		Print("Invalid argument to GetGlobal", c.siError)
-
-	dic = GetDictionary()
-	
-	if dic.IsKnown(in_VariableName):
-		return dic.GetGlobal[in_VariableName]
-	else:
-		return None
-
-
-
-def SetGlobal( in_VariableName, in_Value ):
-
-	if len(in_VariableName) == 0:
-		Print("Invalid argument to SetGlobal", c.siError)
-
-	dic = GetDictionary()		
-	dic.SetGlobal[in_VariableName] = in_Value		
-
-
-
-def GetDictionary():
-	#global g_dictionary
-	#if g_dictionary == None:
-
-	thisPlugin = Application.Plugins("QPopConfigurator")
-	if thisPlugin.UserData == None:
-
-		# Create the dictionary on the fly.  Once created
-		# it will remain active as long as Softimage is running.
-		# (Unless you manually Unload or Reload this plugin)
-
-		# Using the built-in JScript/VBScript dictionary object
-		# which is not to be confused with XSIApplication.Dictionary
-		# thisPlugin.UserData = ActiveXObject("Scripting.Dictionary");
-		
-		thisPlugin.UserData = App.CreateQPop("Globals")
-	g_dictionary = thisPlugin.UserData
-
-	return g_dictionary
-"""
 def GetGlobalObject ( in_VariableName ):
 
 	if len(in_VariableName) == 0:
@@ -4826,14 +4781,10 @@ def GetDictionary():
 
 	thisPlugin = Application.Plugins("QPopConfigurator")
 	if thisPlugin.UserData == None:
-		Application.LogMessage("UserData is None")
 		# Create the dictionary on the fly.  Once created
 		# it will remain active as long as Softimage is running.
 		# (Unless you manually Unload or Reload this plugin)
 
-		# Using the built-in JScript/VBScript dictionary object
-		# which is not to be confused with XSIApplication.Dictionary
-		# thisPlugin.UserData = ActiveXObject("Scripting.Dictionary");
 		dict = d.Dispatch( "Scripting.Dictionary" )
 		thisPlugin.UserData = dict
 
