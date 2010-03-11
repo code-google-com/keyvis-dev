@@ -1,0 +1,272 @@
+// Copyright (C) 1997-2006 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+//  Alias Script File
+//  MODIFY THIS AT YOUR OWN RISK
+//
+//  Creation Date:  June 2000
+//
+//  Description:
+//      Option tool callbacks for Artisan Select Paint tool.
+//
+//
+//  Procedure Name:
+//     	artSelectCallback 
+//
+//  Description:
+//      Initialize the option values.
+//
+//  Input Arguments:
+//
+//  Return Value:
+//      None.
+//
+// 
+
+
+// The following is a modified version of the original procedure of the same name and comes bundled with Ritalin for Maya.
+// If you don't have Ritalin installed you should delete this file, it will cause errors messages due to a Ritalin command
+// only present when Ritalin is actually installed.
+// Note: This file is practically unchaged except for the two additional last 2 lines in the following function
+
+
+global proc artSkinSelectInfluence(
+	string 	$artCommand,
+	string	$influence,
+	string	$shortName
+)
+// 
+//	Description:
+//		Find all the selected skinCluster (not just the active one)
+//		nodes that are influenced by $influence and connect the message
+//		attribute from the $influence transform to the .ptt attribute of the
+//		skinCluster node. 
+//
+{
+	global string $artSkinCurrentInfluence;
+	if (`textScrollList -q -ex skinClusterInflList`) {
+		if ($shortName == "") {
+			string $sel[] = `textScrollList -q -si skinClusterInflList`;
+			$shortName = $sel[0];
+			$influence = artSkinInflNameFromShortName($shortName);
+		} else {
+			textScrollList -e -si $shortName skinClusterInflList;
+			int $index[] = `textScrollList -q -sii skinClusterInflList`;
+			textScrollList -e -shi $index[0] skinClusterInflList;
+		}
+	}
+
+	// Make the proper connection.
+	string $connections[];
+	string $connection;
+
+	$artSkinCurrentInfluence = $influence;
+
+	// Get all the paintable nodes.
+	string $cmd = ($artCommand + " -q -objattrArray `currentCtx`");
+	string $paintClusters = `eval $cmd`;
+
+	string $buffer[];
+	tokenize( $paintClusters, " ", $buffer );
+
+	// Find the skin cluster is connected to the influence node.
+	string	$item;
+	for ( $item in $buffer ) {
+		string $itemElems[];
+		tokenize( $item, ".", $itemElems );
+		int $nbElem = size($itemElems);
+		if ( ( $nbElem < 3 ) || ( $itemElems[2] != "paintWeights") ) {
+			continue;
+		}
+		
+		// We have the skinCluster node.
+		string $skinCluster = $itemElems[1];
+		string $skinAttr 	= $itemElems[0] + "." + $itemElems[1] + "." + $itemElems[2];
+
+		int $foundConnection = false;
+		$connections = `listConnections ($skinCluster + ".matrix")`;
+		
+		for ( $connection in $connections ) {
+			if ($connection == $influence) {
+				$foundConnection = true;
+				break;
+			}
+		}
+		
+		// Delete any existing connection to the 
+		// .ptt attribute of the skinCluster.
+		$connections = `listConnections $skinCluster`;
+		for( $connection in $connections ) {
+			if ($connection != "") {
+				if (isConnected(($connection + ".message"),($skinCluster + ".ptt"))) {
+					disconnectAttr(($connection + ".message"), ($skinCluster + ".ptt"));
+					hilite -u $connection;
+				}
+			}
+		}
+			
+		// Now make the connection to the new influence node.
+		if ($foundConnection && size($influence) != 0) {
+			connectAttr ($influence + ".message") ($skinCluster + ".ptt");
+			hilite $influence;
+
+			// Notify the context about the change.
+			string $cmd = ($artCommand + " -e -pas \"" + $skinAttr + "\" `currentCtx`");
+			eval( $cmd );
+		}
+	}
+	
+	$cmd = ($artCommand + " -e -inf \"" + $influence + "\" `currentCtx`");
+	eval( $cmd );
+	
+	string $centercommand = python ("setCamRotatePivots()");
+	evalDeferred $centercommand;
+}
+
+
+global proc artSkinToggleHoldAttr(
+	string 	$artCommand
+)
+//
+//  Description:
+//      Called when the "Toggle Hold Weight" button is pushed.
+//      It checks to see if the "lock weights" attribute is true 
+//		or false for the selected influence object, and uses 
+//		setAttr to toggle the state. It also appends or removes 
+//		the word "(Hold)", to the joints that are in hold mode.   
+//
+{
+	// Toggle the 'lockWeights' attribute on the 
+	// currently selected influence object.
+
+	global string $artSkinCurrentInfluence;
+	if ( "" == $artSkinCurrentInfluence ) { 
+		// Nothing selected - print a warning message.
+		string $warn = (uiRes("m_artAttrSkinCallback.kNoInfluence"));
+		warning( $warn );
+		return;	
+	}
+
+	string $influenceShortName = artAttrSkinShortName($artSkinCurrentInfluence);
+
+	// Toggle the attribute.
+	string $newLabel = $influenceShortName;
+	string $tmp[];
+	tokenize( $newLabel," ", $tmp );
+	string $currentInfWithoutHold = $tmp[0];
+
+	if (`attributeQuery -n $artSkinCurrentInfluence -ex liw`) {
+		string $cmdString = ("setAttr " + $artSkinCurrentInfluence + ".liw ");
+		if ( `getAttr ($artSkinCurrentInfluence + ".liw")`) {
+			$cmdString += "0";
+			$newLabel = $currentInfWithoutHold;
+		} else {
+			$cmdString += "1";
+ 			$newLabel  = ($currentInfWithoutHold+" (Hold)");
+		}
+		evalEcho $cmdString;
+	}
+	else {
+		// No lockWeight attribute - print an error message.
+		string $format = (uiRes("m_artAttrSkinCallback.kNoLockWeights"));
+		string $errMsg = `format -stringArg $artSkinCurrentInfluence $format`;
+		error( $errMsg );
+	}
+
+	// Update the UI (add/remove "Hold" string)
+	int $ii;
+	string	$infs[] = `textScrollList -q -si skinClusterInflList`;
+	int $index[] = `textScrollList -q -sii skinClusterInflList`;
+	for ($ii = 0; $ii < size($infs); $ii++) {
+		// Fixup the label (remove \HOLD\)
+		string $tmp[];
+		tokenize( $infs[$ii], " ", $tmp );
+		string $label = $tmp[0];
+		if ( $label == $currentInfWithoutHold || $label == $artSkinCurrentInfluence ) {
+			// Found the menu item to change.
+			textScrollList -e -rii $index[$ii] skinClusterInflList;
+			textScrollList -e -ap $index[$ii] $newLabel
+				skinClusterInflList;
+			textScrollList -e -sii $index[$ii] -shi $index[$ii] skinClusterInflList;
+			break;
+		}
+	}
+}
+
+
+global proc artSkinPaintCallback(
+	string 	$artCommand,
+	string	$currTool
+)
+//
+//	Description:
+//		Skin Weights Paint tool callbacks.
+//
+{
+	// Define the common callbacks.
+	artAttrCommonCallback( $artCommand, $currTool );
+
+	// Define the button callback.
+	button -e
+		-c ( "artSkinToggleHoldAttr " + $artCommand )
+	artSkinToggleHoldButton;
+
+	string $rebuildJointListCmd = ("artAttrSkinJointMenu( \"skinClusterInflList\", \""+ $artCommand+"\" )");
+	radioButtonGrp -e
+		-cc1 ("optionVar -iv sortSkinPaintList 1;"+$rebuildJointListCmd)
+		skinPaintSortRadio;
+	radioButtonGrp -e
+		-cc2 ("optionVar -iv sortSkinPaintList 2;"+$rebuildJointListCmd)
+		skinPaintSortRadio;
+}
+
+
+// =======================================================
+// Main Procedure.
+// =======================================================
+
+global proc artAttrSkinCallback(
+	string	$artCommand
+)
+{
+	source "artisanCallback.mel";
+	source "artAttrCallback.mel";
+
+	string $currContext = `currentCtx`;
+	string $currTool	= `contextInfo -c $currContext`;
+
+	// Basic Brush frameLayout.
+	artisanBrushCallback( $artCommand, $currTool );
+
+	// //////////////////////////////////////////// 
+	// Skin Paint Weight frameLayout callback.
+	artSkinPaintCallback( $artCommand, $currTool );
+
+	// Stroke frameLayout.
+	artisanStrokeCallback( $artCommand, $currTool );
+
+	// Stroke frameLayout.
+	artisanPressureCallback( $artCommand, $currTool );
+	
+	// Display frameLayout.
+	artisanDisplayCallback( $artCommand, $currTool );
+}
