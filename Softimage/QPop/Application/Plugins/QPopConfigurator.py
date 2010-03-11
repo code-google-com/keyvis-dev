@@ -1,10 +1,12 @@
 # Script Name: QPopConfigurator Plugin
 # Host Application: Softimage
-# Last changed: 2010-01-21 
+# Last changed: 2010-03-11 
 # Author: Stefan Kubicek
 # Mail: stefan@keyvis.at
 
-#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature
+#Use dictionaries in globalQPopMenus, ..Items etc? 
+#Pass global objects (Menus, items, etc) on to menu and switch items init and/or execute code functions
+#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature (TO find currently active Window?). Already implementred in GetView?
 #TODO: Add categorisation to menus (like script items)
 #TODO: Add create switch button
 #TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
@@ -657,7 +659,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_0", "QPopDisplayMenuSet_0" )
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_1", "QPopDisplayMenuSet_1" )
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_2", "QPopDisplayMenuSet_2" )
-	#in_reg.RegisterCommand( "QPopDisplayMenuSet_3", "QPopDisplayMenuSet_3" )
+	in_reg.RegisterCommand( "QPopDisplayMenuSet_3", "QPopDisplayMenuSet_3" )
 
 	in_reg.RegisterCommand( "QPopRepeatLastCommand", "QPopRepeatLastCommand" )
 	
