@@ -1,6 +1,6 @@
-# Ritalin for Maya version 2008 and higher
+# Ritalin for Maya version 2008, 2009 and 2010
 # Author: Stefan Kubicek 
-# Last changed: 2010-03-03, 23:00
+# Last changed: 2010-03-16, 23:00
 # File Version 1.4
 # Code Dependencies: Sproing_Functions.py
 
@@ -16,6 +16,12 @@ import maya.mel as mel
 true = True
 false = False
 
+#Lets get rid of Ritalin Script jobs that might be lurking in Maya's guts from a previous session
+try:
+	cleanRitalinScriptJobs()
+except:
+	pass
+	
 global RitalinFirstCall; RitalinFirstCall  = False
 global RitalinHonorInfluenceJoints; RitalinHonorInfluenceJoints = True
 global RitalinEnabled; RitalinEnabled = False;
@@ -23,6 +29,9 @@ global RitalinScriptJobs; RitalinScriptJobs = []
 global resetTumbleToolToCOI; resetTumbleToolToCOI = False
 global RitalinDoComputeBB; RitalinDoComputeBB = True
 
+# ======================
+# Some helpful functions
+# ======================
 def Error (strError): #requires maya.mel
 	try: #we need to "try" here, otherwise Python throws an error making our custom error message disappear at the status line
 		mel.eval('error ' + '"' + strError + '"')
@@ -46,10 +55,13 @@ def cleanRitalinScriptJobs():
 			Warning ("Job " + str(job) + " could not be killed!")
 	RitalinScriptJobs = []
 
-cleanRitalinScriptJobs()
 
 
-def setCamRotatePivots():
+# ===========================================================================================================================
+# Main function that computes the Camera's tumble pivot position based on the current selection or specific objects passed in
+# ===========================================================================================================================
+
+def setCamRotatePivots(oObjects = []):
 	global RitalinDoComputeBB
 	
 	if RitalinDoComputeBB == True:
@@ -76,49 +88,55 @@ def setCamRotatePivots():
 		Cams = cmds.ls( dag = true, cameras = True )
 		if RitalinEnabled == True:
 			
+			CheckPaintTool = True
 			Continue = False
-			Selec = cmds.ls( selection = True )
 			ComputeCenterAlreadyDone = False
-
+			
+			if len(oObjects) == 0:
+				#print("No Objects given to compute BB for, using current selection instead!")
+				Selec = cmds.ls( selection = True )
+			else:
+				Selec = oObjects
+				CheckPaintTool = False
+			
 			if len(Selec) > 0:
 				X = 0.0; Y = 0.0; Z = 0.0
-				#Let's find out if we are in skin weights paint mode
-				currCtx = cmds.currentCtx(); 
-				currTool = None
-				try: 
+				if CheckPaintTool:
+					#Let's find out if we are in skin weights paint mode
+					currCtx = cmds.currentCtx(); 
+					currTool = None
+					#try: 
 					currTool = cmds.contextInfo (currCtx, c = True);
-					#print("CurrentTool is:" + str(currTool))
-				except: DoNothing = True
-				if RitalinHonorInfluenceJoints == True: #In case we are painting skin weights we can ignore everything and just concentrate on the currently active skin joint
-					if currTool == "artAttrSkin": 
-						whichTool = cmds.artAttrSkinPaintCtx (currCtx, query = True, whichTool = True)
-						if whichTool == "skinWeights": #Yes we are in skin paint wights mode
-							influenceJoint = ""
-							#Find the currently active joint for which weights are being painted
-							influenceJoint = cmds.artAttrSkinPaintCtx  (currCtx, query = true, influence = true) 
-							if influenceJoint != "":
-								influenceJoint += (".rotatePivot")
-								BB = cmds.exactWorldBoundingBox (influenceJoint)
-								X = ((BB[0] + BB[3])/2)
-								Y = ((BB[1] + BB[4])/2)
-								Z = ((BB[2] + BB[5])/2)
-								ComputeCenterAlreadyDone = True
-								Continue = True			
-			
-				if ComputeCenterAlreadyDone == False:  #Standard computation in case we are not in paintSkinWeights mode
+					#except: DoNothing = True
+					if RitalinHonorInfluenceJoints == True: #In case we are painting skin weights we can ignore everything and just concentrate on the currently active skin joint
+						if currTool == "artAttrSkin":
+							whichTool = cmds.artAttrSkinPaintCtx (currCtx, query = True, whichTool = True)
+							if whichTool == "skinWeights": #Yes we are in skin paint wights mode
+								influenceJoint = ""
+								#Find the currently active joint for which weights are being painted
+								influenceJoint = cmds.artAttrSkinPaintCtx  (currCtx, query = true, influence = true) 
+								if influenceJoint != "":
+									influenceJoint += (".rotatePivot")
+									BB = cmds.exactWorldBoundingBox (influenceJoint)
+									X = ((BB[0] + BB[3])/2)
+									Y = ((BB[1] + BB[4])/2)
+									Z = ((BB[2] + BB[5])/2)
+									ComputeCenterAlreadyDone = True
+									Continue = True			
+				
+				if ComputeCenterAlreadyDone == False:  #Standard computation in case we are not in paintSkinWeights mode or don't care if we are
 					Joints = []
 					stdObjects = []
 					
-					for o in Selec: 
-						specialTransformTypes = ["selectHandle", "rotatePivot", "scalePivot", "Axis"]
-						
+					specialTransformTypes = ["selectHandle", "rotatePivot", "scalePivot", "Axis"]
+					for o in Selec: 						
 						if (cmds.nodeType (o) == "joint"): 
-							#Maya can't compute BB of joints (API bug?) so we have to work around this by dealing with joints rotatePivots instead
+							#Maya can't compute BB of joints (API bug?) so we have to work around this by dealing with joint's rotatePivots instead
 							#print ("Selected node is of type joint")
 							isSpecialType = False
 							for Type in specialTransformTypes:
 								if o.find (Type) > -1:
-									#print ("Selected node is of special TransformType")
+									#print ("Selected node is of a special Transform Type")
 									stdObjects.append(o)
 									isSpecialType = True
 									break
@@ -150,7 +168,6 @@ def setCamRotatePivots():
 
 					if len(stdObjects) > 0:
 						BB = cmds.exactWorldBoundingBox (stdObjects) #Do standard BB computation 
-						#print ("Bounding Box is: " + str(BB))
 						X = ((BB[0] + BB[3])/2)
 						Y = ((BB[1] + BB[4])/2)
 						Z = ((BB[2] + BB[5])/2)
@@ -170,6 +187,9 @@ def setCamRotatePivots():
 					except: 
 						Warning("Ritalin: Setting camera tumble pivot on " + cam + "failed!")
 
+# =============================================================================================================
+# Some management functions (UI callbacks, interaction functions and script jobs that trigger the above function
+# =============================================================================================================
 
 def toggleRitalinHonorSkinJoints():
 	global RitalinHonorInfluenceJoints
@@ -182,6 +202,14 @@ def toggleRitalin ():
 	enableRitalin(not RitalinEnabled)
 	print ("toggleRitalin()")
 	
+
+# =============================================================================================================
+# Thhis function establishes the two sctipt Jobs due to which camera tumble pivot location must happen: 
+# Changing a slection (clicking an object) or dragging the mouse (moving an object)
+# A special case is also handled when the paint skin weights tool is active and use has selected the skin influence
+# by right-dragging and selecting "Paint Skin Weights" from the popup marking menu
+# =============================================================================================================
+
 def enableRitalin(enable = True): 
 	global RitalinEnabled
 	global resetTumbleToolToCOI
@@ -196,11 +224,11 @@ def enableRitalin(enable = True):
 			cleanRitalinScriptJobs()
 	
 			#The dragRelease event is king, it always gets fired when the user presses the mouse button or moves the mouse with the button pressed - exactly what we need
-			Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('DragRelease', "cmds.undoInfo (swf = False); setCamRotatePivots(); RitalinDoComputeBB = True; cmds.undoInfo (swf = True)"))
+			Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('DragRelease',  "cmds.undoInfo (swf = False); setCamRotatePivots(); RitalinDoComputeBB = True; cmds.undoInfo (swf = True)"))
 			RitalinScriptJobs.append(Job1)		
 
 			#Due to a bug in Maya we need to run the following event at least once to ensure that the DragRelease event gets triggered above. Otherwise it never kicks in  :-(
-			Job2 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('SelectionChanged', "RitalinDoComputeBB = True; cmds.undoInfo (swf = False); setCamRotatePivots(); toggleComputation(); cmds.undoInfo (swf = True)"))
+			Job2 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('SelectionChanged',  "cmds.undoInfo (swf = False); RitalinDoComputeBB = True;  setCamRotatePivots(); toggleComputation(); cmds.undoInfo (swf = True)")) 
 			RitalinScriptJobs.append(Job2)
 		
 			#createRitalinCameraScriptJobs()
@@ -217,16 +245,17 @@ def enableRitalin(enable = True):
 		RitalinEnabled = False
 		#print ("enableRitalin(False)")
 		
-
+#Often both script jobs are called simultaneously
+#The following function is a speed optimisation so the bounding box of the selection is only computed once in most cases
 def toggleComputation():
 	global RitalinDoComputeBB;
 	RitalinDoComputeBB == False
 	currCtx = cmds.currentCtx(); 
-	currTool = None
-	try: 
-		currTool = cmds.contextInfo (currCtx, c = True);
-	except:
-		RitalinDoComputeBB == False
+	#currTool = None
+	#try: 
+	currTool = cmds.contextInfo (currCtx, c = True);
+	#except:
+		#RitalinDoComputeBB == False
 	
 	if currTool == "selectTool":
 		RitalinDoComputeBB = True
@@ -268,11 +297,7 @@ def buildRitalinToolsMenu():
 	cmds.menuItem (RitalinEnableMenuItem, edit = True, checkBox = RitalinEnabled)
 	cmds.menuItem (RitalinHonorJointsMenuItem, edit = True, checkBox = RitalinHonorInfluenceJoints)
 
-"""
-def loadSkinPaintToolIntergration():
-	print("Paint integration init called")
-	mel.eval('source "Ritalin_artSkinSelectInfluence.mel"')
-"""
+
 #MEL wrapper for toggleRitalin
 mel.eval ("global proc  toggleRitalin () {python(\"toggleRitalin ()\");}")
 #MEL wrapper for toggleRitalinHonorSkinJoints
@@ -280,6 +305,6 @@ mel.eval ("global proc toggleRitalinHonorSkinJoints () {python(\"toggleRitalinHo
 
 #Create the Ritalins Menu after Maya has started up and there is a UI we can attach to:
 cmds.evalDeferred ("createRitalinToolsMenu();", lowestPriority = True)  
-#Upon Chris Staber's request Ritalin is now enabled by default
-cmds.evalDeferred ("enableRitalin(True);", lowestPriority = True)
-#cmds.evalDeferred ("loadSkinPaintToolIntergration();",lowestPriority = True) 
+cmds.evalDeferred ("enableRitalin(True);", lowestPriority = False)
+
+
