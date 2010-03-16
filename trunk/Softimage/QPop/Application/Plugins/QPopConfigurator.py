@@ -718,6 +718,7 @@ def QPopConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("FirstStartup",c.siBool,True,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
 	oCustomProperty.AddParameter2("QPopConfigurationFile",c.siString,DefaultConfigFile,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("CommandCategory",c.siString,"_ALL_",null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	oCustomProperty.AddParameter2("CommandFilter",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("CommandList",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("ShowHotkeyableOnly",c.siBool,True,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
 	oCustomProperty.AddParameter2("ShowScriptingNameInBrackets",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -866,13 +867,16 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddItem ("ShowHotkeyableOnly", "Show Commands supporting key assignment only")
 	#oLayout.AddSpacer()
 	oLayout.AddItem ("ShowScriptingNameInBrackets", "Show ScriptingName in Brackets")
+	oLayout.AddRow()
 	oLayout.AddEnumControl ("CommandCategory", None, "Category",c.siControlCombo)
-	#oLayout.AddSpacer(0,10)
+	oLayout.AddItem ("CommandFilter", "Filter Word", c.siControlString)
+	oLayout.EndRow()
 	oCommands = oLayout.AddEnumControl ("CommandList", None, "Commands",c.siControlListBox)
 	oCommands.SetAttribute(c.siUINoLabel, True)
 	oLayout.AddRow()
-	oLayout.AddButton("InspectCommand", "Inspect Command")
-	oLayout.AddButton("ConvertCommandToMenuItem", "Create Script Item from selected Command")
+	oLayout.AddButton("InspectCommand", "Inspect Cmd")
+	oLayout.AddButton("ExecuteCommand", "Execute Cmd")
+	oLayout.AddButton("ConvertCommandToMenuItem", "Create Script Item from Cmd")
 	oLayout.EndRow()
 	oLayout.EndGroup()
 
@@ -897,6 +901,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oMenuItems.SetAttribute(c.siUINoLabel, True)
 	oLayout.AddRow()
 	oLayout.AddButton("CreateNewScriptItem","Create new Script Item")
+	oLayout.AddButton("CreateNewSwitchItem","Create new Switch Item")
 	oLayout.AddButton("DeleteScriptItem","Delete selected Script Item")
 	oLayout.EndRow()
 	oLayout.EndGroup()
@@ -1182,10 +1187,14 @@ def QPopConfigurator_QPopConfigurationFile_OnChanged():
 	App.Preferences.SetPreferenceValue("QPop.FirstStartup",False)
 	
 def QPopConfigurator_CommandCategory_OnChanged():
-	Print("ExportSettings_OnChanged called", c.siVerbose)
+	Print("CommandCategory_OnChanged called", c.siVerbose)
 	RefreshCommandList ()
 	PPG.Refresh()
 
+def QPopConfigurator_CommandFilter_OnChanged():
+	Print("CommandFilter_OnChanged called", c.siVerbose)
+	RefreshCommandList ()
+	PPG.Refresh()
 
 def QPopConfigurator_CreateNewScriptItem_OnClicked():
 	Print ("QPopConfigurator_CreateNewMenuItem_OnClicked called",c.siVerbose)
@@ -1222,6 +1231,54 @@ def QPopConfigurator_CreateNewScriptItem_OnClicked():
 	Language = "Python"	
 	newMenuItem.language = Language #Set Scritping language 
 	newMenuItem.code = ('Application.LogMessage("Empty QPop Menu Item executed")')
+	globalQPopMenuItems.addMenuItem(newMenuItem)
+
+	RefreshMenuItem_CategoryList()
+	PPG.MenuItem_Category.Value = MenuItem_Category
+	RefreshMenuItemList()
+
+	PPG.MenuItemList.Value = uniqueName
+	PPG.CommandList.Value = ""
+	PPG.Menus.Value = ""
+	RefreshMenuItemDetailsWidgets()
+	PPG.Refresh()
+	
+def QPopConfigurator_CreateNewSwitchItem_OnClicked():
+	Print ("QPopConfigurator_CreateNewMenuItem_OnClicked called",c.siVerbose)
+	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
+	newMenuItem = App.CreateQPop("MenuItem")
+	
+	#Find the Category for the new menu item
+	MenuItem_Category = str()
+	MenuItem_Category = PPG.MenuItem_Category.Value
+	
+	#try:
+	#try to get the current menuItemCategory for the new menu item's category
+	if (MenuItem_Category == "") or (MenuItem_Category == "_ALL_"):
+		MenuItem_Category = "Switches"	
+	#else:
+		#MenuItem_Category = (str(PPG.MenuItem_Category.Value))
+	#except:
+		#MenuItem_Category = "Miscellaneous"	
+	
+	#Find a unique name for the new menu item
+	listKnownMenuItem_Names = list()
+	for menuItem in globalQPopMenuItems.items:
+		listKnownMenuItem_Names.append (menuItem.name)
+
+	uniqueName = getUniqueName("New Scripted Switch Item",listKnownMenuItem_Names)
+	
+	newMenuItem.name = uniqueName
+	newMenuItem.UID = XSIFactory.CreateGuid()
+	newMenuItem.category = MenuItem_Category
+	
+	#Language = PPG.MenuItem_ScriptLanguage.Value
+	#if str(Language) == "":
+	Language = "Python"	
+	newMenuItem.language = Language #Set Scritping language
+	newMenuItem.code = ("def Switch_Init(): #Don't rename this function\n\t#Add your code here, return value must be boolean and represents the current state of the switch (on or off)\n\treturn False\n\n")
+	newMenuItem.code += ("def Switch_Execute(): #Don't rename this function\n\t#Add your code here, it gets executed when the switch item is clicked on in a QPop menu \n\tpass\n\n")
+	
 	globalQPopMenuItems.addMenuItem(newMenuItem)
 
 	RefreshMenuItem_CategoryList()
@@ -2247,6 +2304,15 @@ def QPopConfigurator_InspectCommand_OnClicked():
 		if CurrentCommand.Name != "":
 			App.EditCommand(CurrentCommand.Name)
 
+def QPopConfigurator_ExecuteCommand_OnClicked():
+	CurrentCommandUID = PPG.CommandList.Value
+	CurrentCommand = getCommandByUID(CurrentCommandUID)
+	#CurrentCommand = App.Commands(CurrentCommandName)
+	#Print(CurrentCommandName)
+	if CurrentCommand != None:
+		if CurrentCommand.Name != "":
+			CurrentCommand.Execute()
+			
 		
 def QPopConfigurator_ConvertCommandToMenuItem_OnClicked():
 	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
@@ -2418,31 +2484,32 @@ def QPopConfigurator_FindItem_OnClicked():
 	if oSelectedMenu != None:
 		oSelectedItem = oSelectedMenu.items[PPG.MenuItems.Value]
 		if oSelectedItem != None:
-			if oSelectedItem.type != "Separator":
-			
-				if oSelectedItem.type == "Command":
-					PPG.CommandCategory.Value = oSelectedItem.categories[0]
-					RefreshCommandList()
-					PPG.CommandList.Value = oSelectedItem.UID
-					PPG.Menus.Value = ""
-					PPG.MenuItemList.Value = ""
-					RefreshMenuItemDetailsWidgets()
-					
-				if oSelectedItem.type == "QPopMenu":
-					PPG.Menus.Value = oSelectedItem.name
-					PPG.CommandList.Value = ""
-					PPG.MenuItemList.Value = ""
-					RefreshMenuItemDetailsWidgets()
-					
-				if oSelectedItem.type == "QPopMenuItem":
-					PPG.MenuItem_Category.Value = oSelectedItem.category
-					RefreshMenuItemList ( )
-					PPG.MenuItemList.Value = oSelectedItem.name
-					PPG.Menus.Value = ""
-					PPG.CommandList.Value = ""
-					RefreshMenuItemDetailsWidgets()
+			#if oSelectedItem.type != "Separator":
+			if oSelectedItem.type == "CommandPlaceholder":
+				oCmd = getCommandByUID(oSelectedItem.UID)
+				PPG.CommandCategory.Value = oCmd.categories[0]
+				PPG.CommandFilter.Value = ""
+				RefreshCommandList()
+				PPG.CommandList.Value = oCmd.UID
+				PPG.Menus.Value = ""
+				PPG.MenuItemList.Value = ""
+				RefreshMenuItemDetailsWidgets()
+				
+			if oSelectedItem.type == "QPopMenu":
+				PPG.Menus.Value = oSelectedItem.name
+				PPG.CommandList.Value = ""
+				PPG.MenuItemList.Value = ""
+				RefreshMenuItemDetailsWidgets()
+				
+			if oSelectedItem.type == "QPopMenuItem":
+				PPG.MenuItem_Category.Value = oSelectedItem.category
+				RefreshMenuItemList ( )
+				PPG.MenuItemList.Value = oSelectedItem.name
+				PPG.Menus.Value = ""
+				PPG.CommandList.Value = ""
+				RefreshMenuItemDetailsWidgets()
 
-				PPG.Refresh()
+			PPG.Refresh()
 
 
 def QPopConfigurator_CtxUp_OnClicked():
@@ -3362,9 +3429,15 @@ def RefreshCommandList():
 		NameInList = oEntry[0]
 		while NameInList in CommandListEnum: #Some softimage commands appear more than once with the same name, we need to make sure that the name is unique in the list, so we add spaces
 				NameInList = NameInList + " "
-
-		CommandListEnum.append("(c) " + NameInList)
-		CommandListEnum.append(oEntry[1])
+		if PPG.CommandFilter.Value != "":
+			if oEntry[0].find(PPG.CommandFilter.Value) > -1:
+				CommandListEnum.append("(c) " + NameInList)
+				CommandListEnum.append(oEntry[1])
+		else:
+			CommandListEnum.append("(c) " + NameInList)
+			CommandListEnum.append(oEntry[1])
+			
+	
 	PPG.PPGLayout.Item ("CommandList").UIItems = CommandListEnum
 	
 
