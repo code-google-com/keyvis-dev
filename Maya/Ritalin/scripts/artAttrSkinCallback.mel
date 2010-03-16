@@ -46,7 +46,7 @@
 // The following is a modified version of the original procedure of the same name and comes bundled with Ritalin for Maya.
 // If you don't have Ritalin installed you should delete this file, it will cause errors messages due to a Ritalin command
 // only present when Ritalin is actually installed.
-// Note: This file is practically unchaged except for the two additional last 2 lines in the following function
+// Note: This file is practically unchaged except for the few additional last lines in the following function "artSkinSelectInfluence"...
 
 
 global proc artSkinSelectInfluence(
@@ -138,8 +138,12 @@ global proc artSkinSelectInfluence(
 	$cmd = ($artCommand + " -e -inf \"" + $influence + "\" `currentCtx`");
 	eval( $cmd );
 	
-	string $centercommand = python ("setCamRotatePivots()");
-	evalDeferred $centercommand;
+	if (python("RitalinHonorInfluenceJoints") == 1) {
+		if ($influence != "") {
+			string $centercommand = ("python (\"RitalinDoComputeBB = True; setCamRotatePivots([\\\"" + $influence + ".rotatePivot" + "\\\"])\")");
+			evalDeferred ($centercommand);
+		}
+	}
 }
 
 
