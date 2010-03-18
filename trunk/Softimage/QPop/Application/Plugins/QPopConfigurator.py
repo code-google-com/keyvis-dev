@@ -1,19 +1,23 @@
 # Script Name: QPopConfigurator Plugin
 # Host Application: Softimage
-# Last changed: 2010-03-11 
+# Last changed: 2010-03-18, 02:00 hrs 
 # Author: Stefan Kubicek
-# Mail: stefan@keyvis.at
+# mail: stefan@keyvis.at
 
-#Use dictionaries in globalQPopMenus, ..Items etc? 
-#Pass global objects (Menus, items, etc) on to menu and switch items init and/or execute code functions
-#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature (TO find currently active Window?). Already implementred in GetView?
+#TODO: Implement QPop command as Python lib so it can be called as a function and not as a command (prevents QPop from appearing as the Undo/Repeat item in the edit menu)
+#TODO: Fix Qpop menu not appearing on second monitor
+#TODO: Catch situations when script item is flagged as switch but is lacking necessary functions
+#TODO: Use dictionaries in globalQPopMenus, ..Items etc? 
+#TODO: Pass global objects (Menus, items, etc) on to menu and switch items init and/or execute code functions
+#TODO: Implement language query box when creating new script items or menu items
+#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature (TO find currently active Window?). Already implemented in GetView?
 #TODO: Add categorisation to menus (like script items)
-#TODO: Add create switch button
 #TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
 #TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
 #Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 
+#Report: It is not possible to prevent a command from being repeatable (should be a capability flag of the command, or at least tied to noLogging)
 #Report: it is not possible to set more than one shader ball model at a time
 #Report: How to query name of currently active window?
 #Report bug: When calling executeScriptCode for the first time on code sored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
@@ -29,9 +33,9 @@
 
 #TODO: Correctly set default script code when creating Script Items and menus Items with other language than Python.
 #TODO: Cleanup function do delete empty script items and menus
-
+#TODO: 
 #TODO: Reverse menu entry display order for menus C & D? or make it an option?
-#TODO: How to find out the currently selected mesh object when in sunComponent selection mode and no component is selected?
+#TODO: How to find out the currently selected mesh object when in sunComponent selection mode and no component is selected? -> set filter to object, get type of sel, return back to prev. filter mode
 
 #Cleanup: Rename QpopMenuItem class and related functions (e.g. getQpopMenuItemByName) to "ScriptItem"
 #Cleanup: Make all class attributes start with upper-case characters to  
@@ -91,7 +95,24 @@ class QPopLastUsedItem:
 	def set (self, menuItem):
 		self.item = menuItem
 	
+class QPopLastClickedItem:
+ # Declare list of exported functions:
+	_public_methods_ = ['set']
+	 # Declare list of exported attributes
+	_public_attrs_ = ['item', 'ViewSignatureLong', 'ViewSignatureNice']
+	 # Declare list of exported read-only attributes:
+	_readonly_attrs_ = []
+
+	def __init__(self):
+	 # Initialize exported attributes:
+		self.item = None
+		self.ViewSignatureLong = str()
+		self.ViewSignatureNice = str()
 	
+	def set (self, menuItem):
+		self.item = menuItem
+
+		
 class QPopSeparator:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -646,11 +667,10 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Major = 0
 	in_reg.Minor = 98
 
-	#Register the configurator custom property
+	#Register the QPop configurator custom property
 	in_reg.RegisterProperty( "QPopConfigurator" )
 	
 	#Register Custom QPop Commands
-	#in_reg.RegisterCommand( "QPopGetView", "QPopGetView" )
 	in_reg.RegisterCommand( "CreateQPop" , "CreateQPop" )
 	#in_reg.RegisterCommand( "QPopDisplayMenuSet" , "QPopDisplayMenuSet" )
 	in_reg.RegisterCommand( "QPopExecuteMenuItem" , "QPopExecuteMenuItem" )
@@ -660,7 +680,6 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_1", "QPopDisplayMenuSet_1" )
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_2", "QPopDisplayMenuSet_2" )
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_3", "QPopDisplayMenuSet_3" )
-
 	in_reg.RegisterCommand( "QPopRepeatLastCommand", "QPopRepeatLastCommand" )
 	
 	#Register Menus
@@ -669,9 +688,8 @@ def XSILoadPlugin( in_reg ):
 	#Register events
 	in_reg.RegisterEvent( "InitQPop", c.siOnStartup )
 	in_reg.RegisterEvent( "DestroyQPop", c.siOnTerminate)
-	#in_reg.RegisterEvent( "QPopRecordViewSignature" , c.siOnKeyDown ) 
-	in_reg.RegisterEvent( "QPopCheckDisplayEvents" , c.siOnKeyDown ) #Does not work very well, using simple commands to trigger menuSet rendering instead
-	
+	in_reg.RegisterEvent( "QPopCheckDisplayEvents" , c.siOnKeyDown )
+	in_reg.RegisterTimerEvent( "QPopExecution", 0, 1 )
 	return True
 
 def XSIUnloadPlugin( in_reg ):
@@ -1331,7 +1349,7 @@ def QPopConfigurator_DeleteScriptItem_OnClicked():
 		
 		deleteQPopMenuItem(CurrentMenuItemName)
 
-		#Select the next logial menu item in the list for convenience
+		#Select the next logical menu item in the list for convenience
 		if CurrentMenuItemIndex != None:
 			if CurrentMenuItemIndex < 2: #The first menuItem was selected?
 				if len(MenuItemsEnum) > 2: # and more than 1 menu items in the enum list left?
@@ -3862,7 +3880,7 @@ def QPopLoadConfiguration(fileName):
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQPopMenuSet_Execute called", c.siVerbose)
 	t0 = time.clock() #Record time before getting current window under mouse
-	ViewSignature = GetView()
+	ViewSignature = GetView(True)
 	t1 = time.clock() #Record time after getting current window under mouse and before assembling menu string
 
 	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
@@ -4081,7 +4099,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				#===========================================================================
 				oClickedMenuItem = None
 				if ((MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1)): #Was something clicked in any of the menus?
-					Print("MenuItemToExecute is: " + str(MenuItemToExecute))
+					#Print("MenuItemToExecute is: " + str(MenuItemToExecute))
 					oClickedMenu = oMenus[MenuItemToExecute[0]] #get the clicked QpopMenu object
 					if oClickedMenu != None:
 						
@@ -4122,8 +4140,6 @@ def DisplayMenuSet( MenuSetIndex ):
 								oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]]
 				
 				if oClickedMenuItem != None:
-					#if (oClickedMenuItem.type == "Command") or (oClickedMenuItem.type =="QPopMenuItem"):
-					#Print("Clicked Menu Item is of type: " + oClickedMenuItem.type)
 					return oClickedMenuItem
 				else:
 					return None
@@ -4153,9 +4169,11 @@ def QPopDisplayMenuSet_0_Init( in_Ctxt ):
 
 def QPopDisplayMenuSet_0_Execute():
 	Print("QPopDisplayMenuSet_0_Execute called", c.siVerbose)
-	if App.GetValue("Preferences.QPop.QPopEnabled") == True:
+	if App.Preferences.GetPreferenceValue("QPop.QPopEnabled"):
 		oQPopMenuItem = DisplayMenuSet(0)
 		if oQPopMenuItem != None:
+			globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+			globalQPopLastUsedItem.set(oQPopMenuItem)			
 			App.QPopExecuteMenuItem(oQPopMenuItem)
 				
 
@@ -4169,10 +4187,12 @@ def QPopDisplayMenuSet_1_Init( in_Ctxt ):
 
 def QPopDisplayMenuSet_1_Execute():
 	Print("QPopDisplayMenuSet_1_Execute called", c.siVerbose)
-	if App.GetValue("Preferences.QPop.QPopEnabled") == true:
+	if App.Preferences.GetPreferenceValue("QPop.QPopEnabled"):
 		oQPopMenuItem = DisplayMenuSet(1)
 		if oQPopMenuItem != None:
-			App.QPopExecuteMenuItem ( oQPopMenuItem )
+			globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+			globalQPopLastUsedItem.set(oQPopMenuItem)			
+			App.QPopExecuteMenuItem(oQPopMenuItem)
 
 def QPopDisplayMenuSet_2_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4183,11 +4203,13 @@ def QPopDisplayMenuSet_2_Init( in_Ctxt ):
 	return True				
 
 def QPopDisplayMenuSet_2_Execute():
-	Print("QPopDisplayMenuSet_1_Execute called", c.siVerbose)
-	if App.GetValue("Preferences.QPop.QPopEnabled") == true:
+	Print("QPopDisplayMenuSet_2_Execute called", c.siVerbose)
+	if App.Preferences.GetPreferenceValue("QPop.QPopEnabled"):
 		oQPopMenuItem = DisplayMenuSet(2)
 		if oQPopMenuItem != None:
-			App.QPopExecuteMenuItem ( oQPopMenuItem )
+			globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+			globalQPopLastUsedItem.set(oQPopMenuItem)			
+			App.QPopExecuteMenuItem(oQPopMenuItem)
 
 def QPopDisplayMenuSet_3_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4198,11 +4220,13 @@ def QPopDisplayMenuSet_3_Init( in_Ctxt ):
 	return True				
 
 def QPopDisplayMenuSet_3_Execute():
-	Print("QPopDisplayMenuSet_1_Execute called", c.siVerbose)
-	if App.GetValue("Preferences.QPop.QPopEnabled") == true:
+	Print("QPopDisplayMenuSet_3_Execute called", c.siVerbose)
+	if App.Preferences.GetPreferenceValue("QPop.QPopEnabled"):
 		oQPopMenuItem = DisplayMenuSet(3)
 		if oQPopMenuItem != None:
-			App.QPopExecuteMenuItem ( oQPopMenuItem )	
+			globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+			globalQPopLastUsedItem.set(oQPopMenuItem)			
+			App.QPopExecuteMenuItem(oQPopMenuItem)
 
 def QPopExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
@@ -4217,7 +4241,7 @@ def QPopExecuteMenuItem_Init( in_ctxt ):
 	
 def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 	Print("QPopExecuteMenuItem_Execute called", c.siVerbose)
-	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+	#oQPopMenuItem = GetGlobalObject("globalQPopLastUsedItem").item
 	
 	if oQPopMenuItem != None:
 		SucessfullyExecuted = False
@@ -4226,15 +4250,15 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 		#Therefore we only work with command names instead and look up the command for execution again,
 		#which imposes a neglectable speed penalty.
 
-		if oQPopMenuItem.type == "CommandPlaceholder": #If we get a string then we're executing a previous command
-			oCmd= App.Commands(oQPopMenuItem.name) #We use the name to identify the command becasue finding by UID would be too slow 
-			try:
-				oCmd.Execute()
-				SucessfullyExecuted = True	
-				globalQPopLastUsedItem.set(oQPopMenuItem) #Just set the name of commands for safety (Commands cannot be executed anymore after undo)
-			except:
-				SucessfullyExecuted = False
-				raise
+		if oQPopMenuItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
+			oCmd= App.Commands(oQPopMenuItem.name) #We use the name to identify the command because finding by UID would be too slow 
+			#try:
+			oCmd.Execute()
+			SucessfullyExecuted = True
+			#globalQPopLastUsedItem.set(oQPopMenuItem) #Just set the name of commands for safety (Commands cannot be executed anymore after undo)
+			#except:
+			#SucessfullyExecuted = False
+				#raise
 					
 		if oQPopMenuItem.type == "QPopMenuItem":
 			Code = (oQPopMenuItem.code)
@@ -4259,7 +4283,7 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 				Print("QPop Menu item '" + oQPopMenuItem.name + "' has no code to execute!",c.siWarning)
 		
 		if SucessfullyExecuted == True:
-			globalQPopLastUsedItem.set(oQPopMenuItem)
+			#globalQPopLastUsedItem.set(oQPopMenuItem)
 			return True
 		else:	
 			Print("An error occured executing QPop menu item '" + oQPopMenuItem.name + "! Please see scripteditor for details.", c.siError)
@@ -4366,7 +4390,8 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
 
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
- 	KeyPressed = in_ctxt.GetAttribute("KeyCode")
+ 	#Application.DelayedRefresh()
+	KeyPressed = in_ctxt.GetAttribute("KeyCode")
 	KeyMask = in_ctxt.GetAttribute("ShiftMask")
 
 	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
@@ -4384,37 +4409,44 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 		
 	if App.Preferences.GetPreferenceValue("QPop.DisplayEventKeys_Record") == True:
 		#if App.GetValue("preferences.QPop.DisplayEventKeys_Record") == True and Consumed == False: #Is user currently recording key events? We must query this from the PPG rather than from Preferences because the preference might not be known yet
-		oSelectedEvent = globalQPopDisplayEvents[App.Preferences.GetPreferenceValue("QPop.DisplayEvent")] #Get the currently selected event in the list
-		oSelectedEvent.key = KeyPressed
-		oSelectedEvent.keyMask = KeyMask
+		oSelectedEvent = None
+		oSelectedEvent = globalQPopDisplayEvents[App.Preferences.GetPreferenceValue("QPop.DisplayEvent")] #Get the currently selected display event number in the selection list
+		if oSelectedEvent != None:
+			oSelectedEvent.key = KeyPressed
+			oSelectedEvent.keyMask = KeyMask
 		
+			App.SetValue("preferences.QPop.DisplayEventKey", KeyPressed)
+			App.SetValue("preferences.QPop.DisplayEventKeyMask", KeyMask)
 		App.SetValue("preferences.QPop.DisplayEventKeys_Record",False)
-		App.SetValue("preferences.QPop.DisplayEventKey", KeyPressed)
-		App.SetValue("preferences.QPop.DisplayEventKeyMask", KeyMask)
+		
 		#Consumed = True
 	#except:
 		#Print("Something happened")
 	
-	try:
-		if (App.Preferences.GetPreferenceValue("QPop.QPopEnabled") == True) and (Consumed == False): #Is Qpop enabled and the event has't been consumed yet?
-			#Check known display events whether there is one that should react to the currently pressed key(s)
-			for oDispEvent in globalQPopDisplayEvents:
-				if ((oDispEvent.key == KeyPressed) and (oDispEvent.keyMask == KeyMask )):
-					Consumed = True
+	#try:
+	if (App.Preferences.GetPreferenceValue("QPop.QPopEnabled") == True) and (Consumed == False): #Is Qpop enabled and the event has't been consumed yet?
+		#Check known display events whether there is one that should react to the currently pressed key(s)
+		for oDispEvent in globalQPopDisplayEvents:
+			if ((oDispEvent.key == KeyPressed) and (oDispEvent.keyMask == KeyMask )):
+				Consumed = True
+				
+				#Finally display the corresponding menu set associated with the display event and get the users input
+				oChosenMenuItem = DisplayMenuSet( oDispEvent.number)
+				
+				if oChosenMenuItem != None:
+					globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+					globalQPopLastUsedItem.set(oChosenMenuItem)
+					QPopTimer = Application.EventInfos( "QPopExecution" )
 					
-					#Finally display the corresponding menu set associated with the display event and get the users input
-					oChosenMenuItem = DisplayMenuSet( oDispEvent.number)
+					#Reset the timer with a millisecond so the menu item can be executed right after this function has finished
+					QPopTimer.Reset( 0, 1 )
 					
-					if oChosenMenuItem != None:
-						#Execute the menu item chosen by the user
-						App.QPopExecuteMenuItem(oChosenMenuItem)
 				break #We only care for the first found display event assuming there are no duplicates
-	except:
-		Print("An error occured in QPopCheckDisplayEvents while trying to display a menu!", c.siError)
+	#except:
+		#Print("An error occured in QPopCheckDisplayEvents while trying to display a menu!", c.siError)
 			
 	# Tell Softimage that the event has been consumed
 	in_ctxt.SetAttribute("Consumed",Consumed)
-
 
 
 def InitQPop_OnEvent (in_ctxt):
@@ -4459,6 +4491,59 @@ def DestroyQPop_OnEvent (in_ctxt):
 				Caption = ("Saving failed, save a QPop Configuration backup file?")
 				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
 
+		
+def QPopExecution_OnEvent (in_ctxt):
+	Print("QPopExecute Event called, c.siVerbose")
+	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+	
+	if globalQPopLastUsedItem != None:	
+		if globalQPopLastUsedItem.item != None:
+			oItem = globalQPopLastUsedItem.item
+			SucessfullyExecuted = False
+			
+			#Instead of the actual command only it's name is given because Softimage has the tendency to forget commands (not always the
+			#same command that was referenced) after undoing it when the command is referenced by a python object (e.g. a list or custom ActiveX class). 
+			#Therefore we only work with command names instead and look up the command for execution again,
+			#which imposes a neglectable speed penalty.
+
+			if oItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
+				oCmd = App.Commands(oItem.name) #We use the name to identify the command because finding by UID would be too slow 
+				#try:
+				oCmd.Execute()
+				SucessfullyExecuted = True
+				#globalQPopLastUsedItem.set(globalQPopLastUsedItem) 
+				#except:
+				#SucessfullyExecuted = False
+					#raise
+						
+			if oItem.type == "QPopMenuItem":
+				Code = (oItem.code)
+				if Code != "":
+					Language = (oItem.language)
+					if Language != None or Language != "":
+						if oItem.switch == True:  #Are we dealing with a switch item?
+							#try:
+							App.ExecuteScriptCode( Code, Language, "Switch_Execute", [] )
+							SucessfullyExecuted = True
+							#except:
+								#SucessfullyExecuted = False
+								#raise	
+						else:
+							#TODO: ExecuteScriptCode should execute a specific function that can return objects to inspect
+							#try:
+							App.ExecuteScriptCode( Code, Language, "","") #, [ProcName], [Params] )
+							SucessfullyExecuted = True
+							#except:
+								#SucessfullyExecuted = False
+								#raise
+					else:
+						Print("QPop Menu item '" + oItem.name + "' has no specific scipting language set!",c.siWarning)
+				else:
+					Print("QPop Menu item '" + oItem.name + "' has no code to execute!",c.siWarning)
+			
+			if SucessfullyExecuted != True:
+				Print("An error occured executing QPop menu item '" + oItem.name + "! Please see script editor for details.", c.siError)
+				
 #===================================== Custom Property Menu callbacks  ============================================================
 
 def QPopConfigurator_Init( in_ctxt ):
@@ -4489,12 +4574,10 @@ def GetView( Silent = False):
 	for sig in WindowSignature:
 		WindowSignatureString = (WindowSignatureString + sig + ";")
 	globalQPopLastUsedItem.ViewSignatureNice = WindowSignatureString
-	#Print(WindowSignatureString)
 	
 	for sigLong in WindowSignatureLong:
 		WindowSignatureStringLong = (WindowSignatureStringLong + sigLong + ";")
 	globalQPopLastUsedItem.ViewSignatureLong = WindowSignatureStringLong
-	#Print(WindowSignatureStringLong)
 	
 	if Silent != True:
 		Print ("Picked Window has the following QPop View Signature: " + str(WindowSignatureString), c.siVerbose)
@@ -4522,7 +4605,7 @@ def initQPopGlobals(force = False):
 			SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
 
 		if GetGlobalObject ("globalQPopSeparators") == None:
-			SetGlobalObject ("globalQPopSeparator",App.CreateQPop("Separators"))
+			SetGlobalObject ("globalQPopSeparators",App.CreateQPop("Separators"))
 			oGlobalSeparators = GetGlobalObject("globalQPopSeparators")
 			oGlobalSeparators.addSeparator(App.CreateQPop("Separator"))
 			
@@ -4663,20 +4746,7 @@ def getDS_ChildName( hwnd, clean = True):
 		else:
 			finished = True
 	return ViewSignature
-
-def fGetSelection():
-    sel = XSIFactory.CreateActiveXObject( "XSI.Collection" )
-    for o in App.Selection:
-        sel.Add(o)
-    return sel
-
-def fGetChildren (colObjects):
-    colChildren = XSIFactory.CreateActiveXObject( "XSI.Collection" )
-    for o in objs:
-        for child in o.Children: colChildren.Add (child)
-    fGetChildren (colChildren)
-    return colChildren
-        
+      
 def splitAlphaNum(name):
 	name = str(name)
 	namelength = (len(name))
@@ -4758,27 +4828,8 @@ def getUniqueSpacedName (name, listOfNames):
 		return uniqueName
 
 	
-def CollectHandles( handle , winList ):
-	winList.append(handle)
-	return True
- 
+
    
-def getXSITopLevelWindow():
-	#Returns the handle to the XSI top-level window
-	wins = []
-	win32gui.EnumWindows(CollectHandles, wins) 
-	currentId = os.getpid()
-	for handle in wins:
-		tid, pid = win32process.GetWindowThreadProcessId(handle)
-		if pid == currentId:
-			title = win32gui.GetWindowText(handle)
-			if title.startswith('SOFTIMAGE') or title.startswith('Autodesk Softimage'):
-				#Print("Softimage window found!")
-				#win32gui.SetWindowText(handle,Windowtext)
-				return handle
-	return None	
-
-
 def getQPopMenuByName (menuName):
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	for menu in globalQPopMenus.items:
@@ -4826,7 +4877,6 @@ def getCommandByUID(UID):
 			return Cmd
 	return None
 
-#====================== Old and experimental Stuff ==============================
 
 def GetGlobalObject ( in_VariableName ):
 
@@ -4866,3 +4916,40 @@ def GetDictionary():
 	g_dictionary = thisPlugin.UserData
 	#Application.LogMessage(g_dictionary)
 	return g_dictionary
+	
+
+#====================== Old and experimental Stuff ==============================
+"""
+def CollectHandles( handle , winList ):
+	winList.append(handle)
+	return True
+ 
+def getXSITopLevelWindow():
+	#Returns the handle to the XSI top-level window
+	wins = []
+	win32gui.EnumWindows(CollectHandles, wins) 
+	currentId = os.getpid()
+	for handle in wins:
+		tid, pid = win32process.GetWindowThreadProcessId(handle)
+		if pid == currentId:
+			title = win32gui.GetWindowText(handle)
+			if title.startswith('SOFTIMAGE') or title.startswith('Autodesk Softimage'):
+				#Print("Softimage window found!")
+				#win32gui.SetWindowText(handle,Windowtext)
+				return handle
+	return None		
+
+
+def fGetChildren (colObjects):
+    colChildren = XSIFactory.CreateActiveXObject( "XSI.Collection" )
+    for o in objs:
+        for child in o.Children: colChildren.Add (child)
+    fGetChildren (colChildren)
+    return colChildren
+	
+def fGetSelection():
+    sel = XSIFactory.CreateActiveXObject( "XSI.Collection" )
+    for o in App.Selection:
+        sel.Add(o)
+    return sel
+"""
