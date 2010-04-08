@@ -971,6 +971,9 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	#oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	#oCodeEditor.SetAttribute(c.siUILineNumbering, True )
 	#oCodeEditor.SetAttribute(c.siUIFolding, True )
+	#oLayout.Item("MenuItem_Code").SetAttribute(c.siUIKeywordFile, "H:/projects/Tools/Softimage/QPop/Data/Preferences/Python.keywords")
+	#oLayout.Item("MenuItem_Code").SetAttribute(c.siUILineNumbering, True)
+	#oLayout.Item("MenuItem_Code").SetAttribute(c.siUIFolding, True)
 	
 	"""
 	#JScript snippets for later use
@@ -980,7 +983,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIType, siControlTextEditor )
 	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUILineNumbering, true)
 	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIToolbar, true)
-	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIFolding, true)
+	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIFolding, True)
 	//QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIKeywordFile, "D:/projects/Scripting Projects/XSI/QPop/Data/Preferences/Python.keywords")
 	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUIKeywords, "def pass")
 	QPC.PPGLayout.Item("MenuItem_Code").SetAttribute(siUICommentColor, 0xFF00FF)
