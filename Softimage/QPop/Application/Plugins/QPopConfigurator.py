@@ -1,9 +1,26 @@
 # Script Name: QPopConfigurator Plugin
 # Host Application: Softimage
-# Last changed: 2010-03-18, 02:00 hrs 
+# Last changed: 2010-04-09, 11:00 hrs 
 # Author: Stefan Kubicek
 # mail: stefan@keyvis.at
 
+
+#Article about delayed events 
+
+#TODO: Try finding currently active view by comparing Rectangles of available views
+"""
+Views = Application.Desktop.ActiveLayout.Views
+#Application.LogMessage(Views[1].FullName)
+for view in Views:
+	if view.Floating:
+		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle))
+	
+Sel = Views[1].GetAttributeValue("selection")
+Application.LogMessage(Sel)
+"""
+#TODO: Check if Execute buttons are in sync with standard context-, menu- and menu-item-code execution 
+#TODO: Query intended script language when creating new contexts
+#TODO: Finish Correctly set default script code when creating Script Items and menus Items with other language than Python.
 #TODO: Evaluate if using a Selection Info class and event is really faster when evaluating contexts
 #TODO: Create texture Editor and Render Tree example menu items
 #TODO: How to find out the "active" (current) texture projection of an object? (for create subprojection) - You cant
@@ -18,7 +35,7 @@
 #TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature (TO find currently active Window?). Already implemented in GetView?
 #TODO: Add categorisation to menus (like script items)
 #TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
-#TODO: Add (ms) and (maybe also) the number in front of the Menu Set in Selector 
+
 #Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 
@@ -36,9 +53,8 @@
 #Report (custom?) commands not supporting key assignment are still listed in the keyboard mapping command list (should better not be listed?) 
 
 #Report:/Request: There is no command to query the currently selected objects in case filter is set to component and no component is selected.
-#TODO: Correctly set default script code when creating Script Items and menus Items with other language than Python.
 #TODO: Cleanup function do delete empty script items and menus
-#TODO: 
+
 #TODO: Reverse menu entry display order for menus C & D? or make it an option?
 #TODO: How to find out the currently selected mesh object when in sunComponent selection mode and no component is selected? -> set filter to object, get type of sel, return back to prev. filter mode
 
@@ -765,6 +781,7 @@ def QPopConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("CommandList",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("ShowHotkeyableOnly",c.siBool,True,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
 	oCustomProperty.AddParameter2("ShowScriptingNameInBrackets",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	oCustomProperty.AddParameter2("ShowSwitchesOnly",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	
 	oCustomProperty.AddParameter2("View",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuContexts",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -939,7 +956,12 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	
 	oLayout.AddRow()
 	oLayout.AddGroup("Existing QPop Script Items")
+	
+	oLayout.AddRow()
 	oLayout.AddEnumControl ("MenuItem_Category", None, "Category",c.siControlCombo)
+	oLayout.AddItem ("ShowSwitchesOnly", "Show Switches Only")
+	oLayout.EndRow()
+	
 	oMenuItems = oLayout.AddEnumControl ("MenuItemList", None, "Menu Item List",c.siControlListBox)
 	oMenuItems.SetAttribute(c.siUINoLabel, True)
 	oLayout.AddRow()
@@ -1043,8 +1065,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oSets = oLayout.AddEnumControl ("ViewMenuSets", None, "Menu Sets",c.siControlListBox)
 	oSets.SetAttribute(c.siUINoLabel, True)
 	oLayout.AddRow()
-	oLayout.AddButton ("InsertSetInView", "Insert Qpop Menu Set")
-	oLayout.AddButton ("RemoveSetInView", "Remove QPop Menu Set")
+	oLayout.AddButton ("InsertSetInView", "Insert Menu Set")
+	oLayout.AddButton ("RemoveSetInView", "Remove Menu Set")
 	oLayout.AddButton ("MoveSetUpInView", "Move Up")
 	oLayout.AddButton ("MoveSetDownInView", "Move Down")
 	oLayout.EndRow()
@@ -1062,7 +1084,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddItem("MenuSetName","Name")
 	oLayout.AddRow()
 	oLayout.AddButton("CreateMenuSet", "Create new Menu Set")
-	oLayout.AddButton("DeleteMenuSet", "Delete Menu Set")
+	oLayout.AddButton("DeleteMenuSet", "Delete Selected Menu Set")
 	oLayout.EndRow()
 	oLayout.EndGroup() #Edit QpopMenuSets
 	
@@ -1071,7 +1093,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	
 	oQG = oLayout.AddGroup("", False, 25)
 	#oQG.SetAttribute(c.siUIWidthPercentage, 25)
-	oLayout.AddStaticText("Select Quad")
+	oLayout.AddStaticText("Select a Quad")
 	oMenuSelector2 = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Select a Context", c.siControlIconList)
 	oMenuSelector2.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector2.SetAttribute(c.siUIColumnCnt,2)
@@ -1620,12 +1642,14 @@ def QPopConfigurator_NewMenuItem_Category_OnChanged():
 			
 	RefreshMenuItem_CategoryList()
 	
-	if CurrentMenuItem_Category != "_ALL_": PPG.MenuItem_Category.Value = NewMenuItem_Category
+	if CurrentMenuItem_Category != "_ALL_": 
+		PPG.MenuItem_Category.Value = NewMenuItem_Category
+		
 	RefreshMenuItem_CategoryChooserList()
 	RefreshMenuItemList()
-	PPG.MenuItemList.Value = CurrentMenuItem_Name
+
 	RefreshMenuItemDetailsWidgets()
-	PPG.NewMenuItem_Category.Value = menuItem.category
+	#PPG.NewMenuItem_Category.Value = menuItem.category
 	PPG.Refresh()
 
 def QPopConfigurator_MenuItem_Switch_OnChanged():
@@ -1638,6 +1662,15 @@ def QPopConfigurator_MenuItem_Switch_OnChanged():
 		if menuItem.name == CurrentMenuItem_Name:
 			menuItem.switch = MenuItem_Switch
 
+def QPopConfigurator_ShowSwitchesOnly_OnChanged():
+	Print("QPopConfigurator_ShowSwitchesOnly_OnChanged called", c.siVerbose)
+	RefreshMenuItemList()
+	if PPG.ShowSwitchesOnly.Value:
+		if PPG.MenuItemList.Value not in PPG.PPGLayout.Item("MenuItemList").UIItems:
+			PPG.MenuItemList.Value = ""
+	
+	RefreshMenuItemDetailsWidgets()
+	PPG.Refresh()
 	
 def QPopConfigurator_MenuItem_ScriptLanguage_OnChanged():
 	Print("QPopConfigurator_MenuItem_ScriptLanguage_OnChanged called", c.siVerbose)
@@ -1696,6 +1729,9 @@ def QPopConfigurator_MenuItem_CategoryChooser_OnChanged():
 def QPopConfigurator_MenuItem_Category_OnChanged():
 	Print("QPopConfigurator_MenuItem_Category_OnChanged called", c.siVerbose)
 	RefreshMenuItemList()
+	if PPG.MenuItemList.Value not in PPG.PPGLayout.Item("MenuItemList").UIItems:
+		PPG.MenuItemList.Value = ""
+			
 	RefreshMenuItemDetailsWidgets()
 	PPG.Refresh()
 
@@ -2556,8 +2592,13 @@ def QPopConfigurator_FindItem_OnClicked():
 				
 			if oSelectedItem.type == "QPopMenuItem":
 				PPG.MenuItem_Category.Value = oSelectedItem.category
+				PPG.ShowSwitchesOnly.Value = False
 				RefreshMenuItemList ( )
-				PPG.MenuItemList.Value = oSelectedItem.name
+				if oSelectedItem.name in PPG.PPGLayout.Item("MenuItemList").UIItems:
+					PPG.MenuItemList.Value = oSelectedItem.name
+				else:
+					PPG.MenuItemList.Value = ""
+				#PPG.MenuItemList.Value = oSelectedItem.name
 				PPG.Menus.Value = ""
 				PPG.CommandList.Value = ""
 				RefreshMenuItemDetailsWidgets()
@@ -2613,8 +2654,8 @@ def QPopConfigurator_CtxDown_OnClicked():
 	oMenuSet = getQPopMenuSetByName (SelectedMenuSetName)
 	oContext = getQPopMenuDisplayContextByName (SelectedContextName)
 	
-	if ((oMenuSet != None) and (oContext != None)):
-		if PPG.MenuSelector.Value == 1:
+	if (oMenuSet != None) and (oContext != None):
+		if PPG.MenuSelector.Value == 0:
 			Contexts = oMenuSet.AContexts
 			Menus = oMenuSet.AMenus
 			MenuList = ContextList = "A"
@@ -2630,21 +2671,21 @@ def QPopConfigurator_CtxDown_OnClicked():
 			Contexts = oMenuSet.DContexts
 			Menus = oMenuSet.DMenus
 			MenuList = ContextList = "D"
-		
-		ContextIndex = Contexts.index(oContext)
-		if ContextIndex < (len(Contexts) -1):
-			oMenu = Menus[ContextIndex]
-			oMenuSet.removeContext (ContextIndex, ContextList)
-			oMenuSet.insertContext (ContextIndex +1 , oContext, ContextList)
-			oMenuSet.removeMenuAtIndex (ContextIndex, MenuList)
-			oMenuSet.insertMenuAtIndex (ContextIndex +1, oMenu, MenuList)
-			RefreshContextConfigurator()
-			PPG.MenuContexts.Value = PPG.MenuContexts.Value +1
-			RefreshMenuContexts()
-			RefreshMenuSetDetailsWidgets()
-			RefreshMenuItems()
-			RefreshMenuItemDetailsWidgets()
-			PPG.Refresh()
+		if Contexts != None:
+			ContextIndex = Contexts.index(oContext)
+			if ContextIndex < (len(Contexts) -1):
+				oMenu = Menus[ContextIndex]
+				oMenuSet.removeContext (ContextIndex, ContextList)
+				oMenuSet.insertContext (ContextIndex +1 , oContext, ContextList)
+				oMenuSet.removeMenuAtIndex (ContextIndex, MenuList)
+				oMenuSet.insertMenuAtIndex (ContextIndex +1, oMenu, MenuList)
+				RefreshContextConfigurator()
+				PPG.MenuContexts.Value = PPG.MenuContexts.Value +1
+				RefreshMenuContexts()
+				RefreshMenuSetDetailsWidgets()
+				RefreshMenuItems()
+				RefreshMenuItemDetailsWidgets()
+				PPG.Refresh()
 
 
 def QPopConfigurator_InsertSeparator_OnClicked():
@@ -3091,11 +3132,12 @@ def RefreshMenuSetChooser():
 		for oViewSignature in globalQPopViewSignatures.items:
 			if oViewSignature.name == CurrentViewName:
 				oCurrentViewSignature = oViewSignature
+				#break
 		
 		if oCurrentViewSignature != None:
 			MenuSets = oCurrentViewSignature.menuSets
 			for oMenuSet in MenuSets:
-				MenuSetChooserEnum.append(oMenuSet.name)
+				MenuSetChooserEnum.append("(ms-" + str(oCurrentViewSignature.menuSets.index(oMenuSet)) + ") " + oMenuSet.name)
 				MenuSetChooserEnum.append(oMenuSet.name)
 
 	PPG.PPGLayout.Item("MenuSetChooser").UIItems = MenuSetChooserEnum
@@ -3105,7 +3147,7 @@ def RefreshMenuSetChooser():
 			PPG.MenuSetChooser.Value = CurrentChosenMenuSetName
 	if str(PPG.MenuSetChooser.Value) == "":
 		if len(MenuSetChooserEnum) > 0:
-			PPG.MenuSetChooser.Value = MenuSetChooserEnum[0]
+			PPG.MenuSetChooser.Value = MenuSetChooserEnum[1]
 				
 				
 	
@@ -3130,7 +3172,7 @@ def RefreshViewMenuSets():
 		if (len(CurrentViewMenuSets) > 0):
 			Print(oCurrentViewSignature.name + " contains " + str(len(CurrentViewMenuSets)) +" menusets")
 			for oMenuSet in CurrentViewMenuSets:
-				CurrentViewMenuSetsEnum.append("(ms) " + oMenuSet.name)
+				CurrentViewMenuSetsEnum.append("(ms-" + str(oCurrentViewSignature.menuSets.index(oMenuSet)) + ") " + oMenuSet.name)
 				CurrentViewMenuSetsEnum.append(oMenuSet.name)
 			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
 		else:
@@ -3348,7 +3390,10 @@ def RefreshMenuItems():
 			if str(oItem.type) == "CommandPlaceholder" or str(oItem.type) == "MissingCommand":
 				prefix = "(c)  "
 			if str(oItem.type) == "QPopMenuItem":
-				prefix = "(s)  "
+				if oItem.switch:
+					prefix = "(sw)  "
+				else:
+					prefix = "(s)  "
 			if str(oItem.type) == "QPopMenu":
 				prefix = "(m) "
 			MissingName = ("_DELETED ITEM_")
@@ -3398,31 +3443,32 @@ def RefreshMenuItemList():
 	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	#Print("globalQPopMenuItems has " + str(len(globalQPopMenuItems.items)) + " menu items: "  )
 	listKnownMenuItems = list(globalQPopMenuItems.items)
-	#Print ("listKnownMenuItems is: " + str(listKnownMenuItems))
-	listKnownMenuItem_Names = list()
+	
 	listMenuItem_Names = list()
 	listMenuItem_NamesEnum = list()
 	
-	for menuItem in listKnownMenuItems:
-		listKnownMenuItem_Names.append(menuItem.name)
 	
 	MenuItem_Category =  (PPG.MenuItem_Category.Value) #Get the currently selected menu item category value from the category selector in the PPG's UI
-	#Print ("Selected MenuItem_Category is: " + str(MenuItem_Category ))
 
-	if MenuItem_Category == "_ALL_":
-		listMenuItem_Names = listKnownMenuItem_Names
-	else:
-		for menuItem in listKnownMenuItems:
-			if menuItem.category == MenuItem_Category:
-				listMenuItem_Names.append(menuItem.name)
-
-	listMenuItem_Names.sort()
-
-	for MenuItem_Name in listMenuItem_Names:
-		listMenuItem_NamesEnum.append("(s) " + MenuItem_Name) #Add the name to the pulldown menu's UIItems enum
-		listMenuItem_NamesEnum.append(MenuItem_Name) #Add the value to the pulldown menu's UIItems enum
+	for menuItem in listKnownMenuItems:
+		if MenuItem_Category == "_ALL_" or menuItem.category == MenuItem_Category:
+			listMenuItem_Names.append(menuItem.name)
 	
-	#Print ((str(listMenuItem_Names), c.siVerbose))
+	listMenuItem_Names.sort()
+	menuItem = None		
+	
+	for menuItemName in listMenuItem_Names:
+		menuItem = getQPopMenuItemByName(menuItemName)
+		
+		if menuItem.switch == True:
+			listMenuItem_NamesEnum.append("(sw) " + menuItemName)
+			listMenuItem_NamesEnum.append(menuItemName)
+		else:
+			if PPG.ShowSwitchesOnly.Value != True:
+				listMenuItem_NamesEnum.append("(s) " + menuItemName)
+				listMenuItem_NamesEnum.append(menuItemName)
+			
+	Print(str(listMenuItem_NamesEnum))
 	PPG.PPGLayout.Item ("MenuItemList").UIItems = listMenuItem_NamesEnum
 
 	
@@ -4493,7 +4539,7 @@ def QPopGetSelectionAndFilter_OnEvent(in_ctxt):
 		
 	
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
-	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
+	Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
  	#Application.DelayedRefresh()
 	KeyPressed = in_ctxt.GetAttribute("KeyCode")
 	KeyMask = in_ctxt.GetAttribute("ShiftMask")
@@ -4643,8 +4689,8 @@ def QPopConfiguratorMenuClicked( in_ctxt ):
 
 def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
-	#Print ("Cursor Position is " + str(CursorPos))
-	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
+
+	#globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
 	WindowSignature = getDS_ChildName(WinUnderMouse, True)
@@ -4653,11 +4699,11 @@ def GetView( Silent = False):
 	WindowSignatureStringLong = str()
 	for sig in WindowSignature:
 		WindowSignatureString = (WindowSignatureString + sig + ";")
-	globalQPopLastUsedItem.ViewSignatureNice = WindowSignatureString
+	#globalQPopLastUsedItem.ViewSignatureNice = WindowSignatureString
 	
 	for sigLong in WindowSignatureLong:
 		WindowSignatureStringLong = (WindowSignatureStringLong + sigLong + ";")
-	globalQPopLastUsedItem.ViewSignatureLong = WindowSignatureStringLong
+	#globalQPopLastUsedItem.ViewSignatureLong = WindowSignatureStringLong
 	
 	if Silent != True:
 		Print ("Picked Window has the following QPop View Signature: " + str(WindowSignatureString), c.siVerbose)
@@ -4811,6 +4857,7 @@ def ListToString(List):
 
 
 def getDS_ChildName( hwnd, clean = True):
+	#Print("GetDS_ChildName called")
 	ViewSignature = list()
 	finished = False
 	while finished == False:
@@ -4830,6 +4877,7 @@ def getDS_ChildName( hwnd, clean = True):
 			hwnd = win32gui.GetParent(hwnd)
 		else:
 			finished = True
+	#Print (ViewSignature)
 	return ViewSignature
       
 def splitAlphaNum(name):
@@ -4913,8 +4961,6 @@ def getUniqueSpacedName (name, listOfNames):
 		return uniqueName
 
 	
-
-   
 def getQPopMenuByName (menuName):
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	for menu in globalQPopMenus.items:
