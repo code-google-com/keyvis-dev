@@ -1264,7 +1264,7 @@ def QPopConfigurator_CommandFilter_OnChanged():
 	PPG.Refresh()
 
 def QPopConfigurator_CreateNewScriptItem_OnClicked():
-	Print ("QPopConfigurator_CreateNewMenuItem_OnClicked called",c.siVerbose)
+	Print ("QPopConfigurator_CreateNewScriptItem_OnClicked called",c.siVerbose)
 
 	Language = QueryScriptLanguage()
 	if Language > -1: #User did not press Cancel?
@@ -1346,13 +1346,13 @@ def QPopConfigurator_CreateNewSwitchItem_OnClicked():
 		
 		if Language == 1: 
 			newMenuItem.language = "JScript"
-			newMenuItem.code = ("def Switch_Init(): //Don't rename this function\n\t//Add your code here, return value must be boolean and represents the current state of the switch (on or off)\n\treturn False\n\n")
-			newMenuItem.code += ("def Switch_Execute(): //Don't rename this function\n\t//Add your code here, it gets executed when the switch item is clicked on in a QPop menu \n\tpass\n\n")
+			newMenuItem.code = ("function Switch_Init()\n{ //Don't rename this function\n\t//Add your code here, return value must be boolean and represents the current state of the switch (on or off)\n\treturn False\n}\n\n")
+			newMenuItem.code += ("function Switch_Execute()\n{ //Don't rename this function\n\t//Add your code here, it gets executed when the switch item is clicked on in a QPop menu \n\tdoNothing = 1\n}\n")
 		
 		if Language == 2: 
 			newMenuItem.language = "VBScript"
-			newMenuItem.code = ("def Switch_Init(): ' Don't rename this function\n\t' Add your code here, return value must be boolean and represents the current state of the switch (on or off)\n\treturn False\n\n")
-			newMenuItem.code += ("def Switch_Execute(): ' Don't rename this function\n\t' Add your code here, it gets executed when the switch item is clicked on in a QPop menu \n\tpass\n\n")
+			newMenuItem.code = ("sub Switch_Init() ' Don't rename this function\n\t' Add your code here, return value must be boolean and represents the current state of the switch (on or off)\n\treturn False\nend sub\n\n")
+			newMenuItem.code += ("sub Switch_Execute() ' Don't rename this function\n\t' Add your code here, it gets executed when the switch item is clicked on in a QPop menu \n\tdoNothing = 1\nend sub\n")
 				
 		globalQPopMenuItems.addMenuItem(newMenuItem)
 
@@ -1377,7 +1377,7 @@ def QPopConfigurator_CreateNewMenu_OnClicked():
 		
 	oNewMenu = App.CreateQPop("Menu")
 	oNewMenu.name = UniqueMenuName
-	Language = PPG.MenuItem_ScriptLanguage.Value
+	Language = QueryScriptLanguage()
 	if str(Language) == "":
 		Language = "Python"
 	oNewMenu.language = Language
