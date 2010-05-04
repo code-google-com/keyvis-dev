@@ -18,9 +18,12 @@ for view in Views:
 Sel = Views[1].GetAttributeValue("selection")
 Application.LogMessage(Sel)
 """
+#Fix: Selecting new menu item sets script code to that of previous selected item in case it has changed (Softimage 2011 only?)
+#TODO: Update script default code with def script_execute (self):, 
 #Finish Views Menus -> #TODO: Implement view-safe view switching commands(Top, Front, ...) like the "Camera" one (uses active view, not view under mouse).
+#TODO: Add Enable/Disabled flag to display events
 #TODO: Execute button should only execute current text selection in editor
-
+#TODO: Separate QPopConfigurator into QPopConfigurator (custom Prop only) and QPopPreferences (file and debug prefs only)
 #TODO: Pass global objects (Menus, items, etc) on to menu and switch items init and/or execute code functions
 
 #TODO: Evaluate if using a Selection Info class and event is really faster when evaluating contexts
@@ -115,24 +118,7 @@ class QPopLastUsedItem:
 	def set (self, menuItem):
 		self.item = menuItem
 	
-class QPopLastClickedItem:
- # Declare list of exported functions:
-	_public_methods_ = ['set']
-	 # Declare list of exported attributes
-	_public_attrs_ = ['item', 'ViewSignatureLong', 'ViewSignatureNice']
-	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
-
-	def __init__(self):
-	 # Initialize exported attributes:
-		self.item = None
-		self.ViewSignatureLong = str()
-		self.ViewSignatureNice = str()
 	
-	def set (self, menuItem):
-		self.item = menuItem
-
-		
 class QPopSeparator:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -607,6 +593,9 @@ class QPopViewSignatures:
 		if len(items) > 0:
 			items.remove (signature)	
 
+#A simply class that pnly stores whether the QPop Configurator has been opened, in which case the
+#"changed" attribute is set to True. This causes a user query to pop up when Softimage exits asking 
+#whether the configuration changes should be saved.
 class QPopConfigStatus:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -619,7 +608,11 @@ class QPopConfigStatus:
 		 # Initialize exported attributes:
 		self.changed = False
 
-
+		
+#A placeholder class that is used as a standin for missing commands that are used in menus.
+#The command might be only temporarily missing because the plugin is currently,uninstalled or the workgroup
+#temporarily unavailable. Yet, the configuration would be lost. To prevent this, the MissingCommand class object is used for every command
+#that cannot be found when the QPop configuration file is loaded.
 class QPopMissingCommand:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -633,7 +626,9 @@ class QPopMissingCommand:
 		self.type = "MissingCommand"
 		self.name = ""
 		self.UID = ""
-		
+
+#It is potentially unsafe to reference Softimage command objects directly, we use a standin class instead that stores name and UID of the
+#respective command.	
 class QPopCommandPlaceholder:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -663,38 +658,25 @@ class QPopSceneSelectionDetails:
 		self.components = None
 		
 		
-"""
-class QPopGlobals:
+""" Deprecated classes
+class QPopLastClickedItem:
  # Declare list of exported functions:
-	_public_methods_ = ['GetGlobal','SetGlobalObject', 'IsKnown']
+	_public_methods_ = ['set']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['globals','']
+	_public_attrs_ = ['item', 'ViewSignatureLong', 'ViewSignatureNice']
 	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = ['type']
-	
-	def __init__(self):
-		 # Initialize exported attributes:
-		self.type = "QPopGlobals"
-		self.globals = dict()
-		
-	def IsKnown(self, key):
-		globals = self.globals
-		if key in globals:
-			return True
-		else: 
-			return False
-	
-	def GetGlobal (self, key):
-		globals = self.globals
-		if key in globals:
-			return globals[key]
-		else: 
-			return False
-	
-	def SetGlobalObject (self, key, value):
-		globals = self.globals
-		globals[key] = value
+	_readonly_attrs_ = []
 
+	def __init__(self):
+	 # Initialize exported attributes:
+		self.item = None
+		self.ViewSignatureLong = str()
+		self.ViewSignatureNice = str()
+	
+	def set (self, menuItem):
+		self.item = menuItem
+
+	
 """
 #==================Plugin Initialisation ====================================	
 
@@ -1290,7 +1272,7 @@ def QPopConfigurator_CreateNewScriptItem_OnClicked():
 		newMenuItem.category = MenuItem_Category
 		
 	
-		if Language == 0: newMenuItem.code = ("#Put your script code here"); newMenuItem.language = "Python"
+		if Language == 0: newMenuItem.code = ("def Script_Execute(Self): #Dont rename this function \n\t#Put your script code here\n\tpass"); newMenuItem.language = "Python"
 		if Language == 1: newMenuItem.code = ("//Put your script code here"); newMenuItem.language = "JScript"
 		if Language == 2: newMenuItem.code = ("' Put your script code here"); newMenuItem.language = "VBScript"
 		
@@ -3470,9 +3452,7 @@ def RefreshMenuSets():
 	
 def RefreshMenuItemList():
 	Print("Qpop: RefreshMenuItemList called",c.siVerbose)
-	#knownMenuItems = globalQPopMenuItems.items
 	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
-	#Print("globalQPopMenuItems has " + str(len(globalQPopMenuItems.items)) + " menu items: "  )
 	listKnownMenuItems = list(globalQPopMenuItems.items)
 	
 	listMenuItem_Names = list()
@@ -3499,7 +3479,6 @@ def RefreshMenuItemList():
 				listMenuItem_NamesEnum.append("(s) " + menuItemName)
 				listMenuItem_NamesEnum.append(menuItemName)
 			
-	Print(str(listMenuItem_NamesEnum))
 	PPG.PPGLayout.Item ("MenuItemList").UIItems = listMenuItem_NamesEnum
 
 	
@@ -4416,6 +4395,7 @@ def QPopExecuteMenuItem_Init( in_ctxt ):
 def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 	Print("QPopExecuteMenuItem_Execute called", c.siVerbose)
 	QPopGlobals = GetDictionary()
+	#Print("QPopGlobals are: " + str(QPopGlobals))
 
 	if oQPopMenuItem != None:
 
@@ -4441,12 +4421,21 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 			#SucessfullyExecuted = True
 					
 		if oQPopMenuItem.type == "QPopMenuItem":
+			ArgList = list()
+			ArgList.append(QPopGlobals("globalQPopLastUsedItem").item)
+			#ArgList.append(QPopGlobals("globalQPopMenuItems").items)
+			#ArgList.append(QPopGlobals("globalQPopMenus").items)
+			#ArgList.append(QPopGlobals("globalQPopMenuSets").items)
+			#ArgList.append(QPopGlobals("globalQPopMenuDisplayContexts").items)
+			#ArgList.append(QPopGlobals("globalQPopViewSignatures").items)
+			#ArgList.append(QPopGlobals("globalQPopDisplayEvents").items)
+			
 			Code = (oQPopMenuItem.code)
 			if Code != "":
 				Language = (oQPopMenuItem.language)
 				if oQPopMenuItem.switch == True:
 					try:
-						App.ExecuteScriptCode( Code, Language, "Switch_Execute", [] ) #[QPopGlobals]
+						App.ExecuteScriptCode( Code, Language, "Switch_Execute", ArgList ) #[]
 						return True
 					except:
 						success = False
@@ -4458,7 +4447,7 @@ def QPopExecuteMenuItem_Execute ( oQPopMenuItem ):
 						
 				else:
 					try:
-						App.ExecuteScriptCode( Code, Language) #, [ProcName], [Params] )
+						App.ExecuteScriptCode( Code, Language , "Script_Execute", ArgList )
 						return True
 					except:
 						success = False
