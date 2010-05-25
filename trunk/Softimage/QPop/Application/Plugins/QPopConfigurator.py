@@ -95,11 +95,11 @@ import xml.dom.minidom as DOM
 null = None
 false = False
 true = True
-True = 1
-False = 0
+#True = 1
+#False = 0
 
 App = Application
-Print = getattr(App, 'LogMessage')
+Print = getattr(App, 'LogMessage') 
 
 #======================================== QPop ActiveX-compliant classes ==============================
 
@@ -1369,13 +1369,13 @@ def QPopConfigurator_CreateNewMenu_OnClicked():
 		oNewMenu.language = Language
 		
 		if 	Language == "Python":
-			oNewMenu.Code = ("def QPopMenu_Execute(oMenu):\t#Don't rename this function\n\t#Add your script code here\n\tpass")
+			oNewMenu.Code = ("def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):\t#Don't rename this function\n\t#Add your script code here\n\tpass")
 		
 		if 	Language == "JScript":
-			oNewMenu.Code = ("function QPopMenu_Execute(oMenu)\t//Don't rename this function\n{\n\t//Add your script code here\n}")
+			oNewMenu.Code = ("function QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets)\t//Don't rename this function\n{\n\t//Add your script code here\n}")
 
 		if 	Language == "VBScript":
-			oNewMenu.Code = ("sub QPopMenu_Execute(oMenu)\t'Don't rename this function\n\t'Add your script code here\nend Sub")			
+			oNewMenu.Code = ("sub QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets)\t'Don't rename this function\n\t'Add your script code here\nend Sub")			
 		
 		globalQPopMenus.addMenu(oNewMenu)
 
@@ -1757,10 +1757,8 @@ def QPopConfigurator_MenuItem_IsActive_OnChanged():
 		oItem = getQPopMenuByName(PPG.Menus.Value)
 		
 		if oItem != None:
-			Print("Attempting to set Menu's executeCode flag to " + str(PPG.MenuItem_IsActive.Value))
+			#Print("Attempting to set Menu's executeCode flag to " + str(PPG.MenuItem_IsActive.Value))
 			oItem.executeCode = PPG.MenuItem_IsActive.Value
-			Print("Menu executeCode flag set to " + str(oItem.executeCode))
-
 
 def QPopConfigurator_CreateMenuSet_OnClicked():
 	Print("QPopConfigurator_CreateMenuSet_OnClicked called", c.siVerbose)
@@ -2502,8 +2500,6 @@ def QPopConfigurator_ExecuteCode_OnClicked():
 			#except:
 				#raise
 				#Print("An Error occured executing the QPop item named '" + oSelectedItem.name + "', please see script editor for details!", c.siError)
-				
-			
 
 def QPopConfigurator_ExecuteDisplayContextCode_OnClicked():
 	Print("QPopConfigurator_ExecuteDisplayContextCode_OnClicked called", c.siVerbose)
@@ -2728,7 +2724,7 @@ def QPopConfigurator_InsertSeparator_OnClicked():
 def QPopConfigurator_Refresh_OnClicked():
 	initQPopGlobals(True)
 	RefreshQPopConfigurator()
-	App.Preferences.SetPreferenceValue("QPop.FirstStartup",False)
+	#App.Preferences.SetPreferenceValue("QPop.FirstStartup",False)
 	PPG.Refresh()
 
 
@@ -2998,6 +2994,7 @@ def RefreshMenuItemDetailsWidgets():
 
 def ResetToDefaultValues():
 	Print("Qpop: ResetToDefaultValues called", c.siVerbose)
+	PPG.QPopConfigurationFile.Value = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
 	PPG.View.Value = ""
 	PPG.CommandList.Value = "_ALL_"
 	PPG.Menus.Value = ""
@@ -3033,7 +3030,7 @@ def RefreshQPopConfigurator():
 	RefreshViewDetailsWidgets()
 	RefreshMenuSets()
 	RefreshContextConfigurator()
-	PPG.MenuSetName.Value = PPG.MenuSets.Value #TODO: Put this and others in a refresh function
+	PPG.MenuSetName.Value = PPG.MenuSets.Value #TODO: Put this in a proper refresh function. Update: Isn't it already? 
 	
 	RefreshViewMenuSets()
 	RefreshMenuSetChooser()
@@ -3318,7 +3315,6 @@ def RefreshCommandCategoryList():
 
 	PPG.PPGLayout.Item ("CommandCategory").UIItems = CommandCategoriesEnum #Populate the ListControl with the known Command Categories 
 
-	
 def RefreshViewSelector():
 	Print("Qpop: RefreshViewSelector called", c.siVerbose)
 
@@ -3346,9 +3342,7 @@ def RefreshViewSelector():
 	else:
 		PPG.PPGLayout.Item("View").UIItems = viewSelectorEnumList
 		PPG.View.Value = ""
-		
-		
-
+				
 def RefreshMenuItem_CategoryList():
 	Print("Qpop: RefreshMenuItem_CategoryList called",c.siVerbose)
 	listMenuItemCategories = list()
@@ -3372,7 +3366,7 @@ def RefreshMenuItem_CategoryList():
 	PPG.PPGLayout.Item ("MenuItem_Category").UIItems = listMenuItemCategoriesEnum #Populate the ListControl with the known MenuItemCategories
 	PPG.MenuItem_Category.Value = "_ALL_"
 
-def RefreshMenuItem_CategoryChooserList(): #This refreshes the widget that lets you change a Qpop script items category
+def RefreshMenuItem_CategoryChooserList(): #This refreshes the widget that lets you change a Qpop script item's category
 	Print("Qpop: RefreshMenuItem_CategoryChooserList called",c.siVerbose)
 	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 	
@@ -3453,9 +3447,7 @@ def RefreshMenuSets():
 		MenuSetsNameListEnum.append(SetName)
 	
 	PPG.PPGLayout.Item ("MenuSets").UIItems = MenuSetsNameListEnum
-		
-		
-	
+			
 def RefreshMenuItemList():
 	Print("Qpop: RefreshMenuItemList called",c.siVerbose)
 	globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
@@ -3486,7 +3478,6 @@ def RefreshMenuItemList():
 				listMenuItem_NamesEnum.append(menuItemName)
 			
 	PPG.PPGLayout.Item ("MenuItemList").UIItems = listMenuItem_NamesEnum
-
 	
 def RefreshCommandList():
 	Print("Qpop: RefreshCommandList called",c.siVerbose)
@@ -3569,7 +3560,6 @@ def RefreshCommandList():
 	
 	PPG.PPGLayout.Item ("CommandList").UIItems = CommandListEnum
 	
-
 def RefreshDisplayEventsKeys():
 	Print("Qpop: RefreshDisplayEventsKeys called", c.siVerbose)
 	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
@@ -3596,7 +3586,6 @@ def RefreshDisplayEventsKeys():
 		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,True)
 		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,True)
 
-
 def RefreshDisplayEvents():
 	Print("Qpop: RefreshDisplayEvents called", c.siVerbose)
 	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents").items
@@ -3610,7 +3599,6 @@ def RefreshDisplayEvents():
 	PPG.PPGLayout.Item("DisplayEvent").UIItems = DisplayEventsEnumList
 	if len(globalQPopDisplayEvents) == 0:
 		PPG.DisplayEvent.Value = -1
-	
 	
 def QPopSaveConfiguration(fileName):
 	Print("Qpop: QPopSaveConfiguration called", c.siVerbose)
@@ -3980,11 +3968,6 @@ def QPopLoadConfiguration(fileName):
 			Print("Could not load QPop Configuration from '" + str(fileName) + "' because the file could not be found!", c.siError)
 			return False
 
-
-
-	
-
-
 #===================================== Plugin Command Callbacks ==========================================================
 
 def DisplayMenuSet( MenuSetIndex ):
@@ -4128,10 +4111,11 @@ def DisplayMenuSet( MenuSetIndex ):
 				NewMenuFound = False #Lets assume we don't find a new menu first
 				for oMenu in oMenus: #Search for submenus in  menus A to D, if any
 					if oMenu != None and oMenu not in CheckedMenus:
-						Code = oMenu.code
+						Code = unicode(oMenu.code)
 						if Code != "" and oMenu.executeCode == True:
 							#ArgList = list(); ArgList.append(oMenu) #QPopMenu_Execute function takes it's own menu as an argument 
-							
+							#Print(oMenu.name)
+							#Print(oMenu.code)
 							Application.ExecuteScriptCode(Code, oMenu.language, "QPopMenu_Execute", [oMenu, QPopMenuItems, QPopMenus, QPopMenuSets]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
 							#except:
 								#raise
@@ -4329,7 +4313,6 @@ def QPopDisplayMenuSet_0_Execute():
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
 				
-
 def QPopDisplayMenuSet_1_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
 	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
@@ -4351,7 +4334,6 @@ def QPopDisplayMenuSet_1_Execute():
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
-
 
 def QPopDisplayMenuSet_2_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4375,7 +4357,6 @@ def QPopDisplayMenuSet_2_Execute():
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
 
-
 def QPopDisplayMenuSet_3_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
 	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
@@ -4397,7 +4378,6 @@ def QPopDisplayMenuSet_3_Execute():
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
-
 
 def QPopExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
@@ -4573,9 +4553,6 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
         App.InspectObj (colGrannyGlobals(0))
         return false
 		
-
-
-
 # =================================== Plugin Event Callbacks =============================================
 
 def QPopGetSelectionAndFilter_OnEvent(in_ctxt):
@@ -4587,13 +4564,10 @@ def QPopGetSelectionAndFilter_OnEvent(in_ctxt):
 	else:
 		oSelDetails.components = None
 		oSelDetails.objects = App.Selection
-		
-	
+			
 	#Print("Selected Objects are: " + str(oSelDetails.objects))
 	#Print("Selected Components are: " + str(oSelDetails.components))
 
-		
-	
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
  	#Application.DelayedRefresh()
@@ -4650,7 +4624,6 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 		# Finally tell Softimage that the event has been consumed (which prevents commands bound to the same hotkey to be executed)
 		in_ctxt.SetAttribute("Consumed",Consumed)
 
-
 def QPopExecution_OnEvent (in_ctxt):
 	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	
@@ -4681,30 +4654,43 @@ def QPopExecution_OnEvent (in_ctxt):
 				App.QPopExecuteMenuItem ()
 			"""
 			
-
 def InitQPop_OnEvent (in_ctxt):
 	Print ("QPop Startup event called",c.siVerbose)
 	initQPopGlobals(True)
-	
+	FirstStartup = False
 	#Load the QPop Config File
 	QPopConfigFile = ""
 	try:
+		FirstStartup = Application.Preferences.GetPreferenceValue("QPop.FirstStartup")
+		#Print("FirstStartup Preference Value is: " + str(FirstStartup))
+		#Print("Type of FirstStartup Preference Value is: " + str(type(FirstStartup)))
+	except:
+		#Print("Could not retrieve state of FirstStartup QPop preference value, assuming it is the first startup...", c.siVerbose)
+		FirstStartup = True
+	
+	if (FirstStartup == "False") or (FirstStartup == "0") or (FirstStartup == False) or (FirstStartup == 0):
 		#QPopConfigFile = App.GetValue("preferences.QPop.QPopConfigurationFile") #Does not work, QPopConfigurator custom property not yet established, need to read from preferences directly instead of using GetValue...
 		QPopConfigFile = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
-	except:
-		Print("Could not retrieve QpopConfigFile from Preferences, must be first startup -> trying to find default file...",c.siVerbose)
-		QPopConfigFile = GetDefaultConfigFilePath()
-	if QPopConfigFile != "":
-		#try:
-			Print("Attempting to load QPop Configuration from: " + str(QPopConfigFile), c.siVerbose)
-			result = QPopLoadConfiguration(QPopConfigFile)
-			if result:
-				Print("Successfully loaded QPop Config file from: " + str(QPopConfigFile) , c.siVerbose)
-				QPopConfigFile = App.Preferences.SetPreferenceValue("QPop.QPopConfigurationFile",QPopConfigFile)
-			else:
-				Print("Failed loading QPop Config file from: " + str(QPopConfigFile) , c.siError)
+		#Print("QpopConfigFile as defined in Prefs is: " + str(QPopConfigFile))
+	
+	if (FirstStartup == "True") or (FirstStartup == "1") or (FirstStartup == True) or (FirstStartup == 1):
+		#Print("FirstStartup is actually: " + str(FirstStartup) + ". -> getting default config file path")
+		QPopConfigFile = GetDefaultConfigFilePath() #Get the file path as string of the QPop default configuration file.
+	
+	if (str(QPopConfigFile) != ""):
+		Print("Attempting to load QPop Configuration from: " + str(QPopConfigFile), c.siVerbose)
+		result = QPopLoadConfiguration(QPopConfigFile)
+		if result:
+			Print("Successfully loaded QPop Config file from: " + str(QPopConfigFile) , c.siVerbose)
+			QPopConfigFile = App.Preferences.SetPreferenceValue("QPop.QPopConfigurationFile",QPopConfigFile)
+			QPopConfigFile = App.Preferences.SetPreferenceValue("QPop.FirstStartup", false)
+			QPopConfigFile = App.SetValue("preferences.QPop.FirstStartup", false)
+			
+		else:
+			Print("Failed loading QPop Config file from: " + str(QPopConfigFile) , c.siError)
 	else:
-		Print("QPop configuration file could not be found!", c.siVerbose)
+		Print("QPop configuration file could not be found, check QPop preferences. -> Disabling QPop.", c.siWarning)
+		App.SetValue("preferences.QPop.QPopEnabled", False, "")
 	
 	App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
@@ -4770,6 +4756,7 @@ def GetDefaultConfigFilePath():
 	for plug in App.Plugins:
 		if plug.Name == ("QPopConfigurator"):
 			DefaultConfigFolder = (plug.OriginPath.rsplit("\\",3)[0] + "\\Data\\Preferences\\")#Get the left side of the path before "Data"
+			#Print("DefaultConfigFolder: " + str(DefaultConfigFolder))
 			DefaultConfigFile =  (DefaultConfigFolder + "QPopConfiguration_Default.xml")
 			return DefaultConfigFile
 
@@ -4900,9 +4887,7 @@ def deleteQPopMenuItem(MenuItemName):
 			if oMenuItem.name == MenuItemName:
 				oMenu.removeMenuItem (oMenuItem)
 
-				
-				
-		
+						
 def ListToString(List):
 	String = ""
 	for i in range (0,len(List)):
