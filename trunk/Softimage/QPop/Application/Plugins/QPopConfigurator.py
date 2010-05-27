@@ -19,10 +19,11 @@ Sel = Views[1].GetAttributeValue("selection")
 Application.LogMessage(Sel)
 """
 
+#Fix: Moving separators up and down is unpredictable when multiple separators exist in a menu
 #Properly implement Current_Selection global object (how to find out objects from selected components? parent gives parent obj, not their own obj)
-#Fix: Selecting new menu item sets script code to that of previous selected item in case it has changed (Softimage 2011 only?), selecting the "1-" -item is problematic
+#Fix (Cannot repro): Selecting new menu item sets script code to that of previous selected item in case it has changed (Softimage 2011 only?), selecting the "1-" -item is problematic
 
-#Finish Views Menus -> #TODO: Implement view-safe view switching commands(Top, Front, ...) like the "Camera" one (uses active view, not view under mouse).
+
 #TODO: Add Enable/Disabled flag to display events
 #TODO: Execute button should only execute current text selection in editor
 #TODO: Separate QPopConfigurator into QPopConfigurator (custom Prop only) and QPopPreferences (file and debug prefs only)
@@ -2518,7 +2519,6 @@ def QPopConfigurator_ExecuteDisplayContextCode_OnClicked():
 					Print("QpopMenuDisplayContext '" + oSelectedItem.name + "' evaluates to: " + str(DisplayMenu[0]) + ", which is not a boolean value!", c.siWarning)
 			except:
 				Print("An Error occurred executing the QPopMenuDiplayContext '" + oSelectedItem.name +"', please see script editor for details.", c.siError)
-
 				
 def QPopConfigurator_RemoveMenuItem_OnClicked():
 	Print("QPopConfigurator_RemoveMenuItem_OnClicked called", c.siVerbose)
@@ -2549,8 +2549,7 @@ def QPopConfigurator_RemoveMenuItem_OnClicked():
 
 			RefreshMenuSetDetailsWidgets()
 			PPG.Refresh()
-		
-	
+			
 def QPopConfigurator_ItemUp_OnClicked():
 	Print("QPopConfigurator_ItemUp_OnClicked called", c.siVerbose)
 	oMenu = getQPopMenuByName(PPG.MenuChooser.Value)
@@ -2565,8 +2564,7 @@ def QPopConfigurator_ItemUp_OnClicked():
 			PPG.MenuItems.Value = MenuItemIndex -1
 			RefreshMenuSetDetailsWidgets()
 			PPG.Refresh()
-			
-			
+						
 def QPopConfigurator_ItemDown_OnClicked():
 	Print("QPopConfigurator_ItemDown_OnClicked called", c.siVerbose)
 	oMenu = getQPopMenuByName(PPG.MenuChooser.Value)
@@ -2619,7 +2617,6 @@ def QPopConfigurator_FindItem_OnClicked():
 				RefreshMenuItemDetailsWidgets()
 
 			PPG.Refresh()
-
 
 def QPopConfigurator_CtxUp_OnClicked():
 	Print("QPopConfigurator_CtxUp_OnClicked called", c.siVerbose)
@@ -2702,7 +2699,6 @@ def QPopConfigurator_CtxDown_OnClicked():
 				RefreshMenuItemDetailsWidgets()
 				PPG.Refresh()
 
-
 def QPopConfigurator_InsertSeparator_OnClicked():
 	Print("QPopConfigurator_InsertSeparator_OnClicked called", c.siVerbose)
 	oCurrentMenu = getQPopMenuByName(PPG.MenuChooser.Value)
@@ -2726,7 +2722,6 @@ def QPopConfigurator_Refresh_OnClicked():
 	RefreshQPopConfigurator()
 	#App.Preferences.SetPreferenceValue("QPop.FirstStartup",False)
 	PPG.Refresh()
-
 
 def QPopConfigurator_AddDisplayEvent_OnClicked():
 	Print("QPopConfigurator_AddDisplayEvent_OnClicked called", c.siVerbose)
@@ -2761,7 +2756,6 @@ def QPopConfigurator_DeleteDisplayEvent_OnClicked():
 		RefreshDisplayEventsKeys()
 	PPG.Refresh()
 	
-	
 def QPopConfigurator_DisplayEvent_OnChanged():
 	Print("QPopConfigurator_DisplayEvent_OnCanged", c.siVerbose)
 	globalQPopDisplayEvents = GetGlobalObject("globalQPopDisplayEvents")
@@ -2774,7 +2768,6 @@ def QPopConfigurator_DisplayEvent_OnChanged():
 	App.Preferences.SetPreferenceValue("QPop.DisplayEventKeys_Record", False)
 	RefreshDisplayEventsKeys()
 	
-
 def QPopConfigurator_DisplayEventKey_OnChanged():
 	Print("QPopConfigurator_DisplayEventKey_OnCanged", c.siVerbose)
 	if (str(PPG.DisplayEventKey.Value) != None):
@@ -2828,8 +2821,6 @@ def QPopConfigurator_MainSettings_OnTab():
 	PPG.RecordViewSignature.Value = False
 	PPG.DisplayEventKeys_Record.Value = False
 	
-	
-
 #=============== Misc. QPopConfigurator Functions ===============================
 
 def RefreshMenuSetDetailsWidgets():
@@ -2901,8 +2892,7 @@ def RefreshMenuSetDetailsWidgets():
 						PPG.PPGLayout.Item("RemoveMenuItem").SetAttribute (c.siUIButtonDisable, False)
 						if oCurrentMenuItem.type != "Separator":
 							PPG.PPGLayout.Item("FindItem").SetAttribute (c.siUIButtonDisable, False)
-											
-			
+													
 def RefreshMenuItemDetailsWidgets():
 	Print("Qpop: RefreshMenuItemDetailsWidgets called", c.siVerbose)
 
@@ -2991,7 +2981,6 @@ def RefreshMenuItemDetailsWidgets():
 			PPG.MenuItem_Code.SetCapabilityFlag (c.siReadOnly,False)
 			PPG.MenuItem_IsActive.SetCapabilityFlag (c.siReadOnly,False)
 
-
 def ResetToDefaultValues():
 	Print("Qpop: ResetToDefaultValues called", c.siVerbose)
 	PPG.QPopConfigurationFile.Value = App.Preferences.GetPreferenceValue("QPop.QPopConfigurationFile")
@@ -3046,7 +3035,6 @@ def RefreshQPopConfigurator():
 	RefreshDisplayEvents()
 	RefreshDisplayEventsKeys()
 
-
 def RefreshMenus():
 	Print("Qpop: RefreshMenus called", c.siVerbose)
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
@@ -3095,7 +3083,6 @@ def RefreshMenuChooser():
 		else:
 			PPG.MenuChooser.Value = -1
 
-	
 def RefreshMenuContexts():
 	Print("Qpop: RefreshMenuContexts called", c.siVerbose)
 	CurrentMenuSetName = str(PPG.MenuSetChooser.Value)
@@ -3134,7 +3121,6 @@ def RefreshMenuContexts():
 		PPG.MenuContexts.Value = 0
 	except:
 		DoNothing = True
-
 		
 def RefreshMenuSetChooser():
 	Print("Qpop: RefreshMenuSetChooser called", c.siVerbose)
@@ -3164,9 +3150,7 @@ def RefreshMenuSetChooser():
 	if str(PPG.MenuSetChooser.Value) == "":
 		if len(MenuSetChooserEnum) > 0:
 			PPG.MenuSetChooser.Value = MenuSetChooserEnum[1]
-				
-				
-	
+					
 def RefreshViewMenuSets():
 	Print("Qpop: RefreshViewMenuSets called", c.siVerbose)
 	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
@@ -3193,8 +3177,7 @@ def RefreshViewMenuSets():
 			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
 		else:
 			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
-			
-	
+				
 def RefreshMenuDisplayContextsList():
 	Print("Qpop: RefreshMenuDisplayContextsList called", c.siVerbose)
 	globalQPopMenuDisplayContexts = GetGlobalObject("globalQPopMenuDisplayContexts")
@@ -3211,7 +3194,6 @@ def RefreshMenuDisplayContextsList():
 		
 	PPG.PPGLayout.Item("MenuDisplayContexts").UIItems = DisplayContextEnum
 	
-
 def RefreshMenuDisplayContextDetailsWidgets():
 	Print("Qpop: RefreshMenuDisplayContextDetailsWidgets called", c.siVerbose)
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
@@ -3225,7 +3207,6 @@ def RefreshMenuDisplayContextDetailsWidgets():
 		PPG.MenuDisplayContext_Code.Value = oCurrentMenuDisplayContext.code
 		PPG.MenuDisplayContext_ScriptLanguage.Value = oCurrentMenuDisplayContext.language
 	
-
 def RefreshContextConfigurator():
 	Print("Qpop: RefreshContextConfigurator called", c.siVerbose)
 	globalQPopMenuSets = GetGlobalObject("globalQPopMenuSets")
@@ -3250,9 +3231,6 @@ def RefreshContextConfigurator():
 			CurrentContextsEnum.append(oContext.name)
 	PPG.PPGLayout.Item ("ContextConfigurator").UIItems = CurrentContextsEnum
 				
-		
-	
-	
 def RefreshViewSignaturesList():
 	Print("Qpop: RefreshViewSignaturesList called", c.siVerbose)
 	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
@@ -4600,8 +4578,9 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 				App.SetValue("preferences.QPop.DisplayEventKey", KeyPressed)
 				App.SetValue("preferences.QPop.DisplayEventKeyMask", KeyMask)
 			App.SetValue("preferences.QPop.DisplayEventKeys_Record",False)
-			
-		if (App.Preferences.GetPreferenceValue("QPop.QPopEnabled") == True) and (Consumed == False): #Is Qpop enabled and the event has't been consumed yet?
+		
+		QpopEnabled = App.Preferences.GetPreferenceValue("QPop.QPopEnabled")
+		if (QpopEnabled == True) or (QpopEnabled == 1) or (QpopEnabled == 'True') and (Consumed == False): #Is Qpop enabled and the event has't been consumed yet?
 			#Check known display events whether there is one that should react to the currently pressed key(s)
 			for oDispEvent in globalQPopDisplayEvents:
 				if ((oDispEvent.key == KeyPressed) and (oDispEvent.keyMask == KeyMask )): #We have found a display event that matches the key(s) that were just pressed
@@ -4690,9 +4669,9 @@ def InitQPop_OnEvent (in_ctxt):
 			Print("Failed loading QPop Config file from: " + str(QPopConfigFile) , c.siError)
 	else:
 		Print("QPop configuration file could not be found, check QPop preferences. -> Disabling QPop.", c.siWarning)
-		App.SetValue("preferences.QPop.QPopEnabled", False, "")
+		#App.SetValue("preferences.QPop.QPopEnabled", false, "")
 	
-	App.Preferences.SaveChanges()
+	#App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
 	App.QPop("") #Call Qpop to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
@@ -4709,8 +4688,6 @@ def DestroyQPop_OnEvent (in_ctxt):
 				Message = ("The QPop configuration file could not be written - would you like to save to the dafault backup file?")
 				Caption = ("Saving failed, save a QPop Configuration backup file?")
 				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
-
-		
 	
 #===================================== Custom Property Menu callbacks  ============================================================
 
@@ -4720,12 +4697,9 @@ def QPopConfigurator_Init( in_ctxt ):
     #oMenu.AddSeparatorItem()
     return true
 
-
 def QPopConfiguratorMenuClicked( in_ctxt ):
     App.QPopConfiguratorCreate()
     return true
-
-
 
 #===================================== Helper functions ============================================================
 
@@ -4867,10 +4841,7 @@ def deleteQPopMenu(MenuName):
 		for oMenu in globalQPopMenus.items:
 			for oItem in oMenu.items:
 				if oItem == oMenuToDelete:
-					oMenu.removeMenuItem(oMenuToDelete)
-				
-				
-				
+					oMenu.removeMenuItem(oMenuToDelete)			
 
 def deleteQPopMenuItem(MenuItemName):				
 	Print ("Qpop: deleteQPopMenuItem called",c.siVerbose)
@@ -4886,8 +4857,7 @@ def deleteQPopMenuItem(MenuItemName):
 		for oMenuItem in oMenu.items:
 			if oMenuItem.name == MenuItemName:
 				oMenu.removeMenuItem (oMenuItem)
-
-						
+					
 def ListToString(List):
 	String = ""
 	for i in range (0,len(List)):
@@ -4895,7 +4865,6 @@ def ListToString(List):
 		if i < (len(List)-1):
 			String += ";"
 	return String
-
 
 def getDS_ChildName( hwnd, clean = True):
 	#Print("GetDS_ChildName called")
@@ -5001,7 +4970,6 @@ def getUniqueSpacedName (name, listOfNames):
 	if unique == True:
 		return uniqueName
 
-	
 def getQPopMenuByName (menuName):
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	for menu in globalQPopMenus.items:
@@ -5034,8 +5002,7 @@ def getQPopSeparatorByName (separatorName):
 	for oItem in globalQPopSeparators.items:
 		if oItem.name == separatorName:
 			return oItem
-			
-			
+					
 def getQPopViewSignatureByName(signatureName):
 	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")	
 	for oSignature in globalQPopViewSignatures.items:
@@ -5049,7 +5016,6 @@ def getCommandByUID(UID):
 			return Cmd
 	return None
 
-
 def GetGlobalObject ( in_VariableName ):
 
 	if len(in_VariableName) == 0:
@@ -5062,8 +5028,6 @@ def GetGlobalObject ( in_VariableName ):
 	else:
 		return None
 
-
-
 def SetGlobalObject( in_VariableName, in_Value ):
 
 	if len(in_VariableName) == 0:
@@ -5071,8 +5035,6 @@ def SetGlobalObject( in_VariableName, in_Value ):
 
 	dic = GetDictionary()		
 	dic[in_VariableName] = in_Value		
-
-
 
 def GetDictionary():
 
@@ -5088,8 +5050,6 @@ def GetDictionary():
 	g_dictionary = thisPlugin.UserData
 	return g_dictionary
 	
-
-
 def QueryScriptLanguage():
 	oDial = win32com.client.Dispatch( "XSIDial.XSIDialog" )
 	Language = oDial.Combo( "Please choose Scripting Language for the new Item", ["Python","JScript","VBScript"] );
