@@ -22,6 +22,7 @@ Application.LogMessage(Sel)
 
 #Properly implement Current_Selection global object (how to find out objects from selected components? parent gives parent obj, not their own obj)
 
+#Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
 #TODO: Implement proper keywords file switching when changing script language of an item
 #TODO: Execute button should only execute current text selection in editor
 #TODO: Separate QPopConfigurator into QPopConfigurator (custom Prop only) and QPopPreferences (file and debug prefs only)
