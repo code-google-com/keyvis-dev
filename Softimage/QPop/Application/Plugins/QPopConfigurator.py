@@ -2962,10 +2962,29 @@ def RefreshQPopConfigurator():
 	RefreshDisplayEvents()
 	RefreshDisplayEventsKeys()
 
+def SortQPopObjectsByName(QPopGlobalObject):
+	Names = list()
+	SortedObjects = list()
+	for oObj in QPopGlobalObject.items:
+		Names.append (oMenu.Name)
+	ObjectList = list()
+	Names.sort()
+	
+	for Name in Names:
+		for oObj in QPopGlobalObject.items:
+			if Name == oObj.name:
+					ObjectList.append(oObj)
+	
+	QPopGlobalObject.items = ObjectList
+		
+	
 def RefreshMenus():
 	Print("Qpop: RefreshMenus called", c.siVerbose)
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
 	MenusEnum = list()
+	MenuNames = list()
+	
+	#SortQPopObjectsByName(globalQPopMenus)
 	
 	for oMenu in globalQPopMenus.items:
 		MenusEnum.append("(m) " + oMenu.name)
