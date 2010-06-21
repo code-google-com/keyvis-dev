@@ -23,6 +23,7 @@ Application.LogMessage(Sel)
 #Properly implement Current_Selection global object (how to find out objects from selected components? parent gives parent obj, not their own obj)
 
 #Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
+#TODO: Store Keys in preferences instead of config file
 #TODO: Implement proper keywords file switching when changing script language of an item
 #TODO: Execute button should only execute current text selection in editor
 #TODO: Separate QPopConfigurator into QPopConfigurator (custom Prop only) and QPopPreferences (file and debug prefs only)
@@ -756,6 +757,7 @@ def QPopConfigurator_Define( in_ctxt ):
 	#oCustomProperty.AddParameter2("QPopMenuC",c.siBool,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	#oCustomProperty.AddParameter2("QPopMenuD",c.siBool,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	
+	oCustomProperty.AddParameter2("MenuFilter",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("Menus",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("ContextChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -900,7 +902,8 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddGroup("Existing QPop Menus")
 	oLayout.AddSpacer()
 	oLayout.AddSpacer()
-	oLayout.AddSpacer()
+	#oLayout.AddSpacer()
+	oLayout.AddItem ("MenuFilter", "Name contains...", c.siControlString)
 	oMenus = oLayout.AddEnumControl ("Menus", None, "Menus",c.siControlListBox)
 	oMenus.SetAttribute(c.siUINoLabel, True)
 	#oLayout.AddItem("MenuName", "Name", c.siControlString)
@@ -979,7 +982,7 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndGroup()
 	
 	oLayout.AddGroup("Description")
-	oLayout.AddStaticText("There are two ways of invoking menu sets:\n\n1. Using 'Display Events'. This is the recommended way for all versions of Softimage from 7.0 to 2011.\n\n2. Alternatively you can use commands that you can bind to hotkeys of your choice.\nThe benefit is that you don't need to worry about accidental duplicate key assignment.\nLook in the 'Custom Script Commands' category for commands called 'QPopDisplayMenuSet_0 - 3').\n\nNote: You can also use a combination of commands and display events works.\n",0,230 )
+	oLayout.AddStaticText("There are two ways of invoking menu sets:\n\n1. Using 'Display Events'. This is the recommended way for all versions of Softimage from 7.0 to 2011.\n\n2. Alternatively you can use commands that you can bind to hotkeys of your choice.\nThe benefit is that you don't need to worry about potentially duplicate key assignments.\nLook in the 'Custom Script Commands' category for commands called 'QPopDisplayMenuSet_0 - 3').\n\nNote: You can also use a combination of commands and display events if you want.\n",0,230 )
 	oLayout.EndGroup()
 
 #========================= Advanced Configuration Tab =============================================================================	
@@ -1133,6 +1136,7 @@ def QPopConfigurator_MoveSetUpInView_OnClicked():
 			oCurrentView.removeMenuSet(CurrentSetIndex)
 			oCurrentView.insertMenuSet(CurrentSetIndex -1,oCurrentSet)
 			RefreshViewMenuSets()
+			RefreshMenuSetChooser()
 			PPG.Refresh()
 
 def QPopConfigurator_MenuItems_OnChanged():
@@ -1305,7 +1309,17 @@ def QPopConfigurator_CreateNewSwitchItem_OnClicked():
 		PPG.Menus.Value = ""
 		RefreshMenuItemDetailsWidgets()
 		PPG.Refresh()
-	
+
+def QPopConfigurator_MenuFilter_OnChanged():
+	Print ("QPopConfigurator_CreateNewSwitchItem_OnClicked called",c.siVerbose)
+	CurrentSelectedMenuName = PPG.Menus.Value
+	RefreshMenus()
+	ListedMenuNames = PPG.PPGlayout.Item("Menus").UIItems
+	if CurrentSelectedMenuName not in ListedMenuNames:
+		PPG.Menus.Value = ""
+	RefreshMenuSetDetailsWidgets()
+	PPG.Refresh()
+		
 def QPopConfigurator_CreateNewMenu_OnClicked():
 	Print ("QPopConfigurator_CreateNewMenu_OnClicked called",c.siVerbose)
 	
@@ -2808,7 +2822,7 @@ def RefreshMenuSetDetailsWidgets():
 			if oCurrentMenu != None:
 				PPG.PPGLayout.Item("InsertSeparator").SetAttribute (c.siUIButtonDisable, False)
 				if (PPG.Menus.Value != "") or (PPG.MenuItemList.Value != "") or (PPG.CommandList.Value != ""): #Is some assignable item selected in one of the combo boxes?
-					PPG.PPGLayout.Item("ItemInsert").SetAttribute (c.siUIButtonDisable, False) #Enable the Insert Iem button again
+					PPG.PPGLayout.Item("ItemInsert").SetAttribute (c.siUIButtonDisable, False) #Enable the Insert Item button again
 			
 			if PPG.MenuItems.Value > -1: #A menu item is currently selected?
 				if oCurrentMenu != None:
@@ -2981,14 +2995,24 @@ def SortQPopObjectsByName(QPopGlobalObject):
 def RefreshMenus():
 	Print("Qpop: RefreshMenus called", c.siVerbose)
 	globalQPopMenus = GetGlobalObject("globalQPopMenus")
+	MenuNameFilter = PPG.MenuFilter.Value
 	MenusEnum = list()
 	MenuNames = list()
 	
-	#SortQPopObjectsByName(globalQPopMenus)
-	
 	for oMenu in globalQPopMenus.items:
-		MenusEnum.append("(m) " + oMenu.name)
-		MenusEnum.append(oMenu.name)
+		MenuNames.append(oMenu.name)
+	
+	MenuNames.sort()
+
+	for MenuName in MenuNames:
+		if MenuNameFilter != "":
+			if MenuName.find (MenuNameFilter) > -1:
+				MenusEnum.append("(m) " + MenuName)
+				MenusEnum.append(MenuName)
+		else:
+			MenusEnum.append("(m) " + MenuName)
+			MenusEnum.append(MenuName)
+			
 	
 	PPG.PPGLayout.Item("Menus").UIItems = MenusEnum
 	PPG.Refresh()
@@ -3340,7 +3364,8 @@ def RefreshMenuItems():
 				NameInList = (prefix + oItem.name)
 			if oItem.type == "QPopSeparator":
 				NameInList = "------------------"
-
+			
+			#Append items with similar names with a whitespace to keep the names unique in the enum
 			while NameInList in listMenuItemsEnum:
 				#Print(NameInList + " already exists, adding whitespace")
 				NameInList = NameInList + " "
@@ -3413,7 +3438,7 @@ def RefreshCommandList():
 	
 	if ComCatName == "_ALL_":
 		for Command in App.Commands:
-			if Command.Name != "":
+			if Command.Name != "": #We don't list commands with empty names
 				if OnlyHotkeyable == True: #Show only hotkeyable commands
 					if Command.SupportsKeyAssignment == True:
 						CommandEntry = Command.Name
@@ -4515,13 +4540,17 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 			#if App.GetValue("preferences.QPop.DisplayEventKeys_Record") == True and Consumed == False: #Is user currently recording key events? We must query this from the PPG rather than from Preferences because the preference might not be known yet
 			oSelectedEvent = None
 			oSelectedEvent = globalQPopDisplayEvents[App.Preferences.GetPreferenceValue("QPop.DisplayEvent")] #Get the currently selected display event number in the selection list
-			if oSelectedEvent != None:
-				oSelectedEvent.key = KeyPressed
-				oSelectedEvent.keyMask = KeyMask
 			
-				App.SetValue("preferences.QPop.DisplayEventKey", KeyPressed)
-				App.SetValue("preferences.QPop.DisplayEventKeyMask", KeyMask)
-			App.SetValue("preferences.QPop.DisplayEventKeys_Record",False)
+			KeyMaskValues = (16,17,18) #Key masks not allowed as single key assignments (Strg, Alt and Shift keys)
+			
+			if KeyPressed not in KeyMaskValues:
+				if oSelectedEvent != None:
+					oSelectedEvent.key = KeyPressed
+					oSelectedEvent.keyMask = KeyMask
+				
+					App.SetValue("preferences.QPop.DisplayEventKey", KeyPressed)
+					App.SetValue("preferences.QPop.DisplayEventKeyMask", KeyMask)
+				App.SetValue("preferences.QPop.DisplayEventKeys_Record",False)
 		
 		QpopEnabled = App.Preferences.GetPreferenceValue("QPop.QPopEnabled")
 		if (QpopEnabled == True) or (QpopEnabled == 1) or (QpopEnabled == 'True') and (Consumed == False): #Is Qpop enabled and the event has't been consumed yet?
