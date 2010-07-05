@@ -97,7 +97,8 @@ true = True
 #False = 0
 
 App = Application
-Print = getattr(App, 'LogMessage') 
+Print = getattr(App, 'LogMessage')
+getClassName = getattr(App,'ClassName')
 
 #======================================== QPop ActiveX-compliant classes ==============================
 class QPopLastUsedItem:
@@ -437,7 +438,7 @@ class QPopMenuSets: #Holds existing MenuSets
 		except:
 			Print(set.name + "could not be found in globals - nothing to delete!", c.siWarning)
 		
-class QPopMenuDisplayContext:   #Holds the code, which should return True or False (display or not display the menu)
+class QPopMenuDisplayContext:   #Holds the context evaluation code, which should return True or False (display or not display the menu)
  # Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
@@ -453,7 +454,7 @@ class QPopMenuDisplayContext:   #Holds the code, which should return True or Fal
 		self.language = str()
 		self.code = str()
 		
-class QPopMenuDisplayContexts:   #Holds existing display rules
+class QPopMenuDisplayContexts:   #Holds existing display rcontexts
  # Declare list of exported functions:
 	_public_methods_ = ['addContext', 'deleteContext']
 	 # Declare list of exported attributes
@@ -485,7 +486,7 @@ class QPopMenuDisplayContexts:   #Holds existing display rules
 		if len(items) > 0:
 			items.remove (context)
 		
-class QPopDisplayEvent:
+class QPopDisplayEvent: #Display events store the keycodes of keys that have been chosen to display a specific menu number for whatever view the mouse is over
 	# Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
@@ -501,7 +502,7 @@ class QPopDisplayEvent:
 		self.key = int()
 		self.keyMask = int()
 		
-class QPopDisplayEvents:
+class QPopDisplayEvents: #Container class storing existing DisplayEvents
 	# Declare list of exported functions:
 	_public_methods_ = ['addEvent','deleteEvent', 'getEventNumber']
 	 # Declare list of exported attributes
@@ -525,7 +526,7 @@ class QPopDisplayEvents:
 		items = self.items
 		return items.index (Event)
 
-class QPopViewSignature:
+class QPopViewSignature: #This class is used to store a unique identifier string for a view. A view is an area of screen estate for which a menu set can be defined (e.g. main 3D viewports, or shader tree window)
  # Declare list of exported functions:
 	_public_methods_ = ['insertMenuSet','removeMenuSet']
 	 # Declare list of exported attributes
@@ -549,7 +550,7 @@ class QPopViewSignature:
 		menuSets = self.menuSets
 		menuSets.pop(index)
 			
-class QPopViewSignatures:
+class QPopViewSignatures: #Container class for existing ViewSignatures
  # Declare list of exported functions:
 	_public_methods_ = ['addSignature', 'deleteSignature']
 	 # Declare list of exported attributes
@@ -580,9 +581,9 @@ class QPopViewSignatures:
 		if len(items) > 0:
 			items.remove (signature)	
 
-#A simply class that pnly stores whether the QPop Configurator has been opened, in which case the
+#A simple class that only stores whether the QPop Configurator has been opened or not, in which case the
 #"changed" attribute is set to True. This causes a user query to pop up when Softimage exits asking 
-#whether the configuration changes should be saved.
+#if the configuration changes should be saved.
 class QPopConfigStatus:
  # Declare list of exported functions:
 	_public_methods_ = []
@@ -597,7 +598,8 @@ class QPopConfigStatus:
 		
 #A placeholder class that is used as a standin for missing commands that are used in menus.
 #The command might be only temporarily missing because the plugin is currently,uninstalled or the workgroup
-#temporarily unavailable. Yet, the command would be lost in the configuration when loaded and saved. To prevent this, the MissingCommand class object is used as a standin for every command
+#temporarily unavailable. Yet, the command would be lost from the configuration when loaded and saved again while (a) command(s) is/are missing. 
+#To prevent this, the MissingCommand class object is used as a standin for every command
 #that cannot be found when the QPop configuration file is loaded.
 class QPopMissingCommand:
  # Declare list of exported functions:
@@ -629,19 +631,27 @@ class QPopCommandPlaceholder:
 		self.name = ""
 		self.UID = ""
 
+#QPopSceneSelectionDetails is a class that's serves as a global data container for all kinds of selection-specific date.
+#It is fed by a Selection Change Event.
+#The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QPopSceneSelectionDetails:
  # Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','objects','components']
+	_public_attrs_ = ['type','Selection','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = []
 	
 	def __init__(self):
 		 # Initialize exported attributes:
 		self.type = "SceneSelectionDetails"
-		self.objects = None
-		self.components = None
+		self.Selection = list()
+		self.Types = list()
+		self.ClassNames = list()
+		self.ComponentClassNames = list()
+		self.ComponentParents = list()
+		self.ComponentParentTypes = list()
+		self.ComponentParentClassNames = list()
 				
 """ Deprecated classes
 class QPopLastClickedItem:
@@ -689,7 +699,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QPopConfigurator" , true , true)
 	
 	#Register events
-	in_reg.RegisterEvent( "QPopGetSelectionAndFilter", c.siOnSelectionChange)
+	in_reg.RegisterEvent( "QPopGetSelectionDetails", c.siOnSelectionChange)
 	in_reg.RegisterEvent( "InitQPop", c.siOnStartup )
 	in_reg.RegisterEvent( "DestroyQPop", c.siOnTerminate)
 	in_reg.RegisterEvent( "QPopCheckDisplayEvents" , c.siOnKeyDown )
@@ -2974,23 +2984,7 @@ def RefreshQPopConfigurator():
 	RefreshMenuItems()
 	RefreshMenuItemDetailsWidgets()
 	RefreshDisplayEvents()
-	RefreshDisplayEventsKeys()
-
-def SortQPopObjectsByName(QPopGlobalObject):
-	Names = list()
-	SortedObjects = list()
-	for oObj in QPopGlobalObject.items:
-		Names.append (oMenu.Name)
-	ObjectList = list()
-	Names.sort()
-	
-	for Name in Names:
-		for oObj in QPopGlobalObject.items:
-			if Name == oObj.name:
-					ObjectList.append(oObj)
-	
-	QPopGlobalObject.items = ObjectList
-		
+	RefreshDisplayEventsKeys()	
 	
 def RefreshMenus():
 	Print("Qpop: RefreshMenus called", c.siVerbose)
@@ -3002,7 +2996,7 @@ def RefreshMenus():
 	for oMenu in globalQPopMenus.items:
 		MenuNames.append(oMenu.name)
 	
-	MenuNames.sort()
+	MenuNames.sort() #Sort Menu names alphabetically
 
 	for MenuName in MenuNames:
 		if MenuNameFilter != "":
@@ -4502,18 +4496,72 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
         return false
 		
 # =================================== Plugin Event Callbacks =============================================
-def QPopGetSelectionAndFilter_OnEvent(in_ctxt):
-	#Print("Selection changed",c.siVerbose)
+def QPopGetSelectionDetails_OnEvent(in_ctxt):
+	Print("QPopGetSelectionDetails_OnEvent called",c.siVerbose)
 	oSelDetails = GetGlobalObject("globalQPopSceneSelectionDetails")
+	oSelection = Application.Selection
+	SelCount = oSelection.Count
 	
-	if App.Selection.Filter.Type == "FilterSubComponentType":
-		oSelDetails.components = App.Selection
-	else:
-		oSelDetails.components = None
-		oSelDetails.objects = App.Selection
-			
-	#Print("Selected Objects are: " + str(oSelDetails.objects))
-	#Print("Selected Components are: " + str(oSelDetails.components))
+	#lsSelection = list()
+	lsSelectionTypes = list() #
+	lsSelectionClassNames = list() #
+	lsSelectionComponentClassNames = list() #
+	lsSelectionComponentParents = list() #
+	lsSelectionComponentParentTypes = list() #
+	lsSelectionComponentParentClassNames = list()
+	
+	for oSel in oSelection:
+		
+		SelectionType = oSel.Type
+		SelectionClassName = getClassName(oSel)
+		#Make sure there are dummy (None) values so all lists will have the same number of items independant of selected objects or components
+		SelectionComponentClassName = None
+		SelectionComponentParent = None
+		SelectionComponentParentType = None
+		SelectionComponentParentClassName = None
+					
+		#Start appending values to the lists
+		lsSelectionTypes.append (oSel.Type)
+		lsSelectionClassNames.append (SelectionClassName)
+		
+		#Let's get subcomponent collection data if there is any (otherwise the above (None) values are used later
+		if ClassName == "CollectionItem":
+			SelectionComponentClassName = getClassname(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
+			SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
+			SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
+			SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
+		
+		#Finally add remaining items to the lists
+		lsSelectionComponentClassNames.append(SelectionComponentClassName) 
+		lsSelectionComponentParents.append (SelectionComponentParent)
+		lsSelectionComponentParentTypes.append (SelectionComponentParentType)
+		lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
+	
+	#Fill the SelectionInfo Object with the Data we have aquired
+	oSelDetails.Selection = oSelection
+	oSelDetails.Types = lsSelectionTypes
+	oSelDetails.ClassNames = lsSelectionClassNames
+	oSelDetails.ComponentClassNames = lsSelectionComponentClassNames 
+	oSelDetails.ComponentParents = lsSelectionComponentParents
+	oSelDetails.ComponentParentTypes = lsSelectionComponentParentTypes
+	oSelDetails.ComponentParentClassNames = lsSelectionComponentParentClassNames
+	
+	
+
+#Some test code		
+# getClassName = getattr(Application,'ClassName')
+# oSelDetails = GetGlobalObject("globalQPopSceneSelectionDetails")
+# oSelection = Application.Selection
+# SelCount = oSelection.Count
+	
+# print oSelection(0).Type
+# print getClassName(oSelection(0))
+# print oSelection(0).SubComponent.Type
+# print getClassName(oSelection(0).SubComponent)
+# print oSelection(0).SubComponent.Parent3DObject.Type
+# print getClassName(oSelection(0).SubComponent.ComponentCollection(0))
+
+
 
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
