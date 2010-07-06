@@ -636,41 +636,26 @@ class QPopCommandPlaceholder:
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QPopSceneSelectionDetails:
  # Declare list of exported functions:
-	_public_methods_ = []
+	_public_methods_ = ['storeSelection']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','Selection','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames' ]
+	_public_attrs_ = ['type','selection','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = []
 	
 	def __init__(self):
 		 # Initialize exported attributes:
 		self.type = "SceneSelectionDetails"
-		self.Selection = list()
+		self.selection = None
 		self.Types = list()
 		self.ClassNames = list()
 		self.ComponentClassNames = list()
 		self.ComponentParents = list()
 		self.ComponentParentTypes = list()
 		self.ComponentParentClassNames = list()
-				
-""" Deprecated classes
-class QPopLastClickedItem:
- # Declare list of exported functions:
-	_public_methods_ = ['set']
-	 # Declare list of exported attributes
-	_public_attrs_ = ['item', 'ViewSignatureLong', 'ViewSignatureNice']
-	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
-
-	def __init__(self):
-	 # Initialize exported attributes:
-		self.item = None
-		self.ViewSignatureLong = str()
-		self.ViewSignatureNice = str()
 	
-	def set (self, menuItem):
-		self.item = menuItem
-"""
+	def storeSelection (self, sel):
+		self.selection = sel
+		
 #==================Plugin Initialisation ====================================	
 def XSILoadPlugin( in_reg ):
 	in_reg.Author = "Stefan Kubicek"
@@ -1980,7 +1965,7 @@ def QPopConfigurator_CreateNewDisplayContext_OnClicked():
 		if Language == "JScript":
 			oNewDisplayContext.code = ("function QPopContext_Execute() //This function must not be renamed!\n{\n\t//Add your code here\n\treturn true\t//This function must return a boolean\n}")
 		if Language == "VBScript":
-			oNewDisplayContext.code = ("sub QPopContext_Execute() 'This function must not be renamed!\n\t'Add your code here\n\treturn true\t'This function must return a boolean\n end sub")
+			oNewDisplayContext.code = ("Function QPopContext_Execute() 'This function must not be renamed!\n\t'Add your code here\n\tQPopContext_Execute = True\t'This function must return a boolean\n end Function")
 		
 		globalQPopMenuDisplayContexts.addContext(oNewDisplayContext)
 		RefreshMenuDisplayContextsList()
@@ -2456,22 +2441,53 @@ def QPopConfigurator_ExecuteCode_OnClicked():
 
 def QPopConfigurator_ExecuteDisplayContextCode_OnClicked():
 	Print("QPopConfigurator_ExecuteDisplayContextCode_OnClicked called", c.siVerbose)
+	SelInfo = GetGlobalObject("globalQPopSceneSelectionDetails")
+
+	SelInfo.storeSelection(App.Selection)
+	selection = SelInfo.selection
+	Types = SelInfo.Types
+	ClassNames = SelInfo.ClassNames
+	ComponentClassNames = SelInfo.ComponentClassNames
+	ComponentParents = SelInfo.ComponentParents
+	ComponentParentTypes = SelInfo.ComponentParentTypes
+	ComponentParentClassNames = SelInfo.ComponentParentClassNames
+			
 	
 	if PPG.MenuDisplayContexts.Value != "":
-		oSelectedItem = getQPopMenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
-		if oSelectedItem != None:
-			Code = oSelectedItem.code
-			Language = oSelectedItem.language
-			#DisplayMenu = (False,())
-			try:
-				DisplayMenu = App.ExecuteScriptCode( Code, Language, "QPopContext_Execute",[])
-				if str(type(DisplayMenu[0])) == "<type 'bool'>":
-					Print("QpopMenuDisplayContext '" + oSelectedItem.name + "' evaluates to: " + str(DisplayMenu[0]))
+		oContext = getQPopMenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
+		#if oContext != None:
+			#report = False
+			#ExecuteDisplayContext(oContext,  selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames, report)
+
+#def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames, silent = True):
+		DisplayMenu = False
+		if oContext != None:
+
+			Code = oContext.code
+			Language = oContext.language
+
+			if Language == "Python":
+				Code = Code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+				try:
+					exec (Code) #Execute Python code natively within the context of this function, all passed function variables are known
+				except:
+					Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', please see script editor for details.", c.siError)
+					DisplayMenu = False
+					raise
+			else: #Language is not Python, use Softimages ExecuteScriptCode Command to execute the code
+				DisplayMenu = App.ExecuteScriptCode( oContext.code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
+				if Language != "Python": DisplayMenu = DisplayMenu[0]
+			#if not silent:
+			if type(DisplayMenu) != bool:
+				Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu) + ", which is not a boolean value!", c.siWarning)
+			else:
+				if DisplayMenu == True:
+					Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
 				else:
-					Print("QpopMenuDisplayContext '" + oSelectedItem.name + "' evaluates to: " + str(DisplayMenu[0]) + ", which is not a boolean value!", c.siWarning)
-			except:
-				Print("An Error occurred executing the QPopMenuDiplayContext '" + oSelectedItem.name +"', please see script editor for details.", c.siError)
-				
+					Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
+
+		return DisplayMenu
+
 def QPopConfigurator_RemoveMenuItem_OnClicked():
 	Print("QPopConfigurator_RemoveMenuItem_OnClicked called", c.siVerbose)
 	SelectedMenuItemNumber = PPG.MenuItems.Value
@@ -3968,8 +3984,9 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu A by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			SelInfo = GetGlobalObject("globalQPopSceneSelectionDetails")
+			SelInfo.storeSelection(App.Selection)
 
-			Selection = SelInfo.Selection
+			selection = SelInfo.selection
 			Types = SelInfo.Types
 			ClassNames = SelInfo.ClassNames
 			ComponentClassNames = SelInfo.ComponentClassNames
@@ -3981,7 +3998,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Language = oMenuSet.AContexts[RuleIndex].language
 				DisplayMenu = False
 				if Language == "Python":
-					Code = oMenuSet.AContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(Selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+					Code = oMenuSet.AContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
 					try:
 						exec (Code)
 					except:
@@ -3990,6 +4007,8 @@ def DisplayMenuSet( MenuSetIndex ):
 						raise
 				else:
 					DisplayMenu = App.ExecuteScriptCode( oMenuSet.AContexts[RuleIndex].code, Language, "QPopContext_Execute",[SelInfo]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
+					if Language == "VBScript":
+						DisplayMenu = DisplayMenu[0]
 				if DisplayMenu: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
 					break
@@ -4001,7 +4020,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Language = oMenuSet.BContexts[RuleIndex].language
 				DisplayMenu = False
 				if Language == "Python":
-					Code = oMenuSet.BContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(Selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+					Code = oMenuSet.BContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
 					try:
 						exec (Code)
 					except:
@@ -4021,7 +4040,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Language = oMenuSet.CContexts[RuleIndex].language
 				DisplayMenu = False
 				if Language == "Python":
-					Code = oMenuSet.CContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(Selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+					Code = oMenuSet.CContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
 					try:
 						exec (Code)
 					except:
@@ -4042,7 +4061,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Language = oMenuSet.DContexts[RuleIndex].language
 				DisplayMenu = False
 				if Language == "Python":
-					Code = oMenuSet.DContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(Selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+					Code = oMenuSet.DContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
 					try:
 						exec (Code)
 					except:
@@ -4552,7 +4571,7 @@ def QPopGetSelectionDetails_OnEvent(in_ctxt):
 		lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
 	
 	#Fill the SelectionInfo Object with the Data we have aquired
-	oSelDetails.Selection = oSelection
+	oSelDetails.storeSelection(oSelection)
 	oSelDetails.Types = lsSelectionTypes
 	oSelDetails.ClassNames = lsSelectionClassNames
 	oSelDetails.ComponentClassNames = lsSelectionComponentClassNames 
