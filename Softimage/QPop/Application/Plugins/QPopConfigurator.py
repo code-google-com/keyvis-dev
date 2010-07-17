@@ -4038,21 +4038,10 @@ def DisplayMenuSet( MenuSetIndex ):
 			ComponentParentClassNames = SelInfo.ComponentParentClassNames
 			
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
-				
-				Language = oMenuSet.AContexts[RuleIndex].language
+				oContext = oMenuSet.AContexts[RuleIndex]
 				DisplayMenu = False
-				if Language == "Python":
-					Code = oMenuSet.AContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
-					try:
-						exec (Code)
-					except:
-						Print("An Error occurred executing the QPop Diplay Context '" + oMenuSet.AContexts[RuleIndex].name +"'", c.siError)
-						DisplayMenu = False
-						raise
-				else:
-					DisplayMenu = App.ExecuteScriptCode( oMenuSet.AContexts[RuleIndex].code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
-					if Language == "VBScript":
-						DisplayMenu = DisplayMenu[0]
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				
 				if DisplayMenu: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
 					break
@@ -4061,19 +4050,11 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu B by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.BContexts)):
-				Language = oMenuSet.BContexts[RuleIndex].language
+				oContext = oMenuSet.BContexts[RuleIndex]
 				DisplayMenu = False
-				if Language == "Python":
-					Code = oMenuSet.BContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
-					try:
-						exec (Code)
-					except:
-						Print("An Error occurred executing the QPop Diplay Context '" + oMenuSet.BContexts[RuleIndex].name +"'", c.siError)
-						DisplayMenu = False
-						raise
-				else:
-					DisplayMenu = App.ExecuteScriptCode( oMenuSet.BContexts[RuleIndex].code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
-				if DisplayMenu:
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				
+				if DisplayMenu: #We have found a matching context rule, we will display the associated menu
 					oBMenu = oMenuSet.BMenus[RuleIndex]
 					break
 			
@@ -4081,19 +4062,10 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu C by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.CContexts)):
-				Language = oMenuSet.CContexts[RuleIndex].language
+				oContext = oMenuSet.CContexts[RuleIndex]
 				DisplayMenu = False
-				if Language == "Python":
-					Code = oMenuSet.CContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
-					try:
-						exec (Code)
-					except:
-						Print("An Error occurred executing the QPop Diplay Context '" + oMenuSet.CContexts[RuleIndex].name +"'", c.siError)
-						DisplayMenu = False
-						raise
-				else:
-					DisplayMenu = App.ExecuteScriptCode( oMenuSet.CContexts[RuleIndex].code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
-					
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				
 				if DisplayMenu:
 					oCMenu = oMenuSet.CMenus[RuleIndex]
 					break
@@ -4102,18 +4074,9 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu D by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.DContexts)):
-				Language = oMenuSet.DContexts[RuleIndex].language
+				oContext = oMenuSet.DContexts[RuleIndex]
 				DisplayMenu = False
-				if Language == "Python":
-					Code = oMenuSet.DContexts[RuleIndex].code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
-					try:
-						exec (Code)
-					except:
-						Print("An Error occurred executing the QPop Diplay Context '" + oMenuSet.DContexts[RuleIndex].name +"'", c.siError)
-						DisplayMenu = False
-						raise
-				else:
-					DisplayMenu = App.ExecuteScriptCode( oMenuSet.DContexts[RuleIndex].code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
 				if DisplayMenu:
 					oDMenu = oMenuSet.DMenus[RuleIndex]
 					break
