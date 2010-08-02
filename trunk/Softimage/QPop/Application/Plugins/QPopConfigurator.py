@@ -656,35 +656,34 @@ class QPopSceneSelectionDetails:
 		#for obj in App.Selection:
 			#self.selection.append(obj)
 	
-	def recordTypes (self, Types):
+	def recordTypes (self, TypeList):
 		self.Types = list()
-		for Type in Types:
+		for Type in TypeList:
 			self.Types.append(Type)
 	
-	def recordClassNames (self,ClassNames):
+	def recordClassNames (self,ClassNameList):
 		self.ClassNames = list()
-		for ClassName in ClassNames:
+		for ClassName in ClassNameList:
 			self.ClassNames.append(ClassName)
 
-	def recordComponentClassNames (self,ComponentClassNames):
+	def recordComponentClassNames (self,ComponentClassNameList):
 		self.ComponentClassNames = list()
-		for ComponentClassName in ComponentClassNames:
+		for ComponentClassName in ComponentClassNameList:
 			self.ComponentClassNames.append(ComponentClassName)
 	
-	def recordComponentParents (self, ComponentParents):
+	def recordComponentParents (self, ComponentParentList):
 		self.ComponentParents = list()
-		for ComponentParent in ComponentParents:
+		for ComponentParent in ComponentParentList:
 			self.ComponentParents.append (ComponentParent)
 	
-	def recordComponentParentTypes (self, ComponentParentTypes):
-		print ("recordComponentParentTypes called")
+	def recordComponentParentTypes (self, ComponentParentTypeList):
 		self.ComponentParentTypes = list()
-		for ComponentParentType in ComponentParentTypes:
+		for ComponentParentType in ComponentParentTypeList:
 			self.ComponentParentTypes.append (ComponentParentType)
 			
-	def recordComponentParentClassNames (self, ComponentParentClassNames):
+	def recordComponentParentClassNames (self, ComponentParentClassNameList):
 		self.ComponentParentClassNames = list()
-		for ComponentParentClassName in ComponentParentClassNames:
+		for ComponentParentClassName in ComponentParentClassNameList:
 			self.ComponentParentClassNames.append (ComponentParentClassName)
 		
 #==================Plugin Initialisation ====================================	
@@ -720,6 +719,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "DestroyQPop", c.siOnTerminate)
 	in_reg.RegisterEvent( "QPopCheckDisplayEvents" , c.siOnKeyDown )
 	in_reg.RegisterTimerEvent( "QPopExecution", 0, 1 )
+		
 	return True
 
 def XSIUnloadPlugin( in_reg ):
@@ -2501,10 +2501,12 @@ def QPopConfigurator_ExecuteDisplayContextCode_OnClicked():
 			ComponentParentTypes = SelInfo.ComponentParentTypes
 			ComponentParentClassNames = SelInfo.ComponentParentClassNames
 			
-			ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = False)
+			notSilent = False
+			ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, notSilent)
 
-def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames, silent = True):
+def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames, silent):
 	DisplayMenu = False #Let's assume the function will evaluate to false
+	ErrorOccured = False
 	if oContext != None:
 		Code = oContext.code
 		Language = oContext.language
@@ -2514,16 +2516,19 @@ def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClas
 			try:
 				exec (Code) #Execute Python code natively within the context of this function, all passed function variables are known
 			except:
-				Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', please see script editor for details.", c.siError)
+				Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', use QPop Configurator for manual execution and debugging.", c.siError)
 				DisplayMenu = False
-				raise
+				ErrorOccured = True
+				#raise
 		else: #Language is not Python, use Softimages ExecuteScriptCode Command to execute the code
 			DisplayMenu = App.ExecuteScriptCode( oContext.code, Language, "QPopContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
 			DisplayMenu = DisplayMenu[0]
 		if silent != True: 
+			if ErrorOccured == True:
+				Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', please see script editor for details.", c.siError)
+				raise
 			if type(DisplayMenu) != bool:
 				Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu) + ", which is not a boolean value!", c.siWarning)
-			else:
 				if DisplayMenu == True:
 					Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
 				else:
@@ -4027,9 +4032,9 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu A by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			SelInfo = GetGlobalObject("globalQPopSceneSelectionDetails")
-			SelInfo.storeSelection(App.Selection)
+			#SelInfo.storeSelection(App.Selection)
 
-			selection = SelInfo.selection
+			selection = App.Selection
 			Types = SelInfo.Types
 			ClassNames = SelInfo.ClassNames
 			ComponentClassNames = SelInfo.ComponentClassNames
@@ -4042,7 +4047,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				DisplayMenu = False
 				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
 				
-				if DisplayMenu: #We have found a matching context rule, we will display the associated menu
+				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
 					break
 			
@@ -4054,7 +4059,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				DisplayMenu = False
 				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
 				
-				if DisplayMenu: #We have found a matching context rule, we will display the associated menu
+				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oBMenu = oMenuSet.BMenus[RuleIndex]
 					break
 			
@@ -4066,7 +4071,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				DisplayMenu = False
 				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
 				
-				if DisplayMenu:
+				if DisplayMenu == True:
 					oCMenu = oMenuSet.CMenus[RuleIndex]
 					break
 			
@@ -4077,7 +4082,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				oContext = oMenuSet.DContexts[RuleIndex]
 				DisplayMenu = False
 				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
-				if DisplayMenu:
+				if DisplayMenu == True:
 					oDMenu = oMenuSet.DMenus[RuleIndex]
 					break
 			
@@ -4536,12 +4541,21 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
 		
 # =================================== Plugin Event Callbacks =============================================
 def QPopGetSelectionDetails_OnEvent(in_ctxt):
-	Print("QPopGetSelectionDetails_OnEvent called",c.siVerbose)
+	Print("QPop: QPopGetSelectionDetails_OnEvent called",c.siVerbose)
 	
-	t0 = time.clock() 
+	t0 = time.clock()
+	QPopGetSelectionDetails()
+	t1 = time.clock()
+	timeTaken = (t1 - t0)/1000
+	if App.Preferences.GetPreferenceValue("QPop.ShowQPopTimes"):
+		Print("QPopGetSelectionDetails event took: " + str(timeTaken) + "seconds")
+
+
+def QPopGetSelectionDetails():
+	Print("QPop: QPopGetSelectionDetails called",c.siVerbose)
 	oSelDetails = GetGlobalObject("globalQPopSceneSelectionDetails")
 	oSelection = Application.Selection
-	SelCount = oSelection.Count
+	#SelCount = oSelection.Count
 	
 	lsSelectionTypes = list() #
 	lsSelectionClassNames = list() #
@@ -4561,12 +4575,12 @@ def QPopGetSelectionDetails_OnEvent(in_ctxt):
 		SelectionComponentParentClassName = ""
 					
 		#Start appending values to the lists
-		lsSelectionTypes.append (oSel.Type)
+		lsSelectionTypes.append (SelectionType)
 		lsSelectionClassNames.append (SelectionClassName)
 		
 		#Let's get subcomponent collection data if there is any (otherwise the above (None) values are used later
-		if ClassName == "CollectionItem":
-			SelectionComponentClassName = getClassname(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
+		if SelectionClassName == "CollectionItem":
+			SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
 			SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
 			SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
 			SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
@@ -4580,16 +4594,23 @@ def QPopGetSelectionDetails_OnEvent(in_ctxt):
 	#Fill the SelectionInfo Object with the Data we have aquired
 	#oSelDetails.storeSelection(oSelection)
 	oSelDetails.recordTypes (lsSelectionTypes)
-	oSelDetails.recordClassNames (lsSelectionClassNames)
-	oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames) 
-	oSelDetails.recordComponentParents (lsSelectionComponentParents)
-	oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
-	oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)
+	#Print("Recording Selection Types: " + str(lsSelectionTypes))
 	
-	t1 = time.clock()
-	timeTaken = (t1 - t0)/1000
-	if App.Preferences.GetPreferenceValue("QPop.ShowQPopTimes"):
-		Print("QPopGetSelectionDetails event took: " + str(timeTaken) + "seconds")
+	oSelDetails.recordClassNames (lsSelectionClassNames)
+	#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
+	
+	oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames) 
+	#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
+	
+	oSelDetails.recordComponentParents (lsSelectionComponentParents)
+	#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
+	
+	oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
+	#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
+	
+	oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)
+	#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
+	
 
 def QPopCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QPopCheckDisplayEvents_OnEvent called",c.siVerbose)
@@ -4659,28 +4680,6 @@ def QPopExecution_OnEvent (in_ctxt):
 		if globalQPopLastUsedItem.item != None:
 			oItem = globalQPopLastUsedItem.item
 			App.QPopExecuteMenuItem (oItem)
-			"""
-			##SucessfullyExecuted = False
-			
-			#Instead of the actual Softimage command only it's name is given because Softimage has the tendency to forget commands (not always the
-			#same command that was referenced though, which makes it har to trace) after undoing it when the command is referenced by a python object (
-			#e.g. a list or custom ActiveX class). 
-			#Therefore we only work with command names instead and look up the command for execution again,
-			#which imposes a neglectable speed penalty.
-
-			if oItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
-				oCmd = App.Commands(oItem.name) #We use the name to identify the command because finding by UID would be too slow 
-				#try:
-				oCmd.Execute()
-				##SucessfullyExecuted = True
-				#globalQPopLastUsedItem.set(globalQPopLastUsedItem) 
-				#except:
-				#SucessfullyExecuted = False
-					#raise
-						
-			if oItem.type == "QPopMenuItem":
-				App.QPopExecuteMenuItem ()
-			"""
 			
 def InitQPop_OnEvent (in_ctxt):
 	Print ("QPop Startup event called",c.siVerbose)
@@ -4797,8 +4796,7 @@ def initQPopGlobals(force = False):
 	if GetGlobalObject ("globalQPopSeparators") == None or force == True:
 		SetGlobalObject ("globalQPopSeparators",App.CreateQPop("Separators"))
 		oGlobalSeparators = GetGlobalObject("globalQPopSeparators")
-		oGlobalSeparators.addSeparator(App.CreateQPop("Separator"))
-		
+		oGlobalSeparators.addSeparator(App.CreateQPop("Separator"))	
 		
 	if (GetGlobalObject ("globalQPopMenuItems") == None) or force == True:
 		SetGlobalObject ("globalQPopMenuItems", App.CreateQPop("MenuItems"))	
@@ -4824,7 +4822,8 @@ def initQPopGlobals(force = False):
 	if (GetGlobalObject ("globalQPopSceneSelectionDetails") == None) or force == True:
 		SetGlobalObject ("globalQPopSceneSelectionDetails", App.CreateQPop("SceneSelectionDetails"))
 			
-
+	QPopGetSelectionDetails()
+	
 	"""
 	if force == True:
 		SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
