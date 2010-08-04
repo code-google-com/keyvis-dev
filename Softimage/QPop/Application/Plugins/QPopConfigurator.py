@@ -1992,11 +1992,11 @@ def QPopConfigurator_CreateNewDisplayContext_OnClicked():
 		oNewDisplayContext.language = Language
 		
 		if Language == "Python":
-			oNewDisplayContext.code = ("def QPopContext_Execute(): #This function must not be renamed!\n\t#Add your code here\n\treturn True\t#This function must return a boolean")
+			oNewDisplayContext.code = ("def QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!\n\t#Add your code here\n\treturn True\t#This function must return a boolean")
 		if Language == "JScript":
-			oNewDisplayContext.code = ("function QPopContext_Execute() //This function must not be renamed!\n{\n\t//Add your code here\n\treturn true\t//This function must return a boolean\n}")
+			oNewDisplayContext.code = ("function QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames) //This function must not be renamed!\n{\n\t//Add your code here\n\treturn true\t//This function must return a boolean\n}")
 		if Language == "VBScript":
-			oNewDisplayContext.code = ("Function QPopContext_Execute() 'This function must not be renamed!\n\t'Add your code here\n\tQPopContext_Execute = True\t'This function must return a boolean\n end Function")
+			oNewDisplayContext.code = ("Function QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames) 'This function must not be renamed!\n\t'Add your code here\n\tQPopContext_Execute = True\t'This function must return a boolean\n end Function")
 		
 		globalQPopMenuDisplayContexts.addContext(oNewDisplayContext)
 		RefreshMenuDisplayContextsList()
@@ -2515,7 +2515,7 @@ def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClas
 			Code = Code + ("\nDisplayMenu = QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
 			try:
 				exec (Code) #Execute Python code natively within the context of this function, all passed function variables are known
-			except:
+			except Exception as ContextError:
 				Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', use QPop Configurator for manual execution and debugging.", c.siError)
 				DisplayMenu = False
 				ErrorOccured = True
@@ -2525,14 +2525,12 @@ def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClas
 			DisplayMenu = DisplayMenu[0]
 		if silent != True: 
 			if ErrorOccured == True:
-				Print("An Error occurred executing the QPopMenuDiplayContext '" + oContext.name +"', please see script editor for details.", c.siError)
-				raise
+				raise ContextError
 			if type(DisplayMenu) != bool:
 				Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu) + ", which is not a boolean value!", c.siWarning)
-				if DisplayMenu == True:
-					Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
-				else:
-					Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
+			if type(DisplayMenu) == bool:
+				Print("QpopMenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
+
 
 	return DisplayMenu
 
@@ -4041,11 +4039,12 @@ def DisplayMenuSet( MenuSetIndex ):
 			ComponentParents = SelInfo.ComponentParents
 			ComponentParentTypes = SelInfo.ComponentParentTypes
 			ComponentParentClassNames = SelInfo.ComponentParentClassNames
+			silent = True
 			
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
 				oContext = oMenuSet.AContexts[RuleIndex]
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				DisplayMenu = ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
 				
 				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
@@ -4057,7 +4056,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			for RuleIndex in range(0,len(oMenuSet.BContexts)):
 				oContext = oMenuSet.BContexts[RuleIndex]
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
 				
 				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oBMenu = oMenuSet.BMenus[RuleIndex]
@@ -4069,7 +4068,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			for RuleIndex in range(0,len(oMenuSet.CContexts)):
 				oContext = oMenuSet.CContexts[RuleIndex]
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
 				
 				if DisplayMenu == True:
 					oCMenu = oMenuSet.CMenus[RuleIndex]
@@ -4081,7 +4080,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			for RuleIndex in range(0,len(oMenuSet.DContexts)):
 				oContext = oMenuSet.DContexts[RuleIndex]
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent = True)
+				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
 				if DisplayMenu == True:
 					oDMenu = oMenuSet.DMenus[RuleIndex]
 					break

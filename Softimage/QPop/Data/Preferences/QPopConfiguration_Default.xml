@@ -1,11 +1,11 @@
-<?xml version="1.0" ?><QPopComponents><QPopMenuItems><QPopMenuItem UID="{D62782CB-5CC2-4BC1-8E3F-311DD6CA020A}" category="Preferences" language="Python" name="Extrude duplicated Polygons" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+<?xml version="1.0" ?><QPopComponents><QPopMenuItems><QPopMenuItem UID="{6DD090FB-627C-4DAD-90AF-9BCA87371B29}" category="Preferences" language="Python" name="Extrude duplicated Polygons" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	if Application.Preferences.GetPreferenceValue(&quot;duplicate.polygons&quot;) == 1:
 		return True
 	return False
 
 def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	Application.SetValue(&quot;Preferences.duplicate.polygons&quot;, not Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets))
-</QPopMenuItem><QPopMenuItem UID="{2D4CB4E5-5035-451D-A485-099F6FF55B51}" category="Property Editing" language="Python" name="+10%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+</QPopMenuItem><QPopMenuItem UID="{3C91CC10-B6E6-4474-8D42-C695E0625DB2}" category="Property Editing" language="Python" name="+10%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -18,7 +18,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						Application.LogMessage
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,(CurrentVal *1.1),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{1BCF0686-C678-4A95-8D5C-99282D1BD0F0}" category="Property Editing" language="Python" name="+50%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{054F6D14-5C24-40F1-815C-20BC9684D74E}" category="Property Editing" language="Python" name="+50%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -31,7 +31,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						Application.LogMessage
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,(CurrentVal *1.5),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{8B14A2A9-8921-4667-BB2D-DC84A37A06A4}" category="Property Editing" language="Python" name="+100%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{42C748A8-2787-4895-BCF9-B4F7F6B92B53}" category="Property Editing" language="Python" name="+100%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -44,7 +44,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						Application.LogMessage
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,(CurrentVal *2),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{C068542A-66BA-490B-BC43-A362C30DBD1C}" category="Property Editing" language="Python" name="-10%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{7E13DBC7-7AE3-471F-B203-ACCA803FDD94}" category="Property Editing" language="Python" name="-10%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -56,7 +56,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,(CurrentVal *0.9),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{D7C36296-414A-4A3A-98CE-1C12D2BF6F04}" category="Property Editing" language="Python" name="-50%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{260E3226-F04E-4517-B0A2-80D6B60E54F2}" category="Property Editing" language="Python" name="-50%" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -68,7 +68,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,(CurrentVal *0.5),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{8E957C72-1792-4054-8F52-9936FFE2FE4C}" category="Property Editing" language="Python" name="0,1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{E13753DC-0105-47F0-B23F-9E8CD8033197}" category="Property Editing" language="Python" name="0,1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -80,7 +80,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,0.1,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{969AE208-B546-4F88-A3AA-588C4D984EE4}" category="Property Editing" language="Python" name="0,5" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{739C6051-6C60-4F93-B9CD-D559050D06E0}" category="Property Editing" language="Python" name="0,5" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -92,7 +92,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,0.5,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{8A52CC81-A906-4991-87DE-9345E316AD33}" category="Property Editing" language="Python" name="1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{95871091-2550-48D1-9A6E-31D4841940EC}" category="Property Editing" language="Python" name="1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -104,7 +104,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,1,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{84388067-BCB7-45F4-9370-73EBCE93ECA5}" category="Property Editing" language="Python" name="5" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{1E763E73-E226-4A32-9AE4-0B93078EE1EB}" category="Property Editing" language="Python" name="5" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -116,7 +116,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,5,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{C959DB5A-60A7-483E-9AAE-E66CB15721CC}" category="Property Editing" language="Python" name="10" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{D0042B62-21CC-40AA-ADC5-B1FA08C4B30E}" category="Property Editing" language="Python" name="10" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -128,7 +128,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,10,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{CF77E4E1-6672-4AA0-997E-30DAEB94BC4D}" category="Property Editing" language="Python" name="0" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{E1AF632A-55A4-4E9B-8023-BC37AA12DA6A}" category="Property Editing" language="Python" name="0" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -140,9 +140,9 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,0,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{5BC9192C-EF4B-478E-A290-7C8836069D88}" category="Polygon Modeling" language="Python" name="Weld Points to COG" switch="False" type="QPopMenuItem">def Script_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{572AF2B8-7D1B-4B9F-AE32-62F2EFB63D75}" category="Polygon Modeling" language="Python" name="Weld Points to COG" switch="False" type="QPopMenuItem">def Script_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	print (self.name)
-	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QPopMenuItem><QPopMenuItem UID="{45D876F8-C7E2-4F54-B525-C6423250B0BA}" category="Preferences" language="Python" name="Raycast Select in Shaded Mode" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QPopMenuItem><QPopMenuItem UID="{A1E1942B-9947-43D6-B8B7-51206699A684}" category="Preferences" language="Python" name="Raycast Select in Shaded Mode" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	if Application.Preferences.GetPreferenceValue(&quot;Select.rectraycast&quot;) == 1:
 		return True
 	return False
@@ -150,20 +150,20 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 
 def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	Application.SetValue(&quot;preferences.Select.rectraycast&quot;, not Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets))
-</QPopMenuItem><QPopMenuItem UID="{00275128-9FCE-4510-ACFB-9889783E3A8F}" category="Views" language="Python" name="Top View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+</QPopMenuItem><QPopMenuItem UID="{C164CDE5-5FA4-4B76-9CFB-F5FBF6175774}" category="Views" language="Python" name="Top View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Top\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{FEFD0F97-8D9C-44DB-835C-56021C9B2AFF}" category="Preferences" language="Python" name="Raycast Select - Include Backfacing Polygons" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{D4DD030F-085F-4709-AC6D-12CF9E69AF8F}" category="Preferences" language="Python" name="Raycast Select - Include Backfacing Polygons" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	if Application.Preferences.GetPreferenceValue(&quot;Select.raycastbackfacing&quot;) == 1:
 		return True
 	return False
 
 def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	Application.SetValue(&quot;preferences.Select.raycastbackfacing&quot;, not Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets))
-</QPopMenuItem><QPopMenuItem UID="{9D22AD5E-C4E9-4FBC-A8FD-B7895C24188A}" category="Preferences" language="Python" name="Orbit Around Selection" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+</QPopMenuItem><QPopMenuItem UID="{6A2B1D3D-953C-460F-87C7-091C3FB6D162}" category="Preferences" language="Python" name="Orbit Around Selection" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;Camera.orbitselected&quot;) == 2
 	return State
 
@@ -175,7 +175,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 		Application.SetValue(&quot;preferences.Camera.orbitselected&quot;, 0, &quot;&quot;)
 
 
-</QPopMenuItem><QPopMenuItem UID="{DD2972AD-9B07-4BB3-8C2C-BD367A06CD91}" category="Preferences" language="Python" name="Orbit Around Selection - Components only" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+</QPopMenuItem><QPopMenuItem UID="{FFE32167-897A-4476-818D-60655E194733}" category="Preferences" language="Python" name="Orbit Around Selection - Components only" switch="True" type="QPopMenuItem">def Switch_Init(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;Camera.orbitselected&quot;) == 1
 	return State
 
@@ -188,9 +188,9 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 
 
 
-</QPopMenuItem><QPopMenuItem UID="{2FC794BD-0515-40C1-9D9D-43DB04D940B1}" category="Polygon Modeling" language="Python" name="Cap" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+</QPopMenuItem><QPopMenuItem UID="{D4500DDB-A21A-43E2-B02C-BE5BCA0A2885}" category="Polygon Modeling" language="Python" name="Cap" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	#Weld selected points towards their common center
-	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QPopMenuItem><QPopMenuItem UID="{8AFBB80C-46C6-4B39-806A-9E3D88268C12}" category="Clusters Editing" language="Python" name="Merge Clusters with same Material" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QPopMenuItem><QPopMenuItem UID="{037E015B-CAE7-483F-BC7E-ADC557F3BB1D}" category="Clusters Editing" language="Python" name="Merge Clusters with same Material" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	Sel = Application.Selection
 	oSel = list()
 	for Obj in Sel:
@@ -227,17 +227,17 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 
 	Application.Application.DeselectAll()
 	Application.SelectObj(oSel)
-</QPopMenuItem><QPopMenuItem UID="{B29BA5D4-99FA-4FC8-896A-89D5F8200E42}" category="Views" language="Python" name="User View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+</QPopMenuItem><QPopMenuItem UID="{F0B9B6C0-1418-45CE-8964-629A20110F9E}" category="Views" language="Python" name="User View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;User\&quot;)&quot;)
-	eval(stri)</QPopMenuItem><QPopMenuItem UID="{2BFB415D-3833-473A-B2BE-75D709F3DD49}" category="Views" language="Python" name="Right View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	eval(stri)</QPopMenuItem><QPopMenuItem UID="{7279239A-F176-4FC4-A45A-0689A0633837}" category="Views" language="Python" name="Right View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Right\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{05B66BAF-ACCE-4EC8-8B69-8096ACB18FAB}" category="Views" language="Python" name="Back View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{E2AFF052-7F7A-4672-9F93-C898B7245394}" category="Views" language="Python" name="Back View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Front\&quot;)&quot;)
@@ -245,14 +245,14 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	Application.AlignViewCamera (3,True,&quot;&quot;, viewIndices[oView])
 
-</QPopMenuItem><QPopMenuItem UID="{4290E775-3A86-44B7-B77F-913A32AC650E}" category="Views" language="Python" name="Front View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+</QPopMenuItem><QPopMenuItem UID="{451900B1-0B49-4F5C-8655-F988DAD74D76}" category="Views" language="Python" name="Front View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Front\&quot;)&quot;)
 	eval(cmd)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])
-</QPopMenuItem><QPopMenuItem UID="{42838E69-0666-4576-BC60-F2A7FB58ACD9}" category="Property Editing" language="Python" name="None" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+</QPopMenuItem><QPopMenuItem UID="{F7AE0718-4CFC-48BB-9239-2063D24EA979}" category="Property Editing" language="Python" name="None" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -264,7 +264,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,&quot;&quot;,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{B2094488-F4C9-4347-9E93-676733DD441C}" category="Property Editing" language="Python" name="-1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{AEE8D558-FFB6-4B8C-AA5E-4BD172FA32DD}" category="Property Editing" language="Python" name="-1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -276,19 +276,19 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam,-1,&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{ED2E0417-D7B9-4398-8D20-4B9603E95802}" category="Views" language="Python" name="Bottom View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+						pass</QPopMenuItem><QPopMenuItem UID="{94FD39C0-0812-49E4-BBF9-3B6A148DB885}" category="Views" language="Python" name="Bottom View" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Top\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (2,True,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{B82D5211-BB65-4749-A58F-9FBCCC90564B}" category="Views" language="Python" name="LeftView" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.AlignViewCamera (2,True,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{61DDACDC-8DBC-4749-93C9-41170870D1FF}" category="Views" language="Python" name="LeftView" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Right\&quot;)&quot;)
 	eval(cmd)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (1,True,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{597815FB-77D7-472C-A01D-76968A9BD342}" category="Property Editing" language="Python" name="add 1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+	Application.AlignViewCamera (1,True,&quot;&quot;, viewIndices[oView])</QPopMenuItem><QPopMenuItem UID="{75947CC7-7445-4E99-8083-77D97390B694}" category="Property Editing" language="Python" name="add 1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -300,7 +300,7 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam, (CurrentVal + 1),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{1E47D41A-43A7-42DF-A42D-9287D5D369D9}" category="Property Editing" language="Python" name="subtract 1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
+						pass</QPopMenuItem><QPopMenuItem UID="{C2825CB8-9EEF-4277-8BC6-B9540C0F7607}" category="Property Editing" language="Python" name="subtract 1" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -312,83 +312,83 @@ def Switch_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets): #Don't rename 
 						CurrentVal = Application.GetValue(FullParamName)
 						Application.SetValue (oObj.FullName + &quot;.&quot; + oParam, (CurrentVal - 1),&quot;&quot;)
 					except:
-						pass</QPopMenuItem><QPopMenuItem UID="{C1E0C237-4E1D-4A51-B812-BAF2D8F86BCC}" category="Views" language="Python" name="Set Wireframe Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+						pass</QPopMenuItem><QPopMenuItem UID="{6923E072-3FBB-4A74-B43A-3CAB5A6706B3}" category="Views" language="Python" name="Set Wireframe Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;wireframe&quot;)</QPopMenuItem><QPopMenuItem UID="{35E91288-C269-48F2-B01B-6D3B6F62685C}" category="Views" language="Python" name="Set Bounding Box Display mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;wireframe&quot;)</QPopMenuItem><QPopMenuItem UID="{1E450918-600F-41B1-8CF5-563BFA11A010}" category="Views" language="Python" name="Set Bounding Box Display mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;bbox&quot;)</QPopMenuItem><QPopMenuItem UID="{8AC0A367-B26E-40E2-A18B-55FB321C9720}" category="Views" language="Python" name="Set Depth Cue Dispay Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;bbox&quot;)</QPopMenuItem><QPopMenuItem UID="{02C2C9F7-1378-4858-A5E8-9F470184873F}" category="Views" language="Python" name="Set Depth Cue Dispay Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;depthcue&quot;)</QPopMenuItem><QPopMenuItem UID="{1E5C2CD3-4596-4A8A-95F1-F3D50EDE0409}" category="Views" language="Python" name="Set Hidden Line Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;depthcue&quot;)</QPopMenuItem><QPopMenuItem UID="{22465FA1-08CF-4C5C-8BA2-30060FBC5C26}" category="Views" language="Python" name="Set Hidden Line Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;hiddenline&quot;)</QPopMenuItem><QPopMenuItem UID="{C5AC7218-913F-4A79-929E-4153EE7B1341}" category="Views" language="Python" name="Set Constant Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;hiddenline&quot;)</QPopMenuItem><QPopMenuItem UID="{F753F7AC-9436-4061-A0CC-B4A78C7EE8DD}" category="Views" language="Python" name="Set Constant Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;constant&quot;)</QPopMenuItem><QPopMenuItem UID="{063C0168-E597-48ED-8033-2003B3F65BF8}" category="Views" language="Python" name="Set Shaded Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;constant&quot;)</QPopMenuItem><QPopMenuItem UID="{4F275F96-817A-44B9-8A3B-7D648B6E91F6}" category="Views" language="Python" name="Set Shaded Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;shaded&quot;)</QPopMenuItem><QPopMenuItem UID="{55C1CBD4-220E-4BF7-8569-BB61FAD546D4}" category="Views" language="Python" name="Set Textured Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;shaded&quot;)</QPopMenuItem><QPopMenuItem UID="{6A584F3D-47C7-40E5-8273-C027C471A926}" category="Views" language="Python" name="Set Textured Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;textured&quot;)</QPopMenuItem><QPopMenuItem UID="{8533FFDE-8985-4F1A-AB1E-F61E7B3D6D36}" category="Views" language="Python" name="Set Textured Decal Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;textured&quot;)</QPopMenuItem><QPopMenuItem UID="{DE66447C-F123-40A7-B27C-7B8B62FF4D12}" category="Views" language="Python" name="Set Textured Decal Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;texturedecal&quot;)</QPopMenuItem><QPopMenuItem UID="{A4B02194-4F5B-4C3F-A66B-47538C29D527}" category="Views" language="Python" name="Set Realtime Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;texturedecal&quot;)</QPopMenuItem><QPopMenuItem UID="{29CFF578-A0A5-4444-8891-EEAB28FE8E5B}" category="Views" language="Python" name="Set Realtime Display Mode" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;realtimeshaders&quot;)</QPopMenuItem><QPopMenuItem UID="{B798957D-5D9E-4B64-AC96-A8D3219C9835}" category="Curve Modeling" language="Python" name="Align Bezier Handles" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	Application.SetDisplayMode(oCam.FullName,&quot;realtimeshaders&quot;)</QPopMenuItem><QPopMenuItem UID="{9A57CE78-EC22-4487-B20A-2FE52BBC6F03}" category="Curve Modeling" language="Python" name="Align Bezier Handles" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,2)
-	pass</QPopMenuItem><QPopMenuItem UID="{605380AC-F4B5-4611-A0B2-4E1C8F8795D1}" category="Curve Modeling" language="Python" name="Align Bezier Handles Forward to Back" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	pass</QPopMenuItem><QPopMenuItem UID="{133CE0C5-8EA8-4A06-A87F-44C16839D34F}" category="Curve Modeling" language="Python" name="Align Bezier Handles Forward to Back" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,0)
-	pass</QPopMenuItem><QPopMenuItem UID="{86138C42-B131-496C-BC10-72CBA20B3E64}" category="Curve Modeling" language="Python" name="Align Bezier Handles Back to Forward" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	pass</QPopMenuItem><QPopMenuItem UID="{758C78F4-6FD9-4E61-A112-EA76DA8BB84D}" category="Curve Modeling" language="Python" name="Align Bezier Handles Back to Forward" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,1)
-	pass</QPopMenuItem><QPopMenuItem UID="{E5C0D5A7-19E0-471E-93C4-B7BF2AFF8805}" category="Curve Modeling" language="Python" name="Align Bezier Handles - Make Knot a Corner" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	pass</QPopMenuItem><QPopMenuItem UID="{8C8827B3-0B97-4362-A4FC-C8CF463AC30B}" category="Curve Modeling" language="Python" name="Align Bezier Handles - Make Knot a Corner" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,7)
-	pass</QPopMenuItem><QPopMenuItem UID="{24CE8F4F-050C-4004-A5DA-E3626765300D}" category="Curve Modeling" language="Python" name="Align Bezier Handles - Make adjacent Segements Linear" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	pass</QPopMenuItem><QPopMenuItem UID="{518A8EEA-5ECE-42BC-B42A-B5DCB48EECA1}" category="Curve Modeling" language="Python" name="Align Bezier Handles - Make adjacent Segements Linear" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,5)
-	pass</QPopMenuItem><QPopMenuItem UID="{A5546BFA-AC0F-4009-BD14-0F9419733249}" category="Preferences" language="Python" name="Inspect Duplicate Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.duplicate&quot;)</QPopMenuItem><QPopMenuItem UID="{B0ABCA35-18B8-407E-861D-09AE9F86C052}" category="Preferences" language="Python" name="Inspect Selection Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.select&quot;)</QPopMenuItem><QPopMenuItem UID="{92C78511-5448-43AF-912D-1C9C8C6827B7}" category="Preferences" language="Python" name="Inspect Camera Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.Camera&quot;)</QPopMenuItem></QPopMenuItems><QPopMenus><QPopMenu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Weld Points to COG;{5BC9192C-EF4B-478E-A290-7C8836069D88};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Weld Points to Target;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5F394BB-72F7-49AC-B3A9-E1F7AE5E9D48};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh Points" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenuItem><QPopMenuItem UID="{6FE88A3B-078A-41F3-9A48-F9DF96B3EF57}" category="Preferences" language="Python" name="Inspect Duplicate Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.duplicate&quot;)</QPopMenuItem><QPopMenuItem UID="{DBEF80C6-FF17-4FA3-8CDC-662E0B292A9F}" category="Preferences" language="Python" name="Inspect Selection Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.select&quot;)</QPopMenuItem><QPopMenuItem UID="{627BD3CE-48C6-4C08-80C6-E7F3468FB146}" category="Preferences" language="Python" name="Inspect Camera Options" switch="False" type="QPopMenuItem">def Script_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.Camera&quot;)</QPopMenuItem></QPopMenuItems><QPopMenus><QPopMenu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Weld Points to COG;{572AF2B8-7D1B-4B9F-AE32-62F2EFB63D75};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Weld Points to Target;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5F394BB-72F7-49AC-B3A9-E1F7AE5E9D48};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh Points" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};Command;Set Edge Crease Value;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E9FEE12-2D9E-11D4-B841-009027BC6587};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Subdivide Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{8F1FA2AF-3635-11D4-A8AF-00C04F8EDF15};Command;Split Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{904FB220-46B2-11D4-8C28-009027BC3A0E};Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Cap;{2FC794BD-0515-40C1-9D9D-43DB04D940B1};Command;Weld Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{61467638-32CE-48C9-971C-904D60579F1A};Command;Bridge Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{3AEF5A2C-40E4-4B08-AE6D-ABBC7C199907}" language="Python" name="Edit Polymesh Edges" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};Command;Set Edge Crease Value;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E9FEE12-2D9E-11D4-B841-009027BC6587};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Subdivide Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{8F1FA2AF-3635-11D4-A8AF-00C04F8EDF15};Command;Split Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{904FB220-46B2-11D4-8C28-009027BC3A0E};Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Cap;{D4500DDB-A21A-43E2-B02C-BE5BCA0A2885};Command;Weld Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{61467638-32CE-48C9-971C-904D60579F1A};Command;Bridge Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{3AEF5A2C-40E4-4B08-AE6D-ABBC7C199907}" language="Python" name="Edit Polymesh Edges" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Inset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{61DB5CAA-03FB-497F-8AAC-A9BB5B6C72BE};Command;Offset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{A3F7B88C-7B09-4B70-B55D-54B6D6D01BC5};Command;Local Subdivision;{50830560-31B5-11D0-82E7-00A0243E268D}:{F8842CA7-78FD-11D4-B851-009027BC6587};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};Command;Invert Selected Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{11BEB110-85B1-11D4-8C31-009027BC3A0E};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Polygon Detach;{50830560-31B5-11D0-82E7-00A0243E268D}:{4F25DC5B-7EE8-487C-B639-D1E7946A53FC};Command;Polygon Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{598E1068-B64F-47F4-8F08-99443D94B0B5};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};Command;Slice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{3FCF7E6F-5E01-4932-9D1A-201A269255C5};Command;Split Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{52964382-BCB8-11D4-8C4B-009027BC3A0E};Command;Subdivide Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{BC8CCEEF-370F-11D4-A8B0-00C04F8EDF15};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Bridge Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{95983629-72EA-11D4-A8C2-00C04F8EDF15};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Duplicate Polygons Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{D1343A2C-97E5-4236-9F41-3DBD21CAD8CB}" language="Python" name="Edit Polymesh Polygons" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Inset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{61DB5CAA-03FB-497F-8AAC-A9BB5B6C72BE};Command;Offset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{A3F7B88C-7B09-4B70-B55D-54B6D6D01BC5};Command;Local Subdivision;{50830560-31B5-11D0-82E7-00A0243E268D}:{F8842CA7-78FD-11D4-B851-009027BC6587};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};Command;Invert Selected Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{11BEB110-85B1-11D4-8C31-009027BC3A0E};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Polygon Detach;{50830560-31B5-11D0-82E7-00A0243E268D}:{4F25DC5B-7EE8-487C-B639-D1E7946A53FC};Command;Polygon Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{598E1068-B64F-47F4-8F08-99443D94B0B5};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};Command;Slice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{3FCF7E6F-5E01-4932-9D1A-201A269255C5};Command;Split Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{52964382-BCB8-11D4-8C4B-009027BC3A0E};Command;Subdivide Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{BC8CCEEF-370F-11D4-A8B0-00C04F8EDF15};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Bridge Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{95983629-72EA-11D4-A8C2-00C04F8EDF15};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Duplicate Polygons Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{D1343A2C-97E5-4236-9F41-3DBD21CAD8CB}" language="Python" name="Edit Polymesh Polygons" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Gator;{50830560-31B5-11D0-82E7-00A0243E268D}:{7DC64A1A-9888-4616-971E-707A802DF006};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Mesh Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{AB9A5C20-5839-11D4-8C2A-009027BC3A0E};Command;Mesh Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{EB16D9E0-5CC1-11D4-8C2C-009027BC3A0E};Command;Boolean Union;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E8-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Intersection;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E9-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Difference;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E7-8E7A-11D4-8094-00A0C9ED67BD}" language="Python" name="Edit Polymesh (multiple)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Gator;{50830560-31B5-11D0-82E7-00A0243E268D}:{7DC64A1A-9888-4616-971E-707A802DF006};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Mesh Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{AB9A5C20-5839-11D4-8C2A-009027BC3A0E};Command;Mesh Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{EB16D9E0-5CC1-11D4-8C2C-009027BC3A0E};Command;Boolean Union;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E8-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Intersection;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E9-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Difference;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E7-8E7A-11D4-8094-00A0C9ED67BD}" language="Python" name="Edit Polymesh (multiple)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Toggle Background Color;{50830560-31B5-11D0-82E7-00A0243E268D}:{D90C33E1-23CB-498A-9B2C-A4860E4E515C};Command;Isolate Selected;{50830560-31B5-11D0-82E7-00A0243E268D}:{153189E9-79CF-4333-89A2-35D123A8B003};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenu;Preferences - Tools - Camera;{94BD468D-7942-415C-AC30-3C905F2060D6};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Set Realtime Display Mode;{A4B02194-4F5B-4C3F-A66B-47538C29D527};QPopMenuItem;Set Textured Decal Display Mode;{8533FFDE-8985-4F1A-AB1E-F61E7B3D6D36};QPopMenuItem;Set Textured Display Mode;{55C1CBD4-220E-4BF7-8569-BB61FAD546D4};QPopMenuItem;Set Shaded Display Mode;{063C0168-E597-48ED-8033-2003B3F65BF8};QPopMenuItem;Set Constant Display Mode;{C5AC7218-913F-4A79-929E-4153EE7B1341};QPopMenuItem;Set Hidden Line Display Mode;{1E5C2CD3-4596-4A8A-95F1-F3D50EDE0409};QPopMenuItem;Set Depth Cue Dispay Mode;{8AC0A367-B26E-40E2-A18B-55FB321C9720};QPopMenuItem;Set Wireframe Display Mode;{C1E0C237-4E1D-4A51-B812-BAF2D8F86BCC};QPopMenuItem;Set Bounding Box Display mode;{35E91288-C269-48F2-B01B-6D3B6F62685C};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Toggle Headlight Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{24D69496-C507-4447-AB77-AB60904B17DC};Command;Toggle Wire On Shaded Display;{50830560-31B5-11D0-82E7-00A0243E268D}:{2218CD14-9A9A-49CA-A33F-B61A4710BFE8};Command;Toggle Shaded Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{CEBDE6E3-7C57-4349-B4E9-83234DFB91D3};Command;Maximize/Restore Current Viewport;{50830560-31B5-11D0-82E7-00A0243E268D}:{2343C950-0D21-11D3-BFE5-00A0248F9397}" language="Python" name="Display Modes" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Toggle Background Color;{50830560-31B5-11D0-82E7-00A0243E268D}:{D90C33E1-23CB-498A-9B2C-A4860E4E515C};Command;Isolate Selected;{50830560-31B5-11D0-82E7-00A0243E268D}:{153189E9-79CF-4333-89A2-35D123A8B003};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenu;Preferences - Tools - Camera;{B0F26EEB-FE2C-4A0C-ABA5-C11E44D14003};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Set Realtime Display Mode;{29CFF578-A0A5-4444-8891-EEAB28FE8E5B};QPopMenuItem;Set Textured Decal Display Mode;{DE66447C-F123-40A7-B27C-7B8B62FF4D12};QPopMenuItem;Set Textured Display Mode;{6A584F3D-47C7-40E5-8273-C027C471A926};QPopMenuItem;Set Shaded Display Mode;{4F275F96-817A-44B9-8A3B-7D648B6E91F6};QPopMenuItem;Set Constant Display Mode;{F753F7AC-9436-4061-A0CC-B4A78C7EE8DD};QPopMenuItem;Set Hidden Line Display Mode;{22465FA1-08CF-4C5C-8BA2-30060FBC5C26};QPopMenuItem;Set Depth Cue Dispay Mode;{02C2C9F7-1378-4858-A5E8-9F470184873F};QPopMenuItem;Set Wireframe Display Mode;{6923E072-3FBB-4A74-B43A-3CAB5A6706B3};QPopMenuItem;Set Bounding Box Display mode;{1E450918-600F-41B1-8CF5-563BFA11A010};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Toggle Headlight Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{24D69496-C507-4447-AB77-AB60904B17DC};Command;Toggle Wire On Shaded Display;{50830560-31B5-11D0-82E7-00A0243E268D}:{2218CD14-9A9A-49CA-A33F-B61A4710BFE8};Command;Toggle Shaded Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{CEBDE6E3-7C57-4349-B4E9-83234DFB91D3};Command;Maximize/Restore Current Viewport;{50830560-31B5-11D0-82E7-00A0243E268D}:{2343C950-0D21-11D3-BFE5-00A0248F9397}" language="Python" name="Display Modes" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Duplicate Multiple Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{6F74FAC0-5E7A-11D4-8C2C-009027BC3A0E};Command;Duplicate Single Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{AF4EDB50-5E63-11D4-8C2C-009027BC3A0E};Command;Extrude Component Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{C8436D81-4851-11D4-B7F3-0008C7A011A6};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenu;Preferences - Commands - Duplicate Options;{843A22C5-D27C-4DF5-B499-260B4BC1B786};QPopMenu;Preferences - Tools - Polygon;{F86031D7-7C2C-484C-9519-436420E79E57};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Slice Polygons Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{6CA134E9-64EA-494B-A7EE-E47BF8D16931};Command;Split Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB7D9160-46B2-11D4-8C28-009027BC3A0E};Command;Split Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{C6737510-67EA-11D4-8C2D-009027BC3A0E};Command;Weld Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{45BA55DB-1280-46FC-96F2-D8385916D61F};Command;Add Vertex Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{64578190-B32E-11D4-8C47-009027BC3A0E};Command;Add Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{87F68420-4782-11D4-8C27-009027BC3A0E};Command;Add Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EFC008C0-3317-11D4-8C24-009027BC3A0E};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Extrude Comp. Axis;{50830560-31B5-11D0-82E7-00A0243E268D}:{9E734592-4B92-11D4-B7F3-0008C7A011A6};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};Command;Bevel;{50830560-31B5-11D0-82E7-00A0243E268D}:{9589E229-4BB4-11D4-A8B7-00C04F8EDF15};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Cursor Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{401C5B7B-3CA8-4675-AC2F-6383B855F747};Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF}" language="Python" name="Edit Polymesh (general)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Duplicate Multiple Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{6F74FAC0-5E7A-11D4-8C2C-009027BC3A0E};Command;Duplicate Single Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{AF4EDB50-5E63-11D4-8C2C-009027BC3A0E};Command;Extrude Component Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{C8436D81-4851-11D4-B7F3-0008C7A011A6};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenu;Preferences - Commands - Duplicate Options;{E5735CDE-7DFF-4487-A960-267E7A1ADA70};QPopMenu;Preferences - Tools - Polygon;{17362E21-200B-4FCF-A2F4-85094EA1AC7C};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Slice Polygons Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{6CA134E9-64EA-494B-A7EE-E47BF8D16931};Command;Split Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB7D9160-46B2-11D4-8C28-009027BC3A0E};Command;Split Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{C6737510-67EA-11D4-8C2D-009027BC3A0E};Command;Weld Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{45BA55DB-1280-46FC-96F2-D8385916D61F};Command;Add Vertex Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{64578190-B32E-11D4-8C47-009027BC3A0E};Command;Add Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{87F68420-4782-11D4-8C27-009027BC3A0E};Command;Add Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EFC008C0-3317-11D4-8C24-009027BC3A0E};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Extrude Comp. Axis;{50830560-31B5-11D0-82E7-00A0243E268D}:{9E734592-4B92-11D4-B7F3-0008C7A011A6};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};Command;Bevel;{50830560-31B5-11D0-82E7-00A0243E268D}:{9589E229-4BB4-11D4-A8B7-00C04F8EDF15};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Cursor Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{401C5B7B-3CA8-4675-AC2F-6383B855F747};Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF}" language="Python" name="Edit Polymesh (general)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;PolyMesh Subdivide With Center;{50830560-31B5-11D0-82E7-00A0243E268D}:{412F8EE6-C4E2-11D4-B863-009027BC6587};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Invert All Normals;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC71-F6B6-11D2-AC7E-00A02485CECB};Command;Invert Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{8DE9E423-B5F0-11D4-87B1-00A0C9ED6CE2};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Dice Object;{50830560-31B5-11D0-82E7-00A0243E268D}:{6AF65230-4EDA-42EB-9AC5-192F4F3916BA};Command;Subdivide;{50830560-31B5-11D0-82E7-00A0243E268D}:{60D7DF7E-B5B0-11D4-814F-00A0C9AC19A9};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;PolyMesh Subdivide With Center;{50830560-31B5-11D0-82E7-00A0243E268D}:{412F8EE6-C4E2-11D4-B863-009027BC6587};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Invert All Normals;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC71-F6B6-11D2-AC7E-00A02485CECB};Command;Invert Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{8DE9E423-B5F0-11D4-87B1-00A0C9ED6CE2};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Dice Object;{50830560-31B5-11D0-82E7-00A0243E268D}:{6AF65230-4EDA-42EB-9AC5-192F4F3916BA};Command;Subdivide;{50830560-31B5-11D0-82E7-00A0243E268D}:{60D7DF7E-B5B0-11D4-814F-00A0C9AC19A9};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
 	pass</QPopMenu><QPopMenu executeCode="False" items="Command;RelaxUVW;{50830560-31B5-11D0-82E7-00A0243E268D}:{ED3B4730-7798-45D8-9C23-5BCF3F8A7FEF}" language="Python" name="Edit UVs" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF};Command;Move Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EC9EC01E-B5C4-4335-9625-5F32F16875C6};Command;Move Component Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56AA96F2-7AE3-11D1-8036-00A0243E2717};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{C21BFD40-3413-11D4-B48F-00D0B7142AFA};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Add Point on Curve Tool by CVs;{50830560-31B5-11D0-82E7-00A0243E268D}:{2BB0233A-293A-44DF-8A83-FEEA941BCE9B};Command;Add Point on Curve Tool by Bezier-Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5AB5B29-A386-4CC5-A040-34956CD44199};Command;Add Point on Curve Tool by Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{46353ACD-408A-4F3F-A0BB-0244A6CC9AF5}" language="Python" name="Edit NURBS Curve (general)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF};Command;Move Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EC9EC01E-B5C4-4335-9625-5F32F16875C6};Command;Move Component Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56AA96F2-7AE3-11D1-8036-00A0243E2717};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{C21BFD40-3413-11D4-B48F-00D0B7142AFA};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Add Point on Curve Tool by CVs;{50830560-31B5-11D0-82E7-00A0243E268D}:{2BB0233A-293A-44DF-8A83-FEEA941BCE9B};Command;Add Point on Curve Tool by Bezier-Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5AB5B29-A386-4CC5-A040-34956CD44199};Command;Add Point on Curve Tool by Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{46353ACD-408A-4F3F-A0BB-0244A6CC9AF5}" language="Python" name="Edit NURBS Curve (general)" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Align Bezier Handles;{B798957D-5D9E-4B64-AC96-A8D3219C9835};QPopMenuItem;Align Bezier Handles Back to Forward;{86138C42-B131-496C-BC10-72CBA20B3E64};QPopMenuItem;Align Bezier Handles Forward to Back;{605380AC-F4B5-4611-A0B2-4E1C8F8795D1};QPopMenuItem;Align Bezier Handles - Make adjacent Segements Linear;{24CE8F4F-050C-4004-A5DA-E3626765300D};Command;Set Curve Knot Multiplicity;{50830560-31B5-11D0-82E7-00A0243E268D}:{90FF723C-BADB-4FCF-8756-AA3D21DAD819}" language="Python" name="Edit NURBS Curve Knot" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Align Bezier Handles;{9A57CE78-EC22-4487-B20A-2FE52BBC6F03};QPopMenuItem;Align Bezier Handles Back to Forward;{758C78F4-6FD9-4E61-A112-EA76DA8BB84D};QPopMenuItem;Align Bezier Handles Forward to Back;{133CE0C5-8EA8-4A06-A87F-44C16839D34F};QPopMenuItem;Align Bezier Handles - Make adjacent Segements Linear;{518A8EEA-5ECE-42BC-B42A-B5DCB48EECA1};Command;Set Curve Knot Multiplicity;{50830560-31B5-11D0-82E7-00A0243E268D}:{90FF723C-BADB-4FCF-8756-AA3D21DAD819}" language="Python" name="Edit NURBS Curve Knot" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
 	pass</QPopMenu><QPopMenu executeCode="False" items="Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{C21BFD40-3413-11D4-B48F-00D0B7142AFA}" language="Python" name="Edit NURBS Curve IsoPoint" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#This function must not be renamed!
 	#Add your script code here
@@ -410,17 +410,17 @@ def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't renam
 		Code += &quot;\tif bAutoInspect and bCtrlDown or bAutoInspect==False and bCtrlDown==False: Application.InspectObj(\&quot;&quot; + oLight.FullName  + &quot;\&quot;);\n&quot;
 		Code += (&quot;\telse: Application.SelectObj('&quot; + oLight.FullName + &quot;','','');&quot;)
 		oLightItem.code = Code
-		self.appendTempMenuItem (oLightItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Top View;{00275128-9FCE-4510-ACFB-9889783E3A8F};QPopMenuItem;Right View;{2BFB415D-3833-473A-B2BE-75D709F3DD49};QPopMenuItem;Front View;{4290E775-3A86-44B7-B77F-913A32AC650E};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Bottom View;{ED2E0417-D7B9-4398-8D20-4B9603E95802};QPopMenuItem;LeftView;{B82D5211-BB65-4749-A58F-9FBCCC90564B};QPopMenuItem;Back View;{05B66BAF-ACCE-4EC8-8B69-8096ACB18FAB};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;User View;{B29BA5D4-99FA-4FC8-896A-89D5F8200E42};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenu;Look Through Camera;{46928EFB-039A-4587-8F6F-D899B3913D1D};QPopMenu;Look Through Spotlight;{F7949848-2107-470B-B7AF-136C9196CC05}" language="Python" name="Set View to..." type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+		self.appendTempMenuItem (oLightItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Top View;{C164CDE5-5FA4-4B76-9CFB-F5FBF6175774};QPopMenuItem;Right View;{7279239A-F176-4FC4-A45A-0689A0633837};QPopMenuItem;Front View;{451900B1-0B49-4F5C-8655-F988DAD74D76};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Bottom View;{94FD39C0-0812-49E4-BBF9-3B6A148DB885};QPopMenuItem;LeftView;{61DDACDC-8DBC-4749-93C9-41170870D1FF};QPopMenuItem;Back View;{E2AFF052-7F7A-4672-9F93-C898B7245394};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;User View;{F0B9B6C0-1418-45CE-8964-629A20110F9E};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenu;Look Through Camera;{CEC2F727-807F-4592-9303-70239482B1A2};QPopMenu;Look Through Spotlight;{2EF8FBE8-B242-4291-BAE9-80DDFC52B6B1}" language="Python" name="Set View to..." type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	pass</QPopMenu><QPopMenu executeCode="False" items="" language="Python" name="Edit Shading Nodes" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	oLO = Application.Desktop.ActiveLayout;
 	i = 0
 	Application.LogMessage(oLO.Views(i).Name)
 	Application.LogMessage(oLO.Views(i).GetAttributeValue(&quot;selection&quot;));
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;+100%;{8B14A2A9-8921-4667-BB2D-DC84A37A06A4};QPopMenuItem;+50%;{1BCF0686-C678-4A95-8D5C-99282D1BD0F0};QPopMenuItem;+10%;{2D4CB4E5-5035-451D-A485-099F6FF55B51};QPopMenuItem;add 1;{597815FB-77D7-472C-A01D-76968A9BD342}" language="Python" name="Property Editing - Add Value" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;+100%;{42C748A8-2787-4895-BCF9-B4F7F6B92B53};QPopMenuItem;+50%;{054F6D14-5C24-40F1-815C-20BC9684D74E};QPopMenuItem;+10%;{3C91CC10-B6E6-4474-8D42-C695E0625DB2};QPopMenuItem;add 1;{75947CC7-7445-4E99-8083-77D97390B694}" language="Python" name="Property Editing - Add Value" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;subtract 1;{1E47D41A-43A7-42DF-A42D-9287D5D369D9};QPopMenuItem;-10%;{C068542A-66BA-490B-BC43-A362C30DBD1C};QPopMenuItem;-50%;{D7C36296-414A-4A3A-98CE-1C12D2BF6F04}" language="Python" name="Property Editing - Subtract Value" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;subtract 1;{C2825CB8-9EEF-4277-8BC6-B9540C0F7607};QPopMenuItem;-10%;{7E13DBC7-7AE3-471F-B203-ACCA803FDD94};QPopMenuItem;-50%;{260E3226-F04E-4517-B0A2-80D6B60E54F2}" language="Python" name="Property Editing - Subtract Value" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;10;{C959DB5A-60A7-483E-9AAE-E66CB15721CC};QPopMenuItem;5;{84388067-BCB7-45F4-9370-73EBCE93ECA5};QPopMenuItem;1;{8A52CC81-A906-4991-87DE-9345E316AD33};QPopMenuItem;0,5;{969AE208-B546-4F88-A3AA-588C4D984EE4};QPopMenuItem;0,1;{8E957C72-1792-4054-8F52-9936FFE2FE4C};QPopMenuItem;0;{CF77E4E1-6672-4AA0-997E-30DAEB94BC4D};QPopMenuItem;-1;{B2094488-F4C9-4347-9E93-676733DD441C};QPopMenuItem;None;{42838E69-0666-4576-BC60-F2A7FB58ACD9}" language="Python" name="Property Editing - Set Value" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;10;{D0042B62-21CC-40AA-ADC5-B1FA08C4B30E};QPopMenuItem;5;{1E763E73-E226-4A32-9AE4-0B93078EE1EB};QPopMenuItem;1;{95871091-2550-48D1-9A6E-31D4841940EC};QPopMenuItem;0,5;{739C6051-6C60-4F93-B9CD-D559050D06E0};QPopMenuItem;0,1;{E13753DC-0105-47F0-B23F-9E8CD8033197};QPopMenuItem;0;{E1AF632A-55A4-4E9B-8023-BC37AA12DA6A};QPopMenuItem;-1;{AEE8D558-FFB6-4B8C-AA5E-4BD172FA32DD};QPopMenuItem;None;{F7AE0718-4CFC-48BB-9239-2063D24EA979}" language="Python" name="Property Editing - Set Value" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
 	pass</QPopMenu><QPopMenu executeCode="True" items="" language="Python" name="Camera Selector (+Ctrl to inspect)" type="QPopMenu">#The following code adds a menu item per existing camera to the bottom of the menu 
 # which selects the respective camera (or inspects it when ctrl key is pressed at the same time)
@@ -439,11 +439,11 @@ def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rena
 		Code += ('\tbAutoInspect = Application.GetValue(\&quot;preferences.Interaction.autoinspect\&quot;)\n')
 		Code += ('\tif bAutoInspect and bCtrlDown or bAutoInspect==False and bCtrlDown==False: Application.InspectObj(\&quot;' + oCam.FullName + '.Camera\&quot;,)')
 		oCamItem.code = Code
-		self.appendTempMenuItem (oCamItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenu;Light Selector (+Ctrl to inspect);{366F3395-C38D-4250-A450-BFCEBEDA4AEB};QPopMenu;Camera Selector (+Ctrl to inspect);{FDC7CF1F-EECC-411E-92BC-00FFF809305D}" language="Python" name="Shading Properties" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+		self.appendTempMenuItem (oCamItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenu;Light Selector (+Ctrl to inspect);{33B43EA4-BDDC-48F6-BE38-352EC939868E};QPopMenu;Camera Selector (+Ctrl to inspect);{0C221C72-1344-4A70-8E65-73396D490390}" language="Python" name="Shading Properties" type="QPopMenu">def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Orbit Around Selection - Components only;{DD2972AD-9B07-4BB3-8C2C-BD367A06CD91};QPopMenuItem;Orbit Around Selection;{9D22AD5E-C4E9-4FBC-A8FD-B7895C24188A};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Inspect Camera Options;{92C78511-5448-43AF-912D-1C9C8C6827B7}" language="Python" name="Preferences - Tools - Camera" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Orbit Around Selection - Components only;{FFE32167-897A-4476-818D-60655E194733};QPopMenuItem;Orbit Around Selection;{6A2B1D3D-953C-460F-87C7-091C3FB6D162};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Inspect Camera Options;{627BD3CE-48C6-4C08-80C6-E7F3468FB146}" language="Python" name="Preferences - Tools - Camera" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Merge Clusters with same Material;{8AFBB80C-46C6-4B39-806A-9E3D88268C12};Command;Create Texture Subprojection;{50830560-31B5-11D0-82E7-00A0243E268D}:{479C4EF9-509D-4F8B-99BC-42A06F13D56F};Command;Create PlanarXY Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A2-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarXZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A4-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarYZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A3-0B13-11D4-B4AE-00AA0068D2C0}" language="Python" name="Create Texture Projection" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Merge Clusters with same Material;{037E015B-CAE7-483F-BC7E-ADC557F3BB1D};Command;Create Texture Subprojection;{50830560-31B5-11D0-82E7-00A0243E268D}:{479C4EF9-509D-4F8B-99BC-42A06F13D56F};Command;Create PlanarXY Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A2-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarXZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A4-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarYZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A3-0B13-11D4-B4AE-00AA0068D2C0}" language="Python" name="Create Texture Projection" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 	#Add your script code here
 	pass</QPopMenu><QPopMenu executeCode="True" items="" language="Python" name="Look Through Spotlight" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function!
 
@@ -475,100 +475,78 @@ def QPopMenu_Execute (self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rena
 		Code += ('\toVM.SetAttributeValue(&quot;activecamera:&quot; + oView + &quot;\&quot;,&quot;' + oCam.FullName + '&quot;)\n')
 
 		oCamItem.code = Code
-		self.appendTempMenuItem (oCamItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Raycast Select in Shaded Mode;{45D876F8-C7E2-4F54-B525-C6423250B0BA};QPopMenuItem;Raycast Select - Include Backfacing Polygons;{FEFD0F97-8D9C-44DB-835C-56021C9B2AFF};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Inspect Selection Options;{B0ABCA35-18B8-407E-861D-09AE9F86C052}" language="Python" name="Preferences - Tools - Polygon" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function
+		self.appendTempMenuItem (oCamItem)</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Raycast Select in Shaded Mode;{A1E1942B-9947-43D6-B8B7-51206699A684};QPopMenuItem;Raycast Select - Include Backfacing Polygons;{D4DD030F-085F-4709-AC6D-12CF9E69AF8F};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Inspect Selection Options;{DBEF80C6-FF17-4FA3-8CDC-662E0B292A9F}" language="Python" name="Preferences - Tools - Polygon" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function
 	#Add your script code here
-	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Extrude duplicated Polygons;{D62782CB-5CC2-4BC1-8E3F-311DD6CA020A};QPopSeparator;NewSeparator;{1B68AD51-0CB9-4DB8-B50D-E7D811A77FA2};QPopMenuItem;Inspect Duplicate Options;{A5546BFA-AC0F-4009-BD14-0F9419733249}" language="Python" name="Preferences - Commands - Duplicate Options" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function
+	pass</QPopMenu><QPopMenu executeCode="False" items="QPopMenuItem;Extrude duplicated Polygons;{6DD090FB-627C-4DAD-90AF-9BCA87371B29};QPopSeparator;NewSeparator;{7AF0AC4A-4970-4C5B-873F-992B842C6391};QPopMenuItem;Inspect Duplicate Options;{6FE88A3B-078A-41F3-9A48-F9DF96B3EF57}" language="Python" name="Preferences - Commands - Duplicate Options" type="QPopMenu">def QPopMenu_Execute(self, QPopMenuItems, QPopMenus, QPopMenuSets):	#Don't rename this function
 	#Add your script code here
 	pass</QPopMenu></QPopMenus><QPopMenuSets><QPopMenuSet AContexts="NURBS_Curve (multiple);NURBS_Curve (or components);Polymesh (multiple);Polymesh (or components);Default" AMenus="None;Edit NURBS Curve (general);Edit Polymesh (multiple);Edit Polymesh (general);None" BContexts="VBScript_TestDisplayContext;Default" BMenus="None;None" CContexts="Default" CMenus="None" DContexts="NURBS_Curve (single);NURBS_Curve_Subcurve;NURBS_Curve_IsoPoint;NURBS_Curve_Knot;NURBS_Curve_Point;Polymesh (single);Polymesh_Polygons;Polymesh_Edges;Polymesh_Points;Default" DMenus="None;Edit NURBS Curve Subcurve;Edit NURBS Curve IsoPoint;Edit NURBS Curve Knot;None;Edit Polymesh;Edit Polymesh Polygons;Edit Polymesh Edges;Edit Polymesh Points;None" name="Modeling" type="QPopMenuSet"/><QPopMenuSet AContexts="Default" AMenus="Edit UVs" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="UV Editing" type="QPopMenuSet"/><QPopMenuSet AContexts="Default" AMenus="Edit Shading Nodes" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Shader Editing" type="QPopMenuSet"/><QPopMenuSet AContexts="Polymesh (or components);Default" AMenus="Create Texture Projection;None" BContexts="Default" BMenus="Shading Properties" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Lighting and shading" type="QPopMenuSet"/><QPopMenuSet AContexts="Default" AMenus="Property Editing - Set Value" BContexts="Default" BMenus="Property Editing - Add Value" CContexts="Default" CMenus="Property Editing - Subtract Value" DContexts="Default" DMenus="None" name="Property Editing" type="QPopMenuSet"/><QPopMenuSet AContexts="Default" AMenus="None" BContexts="Default" BMenus="Display Modes" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Views" type="QPopMenuSet"/></QPopMenuSets><QPopMenuDisplayContexts><QPopMenuDisplayContext language="Python" name="Polymesh (or components)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		oSelection = selection(0)
 		Type = Types[0]
 		if Type == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
 			return True
 		if ((Type == &quot;edgeSubComponent&quot;) or (Type == &quot;pntSubComponent&quot;) or (Type == &quot;polySubComponent&quot;)):
-			oParentObj = ComponentParents[0]
 			if ComponentParentTypes[0] == &quot;polymsh&quot;:  #Is the parent of the selected component(s) a polymesh?
 				return True								
 	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Default" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #Don't rename this function
 	return True</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh_Points" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		oSelection = selection[0]
 		if (Types[0] == &quot;pntSubComponent&quot;):
-			print (&quot;Hi&quot;)
-			#print (ComponentParentTypes[0])
-			oParentObj = ComponentParents[0]
 			if ComponentParentTypes[0] == &quot;polymsh&quot;: #Is the parent of the selected component(s) a polymesh?
 				return True								
-	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh_Edges" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames):  #This function must not be renamed!
+	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh_Edges" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames):  #This function must not be renamed!
 	if (len(selection) &gt; 0):  #Is something selected?
 		#Is the first selected object an edge of on a Polymesh?
-		if str(selection[0].Type) == &quot;edgeSubComponent&quot;: 
-			oParentObj = selection[0].Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;polymsh&quot;: 	
+		if Types[0] == &quot;edgeSubComponent&quot;: 
+			if ComponentParentTypes[0] == &quot;polymsh&quot;: 	
 				return True	#This function must return a boolean!
 	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh_Polygons" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		#Is the first selected object a point on a Polymesh?
-		if Types[1] == &quot;polySubComponent&quot;:
-			oParentObj = ComponentParents[0]
-			if ComponentParentTypes[0] == &quot;polymsh&quot;: 	
-				return True #This function must return a boolean!
-	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Subcurve" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
-	oSelection = selection
-	if (len(oSelection) &gt; 0): #Is something selected?
+		#Is the first selected object a polygont on a Polymesh?
+		if Types[0] == &quot;polySubComponent&quot;:
+			return True #This function must return a boolean!
+	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Subcurve" type="QPopMenuDisplayContext">def QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames ): #This function must not be renamed!
+	if (len(selection) &gt; 0): #Is something selected?
 		#Is the first selected object a subcurve of a NURBS curve list?
-		if str(oSelection[0].Type) == &quot;subcrvSubComponent&quot;: 
-			oParentObj = oSelection[0].Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;crvlist&quot;: 	
+			if ComponentParentTypes[0] == &quot;crvlist&quot;: 	
 				return True #This function must return a boolean!
-	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh (multiple)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh (multiple)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents ,ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 1): #Is something selected?
-		if selection[0].Type == &quot;polymsh&quot; and Selection[1].Type == &quot;polymsh&quot;: #Are the first two selected objects polymeshes?
+		if Types[0] == &quot;polymsh&quot; and Types[1] == &quot;polymsh&quot;: #Are the first two selected objects polymeshes?
 			return True #This function must return a boolean!
 	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="Polymesh (single)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): 	#Is something selected?
-		oSelection = selection[0]
-		if oSelection.Type == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
+		if Types[0] == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
 			return True
-	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve (single)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve (single)" type="QPopMenuDisplayContext">def QPopContext_Execute (selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0):  #Is something selected?
 		#Is the first selected object a NURBS curvelist?
-		if str(selection[0].Type) == &quot;crvlist&quot;: 
-			return True	#This function must return a boolean!
+		if Types[0] == &quot;crvlist&quot;: 
+			return True #This function must return a boolean!
 	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve (or components)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		oSelection = selection[0]
-		if oSelection.Type == &quot;crvlist&quot;:  #Is the first selected object a curve list?
+		if Types[0] == &quot;crvlist&quot;:  #Is the first selected object a curve list?
 			return True
-		selType = oSelection.Type
-		if ((selType == &quot;knotSubComponent&quot;) or (selType == &quot;isopntSubComponent&quot;) or (selType == &quot;pntSubComponent&quot;) or (selType ==&quot;subcrvSubComponent&quot;)):
-			oParentObj = oSelection.Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;crvlist&quot;:  #Is the parent of the selected component(s) a polymesh?
+		if ((Types[0] == &quot;knotSubComponent&quot;) or (Types[0] == &quot;isopntSubComponent&quot;) or (Types[0] == &quot;pntSubComponent&quot;) or (Types[0] ==&quot;subcrvSubComponent&quot;)):
+			if ComponentParentTypes == &quot;crvlist&quot;:  #Is the parent of the selected component(s) a polymesh?
 				return True								
-	return False  #This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Point" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False  #This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Point" type="QPopMenuDisplayContext">def QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		oSelection = selection[0]
-		if (oSelection.Type == &quot;pntSubComponent&quot;):
-			oParentObj = oSelection.Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
+		if Types[0] == &quot;pntSubComponent&quot;:
+			if ComponentParentTypes[0] == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
 				return True								
-	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_IsoPoint" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): 	#This function must not be renamed!
-	if (len(selection) &gt; 0):	#Is something selected?
-		oSelection = selection[0]
-		if (oSelection.Type == &quot;isopntSubComponent&quot;):
-			oParentObj = oSelection.Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;crvlist&quot;:	#Is the parent of the selected component(s) a curve list?
-				return True								
-	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Knot" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_IsoPoint" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): 	#This function must not be renamed!
 	if (len(selection) &gt; 0): #Is something selected?
-		oSelection = selection[0]
-		if (oSelection.Type == &quot;knotSubComponent&quot;):
-			oParentObj = oSelection.Subcomponent.Parent3DObject
-			if oParentObj.Type == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
+		if Types[0] == &quot;isopntSubComponent&quot;:
+			if ComponentParentTypes[0] == &quot;crvlist&quot;:	#Is the parent of the selected component(s) a curve list?
+				return True								
+	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve_Knot" type="QPopMenuDisplayContext">def QPopContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
+	if (len(selection) &gt; 0): #Is something selected?
+		if Types[0] == &quot;knotSubComponent&quot;:
+			if ComponentParentTypes[0] == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
 				return True								
 	return False	#This function must return a boolean!</QPopMenuDisplayContext><QPopMenuDisplayContext language="Python" name="NURBS_Curve (multiple)" type="QPopMenuDisplayContext">def QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
 	if (len(selection) &gt; 1): #Is more than one obj selected?
-		if selection[0].Type == &quot;crvlist&quot; and selection[1].Type == &quot;crvlist&quot;: #Are the first two selected objects curves?
+		if Types[0] == &quot;crvlist&quot; and Types[0] == &quot;crvlist&quot;: #Are the first two selected objects curves?
 			return True #This function must return a boolean!
 	return False</QPopMenuDisplayContext><QPopMenuDisplayContext language="JScript" name="Jscript_TestDisplayContext" type="QPopMenuDisplayContext">function QPopContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames) //This function must not be renamed!
 {
