@@ -19,7 +19,7 @@ Sel = Views[1].GetAttributeValue("selection")
 Application.LogMessage(Sel)
 """
 
-
+#TODO: Pass in Viewport under mouse to contexts script items and menu functions. Also include material editor
 #Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
 #TODO: Store Keys in preferences instead of config file
 #TODO: Implement proper keywords file switching when changing script language of an item
@@ -60,7 +60,6 @@ Application.LogMessage(Sel)
 #Cleanup: Rename QpopMenuItem class and related functions (e.g. getQpopMenuItemByName) to "ScriptItem"
 #Cleanup: Make all class attributes start with upper-case characters to  
 
-#Perl menu items are untested 
 #Japanese font is untested
 
 #Report: oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad does not work?
@@ -3977,7 +3976,7 @@ def QPopLoadConfiguration(fileName):
 
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQPopMenuSet_Execute called", c.siVerbose)
-	ViewSignature = GetView(True)
+	ViewSignature = (GetView(True))[0]
 	
 	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
 	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
@@ -4625,7 +4624,7 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 		globalQPopDisplayEvents = globalQPopDisplayEventContainer.items
 
 		if App.Preferences.GetPreferenceValue("QPop.RecordViewSignature") == True:
-			ViewSignature = GetView(True)
+			ViewSignature = (GetView(True))[0]
 			App.SetValue("preferences.QPop.ViewSignature", ViewSignature, "")
 			#App.Preferences.SetPreferenceValue("QPop.RecordViewSignature",0)
 			App.SetValue("preferences.QPop.RecordViewSignature", False, "")
@@ -4751,24 +4750,23 @@ def QPopConfiguratorMenuClicked( in_ctxt ):
 def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
 
-	#globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
-	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
-	WindowSignature = getDS_ChildName(WinUnderMouse, True)
-	WindowSignatureLong = getDS_ChildName (WinUnderMouse, False)
-	WindowSignatureString = str()
-	WindowSignatureStringLong = str()
-	for sig in WindowSignature:
-		WindowSignatureString = (WindowSignatureString + sig + ";")
-	#globalQPopLastUsedItem.ViewSignatureNice = WindowSignatureString
+	WindowSignature = getDS_ChildName(WinUnderMouse)#, True)
 	
-	for sigLong in WindowSignatureLong:
-		WindowSignatureStringLong = (WindowSignatureStringLong + sigLong + ";")
-	#globalQPopLastUsedItem.ViewSignatureLong = WindowSignatureStringLong
-	
+	WindowSignatureShort = str()
+	WindowSignature = WindowSignature.replace(" ","")
+	for char in WindowSignature:
+		if not char.isdigit():
+			WindowSignatureShort = (WindowSignatureShort + char)
+			
 	if Silent != True:
-		Print ("Picked Window has the following QPop View Signature: " + str(WindowSignatureString), c.siVerbose)
-	return WindowSignatureString
+		Print ("Picked Window has the following short QPop View Signature: " + str(WindowSignatureShort), c.siVerbose)
+		Print ("Picked Window has the following long QPop View Signature: " + str(WindowSignature), c.siVerbose)
+	Signatures = list()
+	Signatures.append (WindowSignatureShort)
+	Signatures.append (WindowSignature)
+	Print(str(Signatures))
+	return Signatures
 	
 def GetDefaultConfigFilePath(FileNameToAppend):
 	DefaultConfigFile = ""
@@ -4911,28 +4909,20 @@ def ListToString(List):
 			String += ";"
 	return String
 
-def getDS_ChildName( hwnd, clean = True):
-	#Print("GetDS_ChildName called")
-	ViewSignature = list()
-	finished = False
-	while finished == False:
+def getDS_ChildName( hwnd): #, clean = True):
+	Print("GetDS_ChildName called")
+	ViewSignature = ""
+	#WindowTitle = win32gui.GetWindowText(hwnd)
+	MainWindowReached = False
+	while MainWindowReached == False:
 		WindowTitle = win32gui.GetWindowText(hwnd)
-		if WindowTitle.find ("SOFTIMAGE") == -1 and WindowTitle.find ("Softimage") == -1:  #Check if we haven'te clicked on or reached the top level window
+		if (WindowTitle.find ("SOFTIMAGE") == -1) and (WindowTitle.find ("Softimage") == -1):
 			if WindowTitle != "":
-				WindowSignature = ""
-				if clean == True:
-					for char in WindowTitle:
-						if not char.isdigit(): #Lets get rid of numbers, the View Signature should alwas be the same no matter how many copies of a window are floating around
-							if char != " ": #We're not interested in Spaces either
-								WindowSignature += char
-				if clean == False:
-					for char in WindowTitle:
-						WindowSignature += char
-				ViewSignature.append (WindowSignature)
+				DelimitedWindowTitle = (WindowTitle + ";")
+				ViewSignature = (ViewSignature + DelimitedWindowTitle)
 			hwnd = win32gui.GetParent(hwnd)
 		else:
-			finished = True
-	#Print (ViewSignature)
+			MainWindowReached = True
 	return ViewSignature
       
 def splitAlphaNum(name):
