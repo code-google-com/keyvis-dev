@@ -1,13 +1,12 @@
-# Ritalin for Maya version 2008, 2009 and 2010
+# Ritalin for Maya version 2011
 # Author: Stefan Kubicek 
-# Last changed: 2010-03-16, 23:00
-# File Version 1.4
-# Code Dependencies: Sproing_Functions.py
+# Last changed: 2010-08-17, 10:00
+# File Version 1.5
 
 # ====================================================================================================
 # Description: Creates a Ritalin menu with options to change the camera navigation behaviour. 
 # When enabled, cameras always tumble around the selected objects or components. This also works for bones and, if enabled,
-# for skin influence objects when in paintSkinWeights mode.
+# for skin influence objects (e.g. joints) when in paintSkinWeights mode.
 #====================================================================================================
 
 import maya.cmds as cmds
@@ -43,8 +42,7 @@ def Warning (strWarning): #requires maya.mel
 		mel.eval('warning ' + '"' + strWarning + '"')
 	except:
 		return
-		
-		
+	
 
 def cleanRitalinScriptJobs():
 	global RitalinScriptJobs
@@ -54,7 +52,6 @@ def cleanRitalinScriptJobs():
 		except:
 			Warning ("Job " + str(job) + " could not be killed!")
 	RitalinScriptJobs = []
-
 
 
 # ===========================================================================================================================
@@ -87,7 +84,6 @@ def setCamRotatePivots(oObjects = []):
 
 		Cams = cmds.ls( dag = true, cameras = True )
 		if RitalinEnabled == True:
-			
 			CheckPaintTool = True
 			Continue = False
 			ComputeCenterAlreadyDone = False
@@ -97,21 +93,22 @@ def setCamRotatePivots(oObjects = []):
 				Selec = cmds.ls( selection = True )
 			else:
 				Selec = oObjects
-				CheckPaintTool = False
-			
-			if len(Selec) > 0:
+				CheckPaintTool = False #In case there are objects given to compute BB center for we don't need to check for the paint tool, we already know what to compute BB for
+			if len(Selec) > 0: #We have objects to work with?
 				X = 0.0; Y = 0.0; Z = 0.0
 				if CheckPaintTool:
 					#Let's find out if we are in skin weights paint mode
 					currCtx = cmds.currentCtx(); 
-					currTool = None
-					#try: 
-					currTool = cmds.contextInfo (currCtx, c = True);
-					#except: DoNothing = True
+					currTool = ""
+					try: #contextInfo operations are buggy in Maya 2011, we need to try.. :-(
+						currTool = cmds.contextInfo (currCtx, t = True);
+					except: pass
+					
 					if RitalinHonorInfluenceJoints == True: #In case we are painting skin weights we can ignore everything and just concentrate on the currently active skin joint
 						if currTool == "artAttrSkin":
 							whichTool = cmds.artAttrSkinPaintCtx (currCtx, query = True, whichTool = True)
-							if whichTool == "skinWeights": #Yes we are in skin paint wights mode
+							if whichTool == "skinWeights": #Yes, we are in skin paint weights mode
+								
 								influenceJoint = ""
 								#Find the currently active joint for which weights are being painted
 								influenceJoint = cmds.artAttrSkinPaintCtx  (currCtx, query = true, influence = true) 
@@ -123,7 +120,6 @@ def setCamRotatePivots(oObjects = []):
 									Z = ((BB[2] + BB[5])/2)
 									ComputeCenterAlreadyDone = True
 									Continue = True			
-				
 				if ComputeCenterAlreadyDone == False:  #Standard computation in case we are not in paintSkinWeights mode or don't care if we are
 					Joints = []
 					stdObjects = []
@@ -152,8 +148,6 @@ def setCamRotatePivots(oObjects = []):
 							#print ("Selected node is of type transform")
 							Shapes = (cmds.ls(o, dagObjects = True, shapes = True, noIntermediate = True)) #Lets get all the shape nodes associated with the transform
 							if len(Shapes) > 0:
-								#print("Node has " + str(len(Shapes)) + " shapes!")
-								#print (Shapes)
 								for shp in Shapes:
 									#print ("Shape is of type " + cmds.nodeType(shp))
 									#print ("Shape name: " + shp)
@@ -204,9 +198,10 @@ def toggleRitalin ():
 	
 
 # =============================================================================================================
-# Thhis function establishes the two sctipt Jobs due to which camera tumble pivot location must happen: 
-# Changing a slection (clicking an object) or dragging the mouse (moving an object)
-# A special case is also handled when the paint skin weights tool is active and use has selected the skin influence
+# This function establishes the two sctipt Jobs that trigger camera tumble pivot relocation when: 
+#  - Changing a slection (clicking an object) or 
+#  - Dragging the mouse (moving an object)
+# A special case is also handled when the paint skin weights tool is active and user has selected the skin influence
 # by right-dragging and selecting "Paint Skin Weights" from the popup marking menu
 # =============================================================================================================
 
@@ -224,11 +219,11 @@ def enableRitalin(enable = True):
 			cleanRitalinScriptJobs()
 	
 			#The dragRelease event is king, it always gets fired when the user presses the mouse button or moves the mouse with the button pressed - exactly what we need
-			Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('DragRelease',  "cmds.undoInfo (swf = False); setCamRotatePivots(); RitalinDoComputeBB = True; cmds.undoInfo (swf = True)"))
+			Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('DragRelease',  "cmds.undoInfo (swf = False); setCamRotatePivots(); cmds.undoInfo (swf = True)"))
 			RitalinScriptJobs.append(Job1)		
 
 			#Due to a bug in Maya we need to run the following event at least once to ensure that the DragRelease event gets triggered above. Otherwise it never kicks in  :-(
-			Job2 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('SelectionChanged',  "cmds.undoInfo (swf = False); RitalinDoComputeBB = True;  setCamRotatePivots(); toggleComputation(); cmds.undoInfo (swf = True)")) 
+			Job2 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('SelectionChanged',  "cmds.undoInfo (swf = False); setCamRotatePivots(); cmds.undoInfo (swf = True)")) 
 			RitalinScriptJobs.append(Job2)
 		
 			#createRitalinCameraScriptJobs()
@@ -247,15 +242,13 @@ def enableRitalin(enable = True):
 		
 #Often both script jobs are called simultaneously
 #The following function is a speed optimisation so the bounding box of the selection is only computed once in most cases
+#Update: Querying the current context in Maya 2011 is buggy, we're not using this function anymore.
 def toggleComputation():
 	global RitalinDoComputeBB;
 	RitalinDoComputeBB == False
 	currCtx = cmds.currentCtx(); 
-	#currTool = None
-	#try: 
+
 	currTool = cmds.contextInfo (currCtx, c = True);
-	#except:
-		#RitalinDoComputeBB == False
 	
 	if currTool == "selectTool":
 		RitalinDoComputeBB = True
@@ -272,12 +265,18 @@ def createRitalinToolsMenu():
 	Continue = False
 	
 	try:
+		#print "Attempting delete RitalinToolsMenu as MenuItem"
 		cmds.deleteUI (RitalinToolsMenu, menuItem = True)
 		Continue = True
 	except:
 		Continue = False
+	try:
+		#print "Attempting delete PerforceToolsMenu as Menu"
+		cmds.deleteUI (RitalinToolsMenu, menu = True)
+		Continue = True
+	except:
+		Continue = False
 
-	
 	try:
 		RitalinToolsMenu = (cmds.menu ("RitalinToolsMenu", label = 'Ritalin', tearOff = True, allowOptionBoxes = True, postMenuCommand = ("buildRitalinToolsMenu()"), parent = gMainWindow))
 		RitalinEnableMenuItem = cmds.menuItem (label='Ritalin Enabled', checkBox = RitalinEnabled, command = ('toggleRitalin ()'), parent = RitalinToolsMenu)
