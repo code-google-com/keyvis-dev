@@ -17,8 +17,16 @@ for view in Views:
 	
 Sel = Views[1].GetAttributeValue("selection")
 Application.LogMessage(Sel)
-"""
 
+=========
+
+Views = Application.Desktop.ActiveLayout.Views
+for View in Views:
+	if View.Visible == True:
+		ViewPlacement = View.Rectangle
+		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
+"""
+#Report: No command for Remove Knot (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
 #TODO: Pass in Viewport under mouse to contexts script items and menu functions. Also include material editor
 #Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
 #TODO: Store Keys in preferences instead of config file
@@ -985,7 +993,21 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndGroup()
 	
 	#================================== Display Events Tab =======================================================================================
+	
 	oLayout.AddTab("Display Events")
+	oLayout.AddGroup()
+	oLayout.AddItem("QPopEnabled", "Enable QPop")
+	oLayout.AddRow()
+	oQPopConfigFile2 = oLayout.AddItem("QPopConfigurationFile", "QPop Config File", c.siControlFilePath)
+	oQPopConfigFile2.SetAttribute (c.siUIFileFilter, "QPop Configuration Files (*.xml)|*.xml|All Files (*.*)|*.*||")
+	oQPopConfigFile2.SetAttribute (c.siUIInitialDir, "C:\\")
+	oQPopConfigFile2.SetAttribute (c.siUIOpenFile, True)
+	oQPopConfigFile2.SetAttribute (c.siUIFileMustExist, False)
+	oLayout.AddButton("LoadConfig","Load")
+	oLayout.AddButton("SaveConfig","Save")
+	oLayout.EndRow()
+	oLayout.EndGroup()
+	
 	
 	oLayout.AddGroup("QPop Display Events")
 	oLayout.AddStaticText("\nSet the 'Record' check mark below, then press your desired key or key combination ( key + Shift, Alt or Ctrl) for the selected menu display event.\n\nNote: The record check mark will be automatically unchecked when a valid key or key combination has been pressed, or when leaving this tab or closing the configurator.",0,100)
@@ -1013,6 +1035,20 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 #========================= Advanced Configuration Tab =============================================================================	
 
 	oLayout.AddTab("Advanced Configuration")
+	
+	oLayout.AddGroup()
+	oLayout.AddItem("QPopEnabled", "Enable QPop")
+	oLayout.AddRow()
+	oQPopConfigFile3 = oLayout.AddItem("QPopConfigurationFile", "QPop Config File", c.siControlFilePath)
+	oQPopConfigFile3.SetAttribute (c.siUIFileFilter, "QPop Configuration Files (*.xml)|*.xml|All Files (*.*)|*.*||")
+	oQPopConfigFile3.SetAttribute (c.siUIInitialDir, "C:\\")
+	oQPopConfigFile3.SetAttribute (c.siUIOpenFile, True)
+	oQPopConfigFile3.SetAttribute (c.siUIFileMustExist, False)
+	oLayout.AddButton("LoadConfig","Load")
+	oLayout.AddButton("SaveConfig","Save")
+	oLayout.EndRow()
+	oLayout.EndGroup()
+	
 	oLayout.AddGroup("Assign Qpop Menu Sets to Views")
 	oLayout.AddRow()
 	oLayout.AddGroup("Existing Views")
@@ -1121,6 +1157,14 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddItem("ShowQpopMenuString","Print Qpop Menu String on menu invokation")
 	oLayout.AddItem("ShowQPopTimes","Print QPop preparation times")
 	oLayout.EndGroup()
+
+def QPopConfigurator_ShowQpopMenuString_OnChanged():
+	val = PPG.ShowQpopMenuString.Value
+	Application.Preferences.SetPreferenceValue("QPop.ShowQpopMenuString",val)
+	
+def QPopConfigurator_ShowQPopTimes_OnChanged():
+	val = PPG.ShowQPopTimes.Value
+	Application.Preferences.SetPreferenceValue("QPop.ShowQPopTimes",val)
 	
 def QPopConfigurator_CommandList_OnChanged():
 	Print("QPopConfigurator_CommandList_OnChanged called", c.siVerbose)
@@ -2455,7 +2499,6 @@ def QPopConfigurator_ShowScriptingNameInBrackets_OnChanged():
 def QPopConfigurator_ExecuteCode_OnClicked():
 	Print("QPopConfigurator_ExecuteCode_OnClicked called", c.siVerbose)
 
-	
 	#Is a menu selected?
 	if PPG.Menus.Value != "":
 		oSelectedItem = getQPopMenuByName(PPG.Menus.Value)
@@ -3973,30 +4016,50 @@ def QPopLoadConfiguration(fileName):
 			return False
 
 #===================================== Plugin Command Callbacks ==========================================================
-
+#This is the main function that creates 
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQPopMenuSet_Execute called", c.siVerbose)
-	ViewSignature = (GetView(True))[0]
+	ViewSignature = (GetView(True))[0] #get the short/nice view signature
+	WindowPos = ViewSignature[2]
 	
 	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
 	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
 	#In which case the wrong view would be affected.
-
-	oVM = Application.Desktop.ActiveLayout.Views.Find( "View Manager" )
+	
+	#Test code to find floating window the user is currently working in.
+	#This would be useful to get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
+	#However, defining popup menus for Rendertree is a bit futile because it's native menues are pretty complete already,
+	#and for Tex Editor there would first need to be proper commands for all the UV operations available(atm most of the logic seems 
+	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
+	#Instead extensive scripting would be required.
+	Views = Application.Desktop.ActiveLayout.Views
+	oVM = Views.Find( "View Manager" )
+	"""
+	FloatingWindowUnderMouse = None
+	for View in Views:
+		if View.Visible == True:
+			if View.Rectangle == WindowPos:
+				FloatingWindowUnderMouse = View
+				Print ("Window under mouse is: " + str(FloatingWindowUnderMouse))
+				
 	#oView = oVM.Views( Application.GetViewportUnderMouse() );
 	#oView = oVM.GetAttributeValue("focusedviewport")
+	"""
+	
+	#Activate the 3D view currently under the mouse so viewport operations triggered affect that view and not the one that was active before the menu was opened from 
 	oView = oVM.GetAttributeValue("viewportundermouse")
 	oVM.SetAttributeValue("focusedviewport",oView)
-	
-	
+
 	t0 = time.clock() #Record time before we start getting the first 4 menus
 
 	globalQPopViewSignatures = GetGlobalObject("globalQPopViewSignatures")
 	
+	#Look through all defined View signatures known to QPop and find the first that fits
 	if globalQPopViewSignatures != None:
 		oCurrentView = None
 		for oView in globalQPopViewSignatures.items:
-			if oView.signature == ViewSignature:
+			#if oView.signature == ViewSignature:
+			if oView.signature.find(ViewSignature) > -1:
 				oCurrentView = oView
 				break  #Lets take the first matching view signature we found (there should not be duplicates anyway)
 		
@@ -4008,7 +4071,6 @@ def DisplayMenuSet( MenuSetIndex ):
 				Print("There is currently no QPop Menu Set " + str(MenuSetIndex) + " defined for view '" + oCurrentView.name + "!", c.siVerbose)
 		
 		if oMenuSet != None:
-
 			QPopGlobals = GetDictionary()
 			#ArgList.append(QPopGlobals("globalQPopLastUsedItem").item)
 			QPopMenuItems = QPopGlobals("globalQPopMenuItems").items
@@ -4539,7 +4601,7 @@ def QPopConfiguratorCreate_Execute(bCheckSingle = true):
 		
 # =================================== Plugin Event Callbacks =============================================
 def QPopGetSelectionDetails_OnEvent(in_ctxt):
-	Print("QPop: QPopGetSelectionDetails_OnEvent called",c.siVerbose)
+	#Print("QPop: QPopGetSelectionDetails_OnEvent called",c.siVerbose)
 	
 	t0 = time.clock()
 	QPopGetSelectionDetails()
@@ -4550,7 +4612,7 @@ def QPopGetSelectionDetails_OnEvent(in_ctxt):
 
 
 def QPopGetSelectionDetails():
-	Print("QPop: QPopGetSelectionDetails called",c.siVerbose)
+	#Print("QPop: QPopGetSelectionDetails called",c.siVerbose)
 	oSelDetails = GetGlobalObject("globalQPopSceneSelectionDetails")
 	oSelection = Application.Selection
 	#SelCount = oSelection.Count
@@ -4568,7 +4630,7 @@ def QPopGetSelectionDetails():
 		SelectionClassName = getClassName(oSel)
 		#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
 		SelectionComponentClassName = ""
-		SelectionComponentParent = None
+		SelectionComponentParent = ""
 		SelectionComponentParentType = ""
 		SelectionComponentParentClassName = ""
 					
@@ -4576,12 +4638,24 @@ def QPopGetSelectionDetails():
 		lsSelectionTypes.append (SelectionType)
 		lsSelectionClassNames.append (SelectionClassName)
 		
-		#Let's get subcomponent collection data if there is any (otherwise the above (None) values are used later
+		#Let's get subcomponent collection data if there is any (otherwise the above (None and "") values are used later on
 		if SelectionClassName == "CollectionItem":
-			SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
-			SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
-			SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
-			SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
+			try:
+				SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
+			except:
+				SelectionComponentClassName = ""
+			try:
+				SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
+			except:
+				SelectionComponentParent = ""
+			try:
+				SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
+			except:
+				SelectionComponentParentType = ""
+			try:
+				SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
+			except:
+				SelectionComponentParentClassName = ""
 		
 		#Finally add remaining items to the lists
 		lsSelectionComponentClassNames.append(SelectionComponentClassName) 
@@ -4751,21 +4825,30 @@ def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
 
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
-	WindowSignature = getDS_ChildName(WinUnderMouse)#, True)
+	WindowData = getDS_ChildName(WinUnderMouse)
+	WindowSignature = WindowData[0]
+	WindowPos = WindowData[1]
+	#print ("Type of WindowPos is " + str(type(WindowPos)))
+	WindowPos[0] = (WindowPos[0] + 4)
+	WindowPos[2] = (WindowPos[2] + 4)
+	WindowPos[3] = (WindowPos[3] + 30)
 	
+	#Lets make a clean version of the string without spaces or numbers
 	WindowSignatureShort = str()
 	WindowSignature = WindowSignature.replace(" ","")
-	for char in WindowSignature:
+	for char in WindowSignature: #Remove numbers from the string
 		if not char.isdigit():
 			WindowSignatureShort = (WindowSignatureShort + char)
 			
 	if Silent != True:
 		Print ("Picked Window has the following short QPop View Signature: " + str(WindowSignatureShort), c.siVerbose)
 		Print ("Picked Window has the following long QPop View Signature: " + str(WindowSignature), c.siVerbose)
+		
 	Signatures = list()
 	Signatures.append (WindowSignatureShort)
 	Signatures.append (WindowSignature)
-	Print(str(Signatures))
+	Signatures.append (WindowPos)
+	#Print(Signatures)
 	return Signatures
 	
 def GetDefaultConfigFilePath(FileNameToAppend):
@@ -4910,8 +4993,9 @@ def ListToString(List):
 	return String
 
 def getDS_ChildName( hwnd): #, clean = True):
-	Print("GetDS_ChildName called")
+	#Print("GetDS_ChildName called", c.siVerbose)
 	ViewSignature = ""
+	ViewData = []
 	#WindowTitle = win32gui.GetWindowText(hwnd)
 	MainWindowReached = False
 	while MainWindowReached == False:
@@ -4920,10 +5004,14 @@ def getDS_ChildName( hwnd): #, clean = True):
 			if WindowTitle != "":
 				DelimitedWindowTitle = (WindowTitle + ";")
 				ViewSignature = (ViewSignature + DelimitedWindowTitle)
+				WindowPos = win32gui.GetWindowPlacement(hwnd)
+				#Print (WindowPos)
 			hwnd = win32gui.GetParent(hwnd)
 		else:
 			MainWindowReached = True
-	return ViewSignature
+			ViewData.append(ViewSignature)
+			ViewData.append(list(WindowPos[4]))
+	return ViewData
       
 def splitAlphaNum(name):
 	name = str(name)
