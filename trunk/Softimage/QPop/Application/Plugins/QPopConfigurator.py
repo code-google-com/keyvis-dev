@@ -26,7 +26,11 @@ for View in Views:
 		ViewPlacement = View.Rectangle
 		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
 """
-#Report: No command for Remove Knot (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
+
+TODO: Implement Merge Curve Menu Item
+
+#Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
+# "Extract Edges As Curve", "Merges Curves",
 #TODO: Pass in Viewport under mouse to contexts script items and menu functions. Also include material editor
 #Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
 #TODO: Store Keys in preferences instead of config file
@@ -52,7 +56,7 @@ for View in Views:
 
 #Report: It is not possible to prevent a command from being repeatable (should be a capability flag of the command, or at least tied to noLogging)
 #Report: It is not possible to set more than one shader ball model at a time
-#Report: How to query name of currently active window?
+#Report: How to query name of currently active window? How to query currently active window.
 #Report bug: When calling executeScriptCode for the first time on code stored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
 #Report bug: Execute Script Code is insanely slow compare to executing the code directly
 #Report bug: Pasting into the text editor causes "\n" charcters to be replacd with "\n\r"
@@ -61,9 +65,10 @@ for View in Views:
 #Report Bug: Local subdivision _does_ work when assigned to a key! Currently is flagged as not.
 #Report duplicate commands (Dice Polygons, Dice Object & Dice Object/Polygons does the same)
 #Report duplicate commands (Invert Polygons, Invert All Normals, Invert Selected Polygons; Delete Components vs Delete Component)
+#Report duplicate commands (InsertCurveKnot, SetCurveKnotMultiplicity, 
 #Report (custom?) commands not supporting key assignment are still listed in the keyboard mapping command list (should better not be listed?) 
 
-#TODO: Cleanup function do delete empty script items and menus
+#TODO: Implement Cleanup functionality to delete empty script items and menus
 
 #Cleanup: Rename QpopMenuItem class and related functions (e.g. getQpopMenuItemByName) to "ScriptItem"
 #Cleanup: Make all class attributes start with upper-case characters to  
@@ -72,6 +77,7 @@ for View in Views:
 
 #Report: oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad does not work?
 #TODO: Enable color coding for text fields according to set script language - > Bug in XSI that prevents certain text editor features from being displayed already
+
 
 
 # ============================= Helpful code snippets==========================================
