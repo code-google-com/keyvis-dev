@@ -29,6 +29,8 @@ for View in Views:
 
 #TODO: Implement Merge Curve Menu Item
 
+#Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
+#Timer event execution will not wait for Pick session.
 #Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
 # "Extract Edges As Curve", "Merges Curves",
 #TODO: Pass in Viewport under mouse to contexts script items and menu functions. Also include material editor
