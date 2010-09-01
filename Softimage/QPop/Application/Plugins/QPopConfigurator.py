@@ -27,7 +27,7 @@ for View in Views:
 		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
 """
 
-TODO: Implement Merge Curve Menu Item
+#TODO: Implement Merge Curve Menu Item
 
 #Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
 # "Extract Edges As Curve", "Merges Curves",
@@ -722,13 +722,13 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_2", "QPopDisplayMenuSet_2" )
 	in_reg.RegisterCommand( "QPopDisplayMenuSet_3", "QPopDisplayMenuSet_3" )
 	in_reg.RegisterCommand( "QPopRepeatLastCommand", "QPopRepeatLastCommand" )
-	
+	in_reg.RegisterCommand( "CreateBlendCurve", "CreateBlendCurve" )
 	#Register Menus
 	in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QPopConfigurator" , true , true)
 	
 	#Register events
 	in_reg.RegisterEvent( "QPopGetSelectionDetails", c.siOnSelectionChange)
-	in_reg.RegisterEvent( "InitQPop", c.siOnStartup )
+	in_reg.RegisterEvent( "InitializeQPop", c.siOnStartup )
 	in_reg.RegisterEvent( "DestroyQPop", c.siOnTerminate)
 	in_reg.RegisterEvent( "QPopCheckDisplayEvents" , c.siOnKeyDown )
 	in_reg.RegisterTimerEvent( "QPopExecution", 0, 1 )
@@ -743,7 +743,7 @@ def XSIUnloadPlugin( in_reg ):
 #=============== QPop Configurator UI Callbacks  =============================
 def QPopConfigurator_OnInit( ):
 	Print ("QPopConfigurator_OnInit called",c.siVerbose)
-	initQPopGlobals(False)
+	InitializeQPopGlobals(False)
 	globalQPopConfigStatus = GetGlobalObject("globalQPopConfigStatus")
 	globalQPopConfigStatus.changed = True #When opening the PPG we assume that changes are made. This is a somewhat bold assumption but checking every value for changes is too laborious 
 	
@@ -812,7 +812,8 @@ def QPopConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("MenuItem_ScriptLanguage",c.siString,"Python",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuItem_CategoryChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("NewMenuItem_Category",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	oCustomProperty.AddParameter2("MenuItem_IsActive",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
+	oCustomProperty.AddParameter2("MenuItem_IsActive",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	oCustomProperty.AddParameter2("CodeEditorHeight",c.siInt4,200,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 
 	oCustomProperty.AddParameter2("MenuDisplayContexts",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuDisplayContext_Code",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -982,12 +983,17 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddGroup("Edit selected QPop Menu or Script Item")
 	oLayout.AddRow()
 	oLanguage = oLayout.AddEnumControl("MenuItem_ScriptLanguage", ("Python","Python","JScript","JScript","VBScript","VBScript"), "      Scripting Language", c.siControlCombo)
-	oSpacer = oLayout.AddSpacer(10,1)
+	oLayout.AddSpacer(10,1)
 	oLayout.AddButton("ExecuteCode", "Execute")
+	oLayout.AddSpacer(10,1)
+	oEditorHeight = oLayout.AddItem ("CodeEditorHeight", "Code Editor Height")
+	#oEditorHeight.SetAttribute(c.siUICX, 150)
+	#oEditorHeight.SetAttribute(c.siUIWidthPercentage, 10)
 	oLayout.EndRow()
 	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
-	#oCodeEditor.SetAttribute(c.siUIValueOnly, True)
+	#oCodeEditor.SetAttribute(c.siUIHeight, oLayout.Item("CodeEditorHeight").Value)
+	oCodeEditor.SetAttribute(c.siUIHeight, Application.Preferences.GetPreferenceValue("QPop.CodeEditorHeight"))
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
 	oCodeEditor.SetAttribute(c.siUIFolding, True ) #Broken since XSI7.0
@@ -1164,6 +1170,12 @@ def QPopConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddItem("ShowQPopTimes","Print QPop preparation times")
 	oLayout.EndGroup()
 
+def QPopConfigurator_CodeEditorHeight_OnChanged():
+	oCodeEditor = PPG.PPGLayout.Item("MenuItem_Code")
+	intHeight = PPG.CodeEditorHeight.Value
+	oCodeEditor.SetAttribute(c.siUIHeight, intHeight)
+	PPG.Refresh()
+	
 def QPopConfigurator_ShowQpopMenuString_OnChanged():
 	val = PPG.ShowQpopMenuString.Value
 	Application.Preferences.SetPreferenceValue("QPop.ShowQpopMenuString",val)
@@ -2779,7 +2791,7 @@ def QPopConfigurator_InsertSeparator_OnClicked():
 		PPG.Refresh()	
 	
 def QPopConfigurator_Refresh_OnClicked():
-	initQPopGlobals(True)
+	InitializeQPopGlobals(True)
 	RefreshQPopConfigurator()
 	#App.Preferences.SetPreferenceValue("QPop.FirstStartup",False)
 	PPG.Refresh()
@@ -3814,7 +3826,7 @@ def QPopLoadConfiguration(fileName):
 		if os.path.isfile(fileName) == True:
 			QPopConfigFile = DOM.parse(fileName)
 			#In case the file could be loaded and parsed we can destroy the existing configuration in memory and refill it with the new data from the file
-			initQPopGlobals(True)
+			InitializeQPopGlobals(True)
 			globalQPopSeparators = GetGlobalObject("globalQPopSeparators")
 			globalQPopMenuItems = GetGlobalObject("globalQPopMenuItems")
 			globalQPopMenus = GetGlobalObject("globalQPopMenus")
@@ -4431,6 +4443,48 @@ def QPopDisplayMenuSet_3_Execute():
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
 
+									
+def CreateBlendCurve_Init( in_Ctxt ):
+	oCmd = in_Ctxt.Source
+	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
+	oCmd.SetFlag(c.siCannotBeUsedInBatch, False)
+	oCmd.SetFlag(c.siNoLogging, False)
+	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is false otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	return True	
+	
+def CreateBlendCurve_Execute (): 
+	ImmedMode = 0
+	if Application.Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" ) == True:
+		ImmedMode = 1
+	if len(Application.Selection) >0 :
+		if (Application.Selection(0).Type == "crvbndrySubComponent"):
+			FirstBoundary = Application.Selection(0)
+		else:
+			FirstResult = Application.PickElement( "CurveBoundary" , "Select first Boundary", "Select first Boundary", "", "", 0, "" )
+			Application.LogMessage("Past first pick session A")
+			FirstBoundary = FirstResult.Value("PickedElement")
+	else:
+		FirstResult = Application.PickElement( "CurveBoundary" , "Select first Boundary", "Select first Boundary", "", "", 0, "" )
+		Application.LogMessage("Past first pick session B")
+		FirstBoundary = FirstResult.Value("PickedElement")
+	
+	if len(Application.Selection) >1:
+		if (Application.Selection(1).Type == "crvbndrySubComponent"):
+			SecondBoundary = Application.Selection(1)
+		else:
+			SecondResult = Application.PickElement( "CurveBoundary" , "Select second Boundary", "Select second Boundary", "", "", 0, "" )
+			Application.LogMessage("Past second pick session A.")
+			SecondBoundary = SecondResult.Value("PickedElement")
+	else:
+		SecondResult = Application.PickElement( "CurveBoundary" , "Select second Boundary", "Select second Boundary", "", "", 0, "" )
+		Application.LogMessage("Past second pick session B")
+		SecondBoundary = SecondResult.Value("PickedElement")
+	
+	if FirstBoundary.Type == "crvbndrySubComponent" and SecondBoundary.Type == "crvbndrySubComponent":
+		Result = Application.ApplyGenOp("BlendCrv", "", [FirstBoundary,SecondBoundary], 3, ImmedMode, "siKeepGenOpInputs", "")
+		Application.InspectObj(Result)
+		
+		
 def QPopExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
 	oCmd.ReturnValue = True
@@ -4752,6 +4806,7 @@ def QPopCheckDisplayEvents_OnEvent( in_ctxt ):
 		in_ctxt.SetAttribute("Consumed",Consumed)
 
 def QPopExecution_OnEvent (in_ctxt):
+	Print("QPop: QPopExecution_OnEvent called",c.siVerbose)
 	globalQPopLastUsedItem = GetGlobalObject("globalQPopLastUsedItem")
 	
 	if globalQPopLastUsedItem != None:	
@@ -4759,9 +4814,9 @@ def QPopExecution_OnEvent (in_ctxt):
 			oItem = globalQPopLastUsedItem.item
 			App.QPopExecuteMenuItem (oItem)
 			
-def InitQPop_OnEvent (in_ctxt):
+def InitializeQPop_OnEvent (in_ctxt):
 	Print ("QPop Startup event called",c.siVerbose)
-	initQPopGlobals(True)
+	InitializeQPopGlobals(True)
 	FirstStartup = False
 	#Load the QPop Config File
 	QPopConfigFile = ""
@@ -4873,8 +4928,8 @@ def GetCustomGFXFilesPath():
 			CustomGFXFolder = (plug.OriginPath.rsplit("\\",3)[0] + "\\Data\\Images\\")#Get the left side of the path before "Data"
 			return CustomGFXFolder
 
-def initQPopGlobals(force = False):
-	Print("Qpop: initQPopGlobals called", c.siVerbose)
+def InitializeQPopGlobals(force = False):
+	Print("Qpop: InitializeQPopGlobals called", c.siVerbose)
 	#if force == False:
 	if GetGlobalObject ("globalQPopLastUsedItem") == None or force == True:
 		SetGlobalObject ("globalQPopLastUsedItem", App.CreateQPop("LastUsedItem"))
