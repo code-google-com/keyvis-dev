@@ -1,9 +1,9 @@
-QPop_FAQ_and_Facts
+QMenu_FAQ_and_Facts
 
-Why QPop is still not ideal:
+Why QMenu is still not ideal:
 
-Property pages don't open when calling commands from a Qpop Menu.
-Example: No PPG opens when calling the Bevel command from a QPop menu, even when not holding the Ctrl key.
+Property pages don't open when calling commands from a QMenu Menu.
+Example: No PPG opens when calling the Bevel command from a QMenu menu, even when not holding the Ctrl key.
 Reason: When Softimage executes commands it needs certain input values to properly perform the operation, 
 depending on the command to be executed.
 Normally, when calling a command from one of Softimage's native menus, a function is called that handles all that (e.g. in case of Bevel, 
@@ -23,15 +23,15 @@ In case the command gets directly called from within another command it will not
 It would be cool if this could be controlled by a flag on the calling command.
 
 KPL
-Opening more than one QPop configurator panel at a time causes a cyclic dependency refresh 
+Opening more than one QMenu configurator panel at a time causes a cyclic dependency refresh 
 loops in the Property page.
-Solution: Don't open more than one Property page to the QPop
+Solution: Don't open more than one Property page to the QMenu
 
-Resizing QPop configuration window displayed inside preferences can casue the property page display to become
+Resizing QMenu configuration window displayed inside preferences can casue the property page display to become
 corrupted/unreadble. This seems to happen only on 64bit systems and mifght be related to display drivers issues.
 There is nothing I can do about it.
 Solution: 
 	1.) After resizing move the PPG's left side sepparator bar that separates Preference categories from the
-QPop preferences Proptery page, it will render the and display correctly until resized again
-	2.) Alternatively, open the QPop preferences in a separate Property page instead, e.g. by clicking on ot'scripting
+QMenu preferences Proptery page, it will render the and display correctly until resized again
+	2.) Alternatively, open the QMenu preferences in a separate Property page instead, e.g. by clicking on ot'scripting
 	orange icon in the preferences category selection bar on the left (
