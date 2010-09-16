@@ -1,0 +1,25 @@
+global proc doMenuComponentSelection(string $item, string $mask)
+//
+// Changes the selection/display state on this object to allow
+// selection of the specified selection mask type.
+{
+	string $selectCmd;
+
+	if (`selectMode -q -object`) {
+		hilite $item;
+		selectMode -component;
+		selectType -alc false;
+		
+		$selectCmd = "selectType -" + $mask + " true;";
+	} else {
+		selectType -alc false;
+		$selectCmd = "selectType -" + $mask + " true;";
+		if (!`selectMode -q -preset`) {
+			$selectCmd = $selectCmd + "hilite " + $item + ";";
+		}
+	}
+	eval $selectCmd;
+	python("restoreSelectionData()");
+}
+
+print ("Ritalin component selection mode\n");
