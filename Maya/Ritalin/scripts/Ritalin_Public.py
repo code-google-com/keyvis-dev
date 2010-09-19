@@ -1,7 +1,7 @@
 # Ritalin for Maya version 2011
 # Author: Stefan Kubicek 
-# Last changed: 2010-08-17, 10:00
-# File Version 1.5
+# Last changed: 2010-09-19, 17:00
+# File Version 1.6
 
 # ====================================================================================================
 # Description: Creates a Ritalin menu with options to change the camera navigation behaviour. 
@@ -20,14 +20,20 @@ try:
 	cleanRitalinScriptJobs()
 except:
 	pass
+
+
+try:
+	cleanRCSScriptJobs()
+except:
+	pass
 	
-global RitalinHonorInfluenceJoints; RitalinHonorInfluenceJoints = True
+global RitalinHonorInfluenceJoints; RitalinHonorInfluenceJoints = cmds.optionVar (q='RitalinHonorInfluenceJoints')
 global RitalinEnabled; RitalinEnabled = cmds.optionVar (q='RitalinEnabled')
-global RitalinScriptJobs; RitalinScriptJobs = []
+global RitalinScriptJobs; RitalinScriptJobs = list()
 global resetTumbleToolToCOI; resetTumbleToolToCOI = False
 global RitalinDoComputeBB; RitalinDoComputeBB = True
-
 global RitalinRememberSelections; RitalinRememberSelections = cmds.optionVar (q = "RitalinRememberSelections")
+global RCSScriptJobs; RCSScriptJobs = list()
 
 # ======================
 # Some helpful functions
@@ -53,18 +59,9 @@ def sourceMel (melScript, deferred = False):
 	except:
 		pass
 		#Error("Could not source " + str(melScript) + ", make sure the file resides in a script folder known to Maya.")
-		
-def cleanRitalinScriptJobs():
-	global RitalinScriptJobs
-	for job in RitalinScriptJobs:
-		try:
-			cmds.scriptJob (kill = job)	
-		except:
-			Warning ("Job " + str(job) + " could not be killed!")
-	RitalinScriptJobs = []
 
 # ===========================================================================================================================
-# Main function that computes the Camera's tumble pivot position based on the current selection or specific objects passed in
+# setCamRotatePivots computes the Camera's tumble pivot position based on the current selection or specific objects passed in
 # ===========================================================================================================================
 
 def setCamRotatePivots(oObjects = []):
@@ -194,49 +191,50 @@ def setCamRotatePivots(oObjects = []):
 # 							Store Component Selections functions
 # ====================================================================================================
 def findStoredVertexSelectionTemplate ():
-    VertexTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99410 )
-    if VertexTemplates != None:
-        #print ("Found Vertex Templates: " + str(VertexTemplates)) 
-        return VertexTemplates[0]
-    else:
-        #print ("Creating StoredVertexSelectionDataTemplate...")
-        StoredVertexSelectionDataTemplate = cmds.blindDataType(typeId = 99410, dataType = "boolean", longDataName = "StoredVertexSelectionData", shortDataName = "SVSD")
-        Template = cmds.rename (StoredVertexSelectionDataTemplate, "StoredVertexSelectionDataTemplate")
-        return Template     
-    return None
-       
+	VertexTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99410 )
+	if VertexTemplates != None:
+		#print ("Found Vertex Templates: " + str(VertexTemplates)) 
+		return VertexTemplates[0]
+	else:
+		#print ("Creating StoredVertexSelectionDataTemplate...")
+		StoredVertexSelectionDataTemplate = cmds.blindDataType(typeId = 99410, dataType = "boolean", longDataName = "StoredVertexSelectionData", shortDataName = "SVSD")
+		Template = cmds.rename (StoredVertexSelectionDataTemplate, "StoredVertexSelectionDataTemplate")
+		return Template     
+	return None
+	   
 def findStoredFaceSelectionTemplate ():
-    FaceTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99411 )
-    if FaceTemplates != None:
-        #print ("Found Face Templates: " + str(FaceTemplates)) 
-        return FaceTemplates[0]
-    else:
-        #print ("Creating StoredFaceSelectionDataTemplate...")
-        StoredFaceSelectionDataTemplate = cmds.blindDataType(typeId = 99411, dataType = "boolean", longDataName = "StoredFaceSelectionData", shortDataName = "SFSD")
-        Template = cmds.rename (StoredFaceSelectionDataTemplate, "StoredFaceSelectionDataTemplate")
-        return Template
-    return None
-    
+	FaceTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99411 )
+	if FaceTemplates != None:
+		#print ("Found Face Templates: " + str(FaceTemplates)) 
+		return FaceTemplates[0]
+	else:
+		#print ("Creating StoredFaceSelectionDataTemplate...")
+		StoredFaceSelectionDataTemplate = cmds.blindDataType(typeId = 99411, dataType = "boolean", longDataName = "StoredFaceSelectionData", shortDataName = "SFSD")
+		Template = cmds.rename (StoredFaceSelectionDataTemplate, "StoredFaceSelectionDataTemplate")
+		return Template
+	return None
+	
 def findStoredEdgeSelectionTemplate ():
-    EdgeTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99412 )
-    if EdgeTemplates != None:
-        #print ("Found Edge Templates: " + str(EdgeTemplates))   
-        return EdgeTemplates[0]
-    else:
-        #print ("Creating StoredEdgeSelectionDataTemplate...")
-        StoredEdgeSelectionDataTemplate = cmds.blindDataType(typeId = 99412, dataType = "boolean", longDataName = "StoredEdgeSelectionData", shortDataName = "SESD")
-        Template = cmds.rename (StoredEdgeSelectionDataTemplate, "StoredEdgeSelectionDataTemplate")
-        return Template
-    return None
+	EdgeTemplates = cmds.blindDataType(query = True, longNames = True, typeId = 99412 )
+	if EdgeTemplates != None:
+		#print ("Found Edge Templates: " + str(EdgeTemplates))   
+		return EdgeTemplates[0]
+	else:
+		#print ("Creating StoredEdgeSelectionDataTemplate...")
+		StoredEdgeSelectionDataTemplate = cmds.blindDataType(typeId = 99412, dataType = "boolean", longDataName = "StoredEdgeSelectionData", shortDataName = "SESD")
+		Template = cmds.rename (StoredEdgeSelectionDataTemplate, "StoredEdgeSelectionDataTemplate")
+		return Template
+	return None
 
 def storeSelectionData ():
-    if RitalinEnabled == True:
-		if RitalinRememberSelections == True:
-			print "Storing selection..."
+	if RitalinRememberSelections == True:
+		print("RCS is enabled...")
+		if cmds.undoInfo(q = true, redoName = True) == "":
+			#print ("Redo Log is: " + cmds.undoInfo(q = true, redoName = True))
 			ComponentSelectMode = cmds.selectMode (query = True, component = True)
 			if ComponentSelectMode == True:
+				#print("Component selection mode, remembering selections...")
 				#if DoRecordSelection == True:
-				
 				#print("Storing current component selection...")   
 				Sel = cmds.ls(sl = True)   
 				hiliteObjs = cmds.ls (hilite = True)
@@ -290,115 +288,114 @@ def storeSelectionData ():
 							if len(edgeList) > 0:            
 								StoredEdgeSelectionData = cmds.polyBlindData(edgeList, typeId = 99412, associationType = "edge", booleanData = True, longDataName = "StoredEdgeSelectionData", shortDataName = "SESD")
 								result = cmds.rename( StoredEdgeSelectionData , obj + "_StoredEdgeSelectionData")       
-						  
+							  
 def restoreSelectionData():
-    if RitalinEnabled == True:
-		if RitalinRememberSelections == True:
-			Sel = cmds.ls(sl = True)    
-			
-			allHiliteObjsVerts = getAllHiliteObjsVertices()
-			if len(allHiliteObjsVerts) > 0: 
-				if (cmds.selectType (query = True, polymeshVertex = True) == True):
-					if findStoredVertexSelectionTemplate () != None:            
-						#print ("Restoring vertex selection...")     
-						lsStoredVerts = cmds.polyQueryBlindData(allHiliteObjsVerts, sc=True, typeId = 99410, associationType = "vertex", booleanData = True, longDataName = "StoredVertexSelectionData", shortDataName = "SVSD")
-						if lsStoredVerts != None:        
-							storedComponents = list()    
-							for i in range(0,len(lsStoredVerts)-1,2) :
-								cmp = lsStoredVerts[i].rsplit(".",1)[0]; 
-								storedComponents.append(cmp)
-								  
-							if len(storedComponents) > 0:
-								#print ("Restoring selection for components: " + str(storedComponents))  
-								cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
-					return
+	if RitalinRememberSelections == True:
+		Sel = cmds.ls(sl = True)    
+		print("Restoring selection..")
+		allHiliteObjsVerts = getAllHiliteObjsVertices()
+		if len(allHiliteObjsVerts) > 0: 
+			if (cmds.selectType (query = True, polymeshVertex = True) == True):
+				if findStoredVertexSelectionTemplate () != None:            
+					#print ("Restoring vertex selection...")     
+					lsStoredVerts = cmds.polyQueryBlindData(allHiliteObjsVerts, sc=True, typeId = 99410, associationType = "vertex", booleanData = True, longDataName = "StoredVertexSelectionData", shortDataName = "SVSD")
+					if lsStoredVerts != None:        
+						storedComponents = list()    
+						for i in range(0,len(lsStoredVerts)-1,2) :
+							cmp = lsStoredVerts[i].rsplit(".",1)[0]; 
+							storedComponents.append(cmp)
+							  
+						if len(storedComponents) > 0:
+							#print ("Restoring selection for components: " + str(storedComponents))  
+							cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
+				return
 
-			allHiliteObjsFaces = getAllHiliteObjsFaces()
-			if len(allHiliteObjsFaces) > 0:
-				if (cmds.selectType (query = True, polymeshFace = True) == True):
-					if findStoredFaceSelectionTemplate () != None:
-						#print ("Restoring face selection...")          
-						lsStoredFaces = cmds.polyQueryBlindData(allHiliteObjsFaces, sc=True, typeId = 99411, associationType = "face", booleanData = True, longDataName = "StoredFaceSelectionData", shortDataName = "SFSD")   
-						if lsStoredFaces != None:     
-							storedComponents = list()    
-							for i in range(0,len(lsStoredFaces)-1,2) :
-								cmp = lsStoredFaces[i].rsplit(".",1)[0]; 
-								storedComponents.append(cmp)
-								  
-							if len(storedComponents) > 0:
-								#print ("Restoring selection for components: " + str(storedComponents))  
-								cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
-					return
-					
-			allHiliteObjsEdges = getAllHiliteObjsEdges()
-			if len(allHiliteObjsEdges) > 0:
-				#print allHiliteObjsEdges
-				if (cmds.selectType (query = True, polymeshEdge = True) == True):
-					if findStoredEdgeSelectionTemplate () != None:
-						print ("Restoring edge selection...")          
-						lsStoredEdges = cmds.polyQueryBlindData(allHiliteObjsEdges, sc=True, typeId = 99412, associationType = "edge", booleanData = True, longDataName = "StoredEdgeSelectionData", shortDataName = "SESD")    
-						#print lsStoredEdges
-						if lsStoredEdges != None:     
-							storedComponents = list()    
-							for i in range(0,len(lsStoredEdges)-1,2) :
-								cmp = lsStoredEdges[i].rsplit(".",1)[0]; 
-								storedComponents.append(cmp)
-								  
-							if len(storedComponents) > 0:
-								#print ("Restoring selection for components: " + str(storedComponents))  
-								cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
-					return
+		allHiliteObjsFaces = getAllHiliteObjsFaces()
+		if len(allHiliteObjsFaces) > 0:
+			if (cmds.selectType (query = True, polymeshFace = True) == True):
+				if findStoredFaceSelectionTemplate () != None:
+					#print ("Restoring face selection...")          
+					lsStoredFaces = cmds.polyQueryBlindData(allHiliteObjsFaces, sc=True, typeId = 99411, associationType = "face", booleanData = True, longDataName = "StoredFaceSelectionData", shortDataName = "SFSD")   
+					if lsStoredFaces != None:     
+						storedComponents = list()    
+						for i in range(0,len(lsStoredFaces)-1,2) :
+							cmp = lsStoredFaces[i].rsplit(".",1)[0]; 
+							storedComponents.append(cmp)
+							  
+						if len(storedComponents) > 0:
+							#print ("Restoring selection for components: " + str(storedComponents))  
+							cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
+				return
+				
+		allHiliteObjsEdges = getAllHiliteObjsEdges()
+		if len(allHiliteObjsEdges) > 0:
+			#print allHiliteObjsEdges
+			if (cmds.selectType (query = True, polymeshEdge = True) == True):
+				if findStoredEdgeSelectionTemplate () != None:
+					#print ("Restoring edge selection...")          
+					lsStoredEdges = cmds.polyQueryBlindData(allHiliteObjsEdges, sc=True, typeId = 99412, associationType = "edge", booleanData = True, longDataName = "StoredEdgeSelectionData", shortDataName = "SESD")    
+					#print lsStoredEdges
+					if lsStoredEdges != None:     
+						storedComponents = list()    
+						for i in range(0,len(lsStoredEdges)-1,2) :
+							cmp = lsStoredEdges[i].rsplit(".",1)[0]; 
+							storedComponents.append(cmp)
+							  
+						if len(storedComponents) > 0:
+							#print ("Restoring selection for components: " + str(storedComponents))  
+							cmds.select(storedComponents, add = False) #Replacing selection instead of adding...
+				return
 
 def getAllObjVertices (Object):
-    allVertsList = list()
-    vertCount = cmds.polyEvaluate(Object, vertex = True)
-    vertSelString = (Object + '.vtx[0:' + str(vertCount -1) + ']')
-    allVertsList.append(vertSelString)    
-    return allVertsList
+	allVertsList = list()
+	vertCount = cmds.polyEvaluate(Object, vertex = True)
+	vertSelString = (Object + '.vtx[0:' + str(vertCount -1) + ']')
+	allVertsList.append(vertSelString)    
+	return allVertsList
 
 def getAllObjFaces(Object):
-    allFacesList = list()
-    faceCount = cmds.polyEvaluate(Object, face = True)
-    faceSelString = (Object + '.f[0:' + str(faceCount -1) + ']')
-    allFacesList.append(faceSelString)
-    return allFacesList
-    
+	allFacesList = list()
+	faceCount = cmds.polyEvaluate(Object, face = True)
+	faceSelString = (Object + '.f[0:' + str(faceCount -1) + ']')
+	allFacesList.append(faceSelString)
+	return allFacesList
+	
 def getAllObjEdges(Object):
-    allEdgesList = list()
-    edgeCount = cmds.polyEvaluate(Object, edge = True)
-    edgeSelString = (Object + '.e[0:' + str(edgeCount -1) + ']')
-    allEdgesList.append(edgeSelString)    
-    return allEdgesList 
-                              
+	allEdgesList = list()
+	edgeCount = cmds.polyEvaluate(Object, edge = True)
+	edgeSelString = (Object + '.e[0:' + str(edgeCount -1) + ']')
+	allEdgesList.append(edgeSelString)    
+	return allEdgesList 
+							  
 def getAllHiliteObjsVertices():
-    hiliteObjs = cmds.ls (hilite = True)
-    allVertsList = list()
-    
-    for obj in hiliteObjs:
-        vertCount = cmds.polyEvaluate(obj, vertex = True)
-        vertSelString = (obj + '.vtx[0:' + str(vertCount -1) + ']')
-        allVertsList.append(vertSelString)    
-    return allVertsList
+	hiliteObjs = cmds.ls (hilite = True)
+	allVertsList = list()
+	
+	for obj in hiliteObjs:
+		vertCount = cmds.polyEvaluate(obj, vertex = True)
+		vertSelString = (obj + '.vtx[0:' + str(vertCount -1) + ']')
+		allVertsList.append(vertSelString)    
+	return allVertsList
 
 def getAllHiliteObjsFaces():
-    hiliteObjs = cmds.ls (hilite = True)
-    allFacesList = list()
-    
-    for obj in hiliteObjs:
-        faceCount = cmds.polyEvaluate(obj, face = True)
-        faceSelString = (obj + '.f[0:' + str(faceCount -1) + ']')
-        allFacesList.append(faceSelString)
-    return allFacesList
-    
+	hiliteObjs = cmds.ls (hilite = True)
+	allFacesList = list()
+	
+	for obj in hiliteObjs:
+		faceCount = cmds.polyEvaluate(obj, face = True)
+		faceSelString = (obj + '.f[0:' + str(faceCount -1) + ']')
+		allFacesList.append(faceSelString)
+	return allFacesList
+	
 def getAllHiliteObjsEdges():
-    hiliteObjs = cmds.ls (hilite = True)
-    allEdgesList = list()
-    
-    for obj in hiliteObjs:
-        edgeCount = cmds.polyEvaluate(obj, edge = True)
-        edgeSelString = (obj + '.e[0:' + str(edgeCount -1) + ']')
-        allEdgesList.append(edgeSelString)    
-    return allEdgesList
+	hiliteObjs = cmds.ls (hilite = True)
+	allEdgesList = list()
+	
+	for obj in hiliteObjs:
+		edgeCount = cmds.polyEvaluate(obj, edge = True)
+		edgeSelString = (obj + '.e[0:' + str(edgeCount -1) + ']')
+		allEdgesList.append(edgeSelString)    
+	return allEdgesList
 
 						
 # =============================================================================================================
@@ -412,23 +409,37 @@ def toggleRitalinHonorSkinJoints():
 	setCamRotatePivots()
 	print("toggleRitalinHonorSkinJoints()")
 
-def toggleRitalinRememberSelections():
-	global RitalinRememberSelections
-	RitalinRememberSelections = not RitalinRememberSelections
-	cmds.optionVar (iv=('RitalinRememberSelections', RitalinRememberSelections))
-	if RitalinRememberSelections == False:
-		sourceMel ("Ritalin_doMenuComponentSelection_default.mel")
-	else:
-		sourceMel ("Ritalin_doMenuComponentSelection.mel")
-	print("toggleRitalinRememberSelections()")
-
 def toggleRitalin ():
 	global RitalinEnabled
 	RitalinEnabled = not RitalinEnabled
 	enableRitalin(RitalinEnabled)
 	cmds.optionVar (iv=('RitalinEnabled', RitalinEnabled))
 	print ("toggleRitalin()")
+
+def toggleRCS ():
+	global RitalinRememberSelections
+	RitalinRememberSelections = not RitalinRememberSelections
+	enableRCS(RitalinRememberSelections)
+	cmds.optionVar (iv=('RitalinRememberSelections', RitalinRememberSelections))
+	print ("toggleRCS()")
 	
+def cleanRitalinScriptJobs():
+	global RitalinScriptJobs
+	for job in RitalinScriptJobs:
+		try:
+			cmds.scriptJob (kill = job)	
+		except:
+			Warning ("Job " + str(job) + " could not be killed!")
+	RitalinScriptJobs = []
+
+def cleanRCSScriptJobs():
+	global RCSScriptJobs
+	for job in RCSScriptJobs:
+		try:
+			cmds.scriptJob (kill = job)	
+		except:
+			Warning ("Job " + str(job) + " could not be killed!")
+	RCSScriptJobs = []
 
 # =============================================================================================================
 # This function establishes the two script Jobs that trigger camera tumble pivot relocation when: 
@@ -438,6 +449,25 @@ def toggleRitalin ():
 # by right-dragging and selecting "Paint Skin Weights" from the popup marking menu
 # =============================================================================================================
 
+def cleanStoredComponentSelectionData():
+	print("Attempting to clean...")
+	shapes = cmds.ls(sl = True, shapes = true, dag = True, objectsOnly = True )
+	print ("Cleaning up on selected objects: " + str(shapes))
+	if len(shapes) < 1:
+		print("Nothing selected, cleaning Stored Component Selection Data from whole scene.")
+		shapes = cmds.ls(dag =True, shapes = True, geometry = True, type = "mesh")
+	
+	print ("length of array is :" + str(len(shapes)) )
+	if (len(shapes) > 0):
+		print ("Cleaning up on: " + str(shapes))
+		for shape in shapes:
+			BDnodes = cmds.listConnections(shape, type = "polyBlindData")
+			print("Found Blind Data Nodes connected: " + str(BDnodes))
+			if BDnodes != None:
+				for node in BDnodes:
+					if (cmds.getAttr (node +".typeId")) == 99410 or 99411 or 99412:
+						print ("Deleting " + str(node))
+						cmds.delete (node)
 
 def enableRitalin(enable = True): 
 	global RitalinEnabled
@@ -458,23 +488,45 @@ def enableRitalin(enable = True):
 		RitalinScriptJobs.append(Job1)		
 
 		#Due to a bug in Maya we need to run the following event at least once to ensure that the DragRelease event gets triggered above. Otherwise it never kicks in  :-(
-		Job2 = cmds.scriptJob(runOnce = False, killWithScene = False, event =('SelectionChanged',  "cmds.undoInfo (swf = False); setCamRotatePivots(); storeSelectionData(); cmds.undoInfo (swf = True); ")) 
+		#Also, to prevent the undo/redo queue from getting overwritten we only do store selected components when there are no commands to redo, 
+		#which is only the case if the selction change was due to user-action rather than undo/redo...
+		Job2 = cmds.scriptJob(runOnce = False, killWithScene = False,  event =('SelectionChanged',  "cmds.undoInfo (swf = False); setCamRotatePivots(); cmds.undoInfo (swf = True)")) #if cmds.undoInfo(q = true, redoName = True) == '':
 		RitalinScriptJobs.append(Job2)
+		Job3 = cmds.scriptJob(runOnce = False, killWithScene = False,  event =('Undo',  "cmds.undoInfo (swf = False); setCamRotatePivots(); cmds.undoInfo (swf = True)")) #if cmds.undoInfo(q = true, redoName = True) == '':
+		RitalinScriptJobs.append(Job3)
+		Job4 = cmds.scriptJob(runOnce = False, killWithScene = False,  event =('Redo',  "cmds.undoInfo (swf = False); setCamRotatePivots(); cmds.undoInfo (swf = True)")) #if cmds.undoInfo(q = true, redoName = True) == '':
+		RitalinScriptJobs.append(Job4)
 	
-		#createRitalinCameraScriptJobs()
 		setCamRotatePivots()
-		if RitalinRememberSelections == True:
-			sourceMel ("Ritalin_doMenuComponentSelection.mel")
-			storeSelectionData()
-	
+			
 	if enable == False:
 		#print ("Attempting to disable Ritalin - Deleting script Jobs")
 		if resetTumbleToolToCOI == True:
 			cmds.tumbleCtx ("tumbleContext", edit = True, localTumble = 1)
 		
-		sourceMel ("Ritalin_doMenuComponentSelection_default.mel")
 		cleanRitalinScriptJobs()
+		
+def enableRCS(enable = True):
+	global RitalinRememberSelections
+	global RCSScriptJobs
+	
+	if enable == True:
 
+		cleanRCSScriptJobs()
+
+		#To prevent the undo/redo queue from getting overwritten we only do store selected components when there are no commands to redo, 
+		#which is only the case if the selction change was due to user-action rather than undo/redo...
+		Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, compressUndo = True, event =('SelectionChanged',  "if cmds.undoInfo(q = true, redoName = True) == '': storeSelectionData();")) 
+		RCSScriptJobs.append(Job1)
+	
+		if RitalinRememberSelections == True:
+			storeSelectionData()
+			cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection.mel")')
+	
+	if enable == False:
+		#print ("Attempting to disable Ritalin - Deleting script Jobs")
+		cleanRCSScriptJobs()
+		cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection_default.mel")')
 		
 def createRitalinToolsMenu():
 	global RitalinEnabled
@@ -483,11 +535,13 @@ def createRitalinToolsMenu():
 	global RitalinHonorJointsMenuItem
 	global RitalinRememberSelectionsMenuItem
 	global RitalinRememberSelections
+	global RitalinCleanRCSDataMenuItem
+	
 	gMainWindow = mel.eval('$tmpVar=$gMainWindow')
 	Continue = False
-	
+		
 	try:
-		#print "Attempting delete RitalinToolsMenu as MenuItem"
+		#print "Attempting to delete RitalinToolsMenu as MenuItem"
 		cmds.deleteUI (RitalinToolsMenu, menuItem = True)
 		Continue = True
 	except:
@@ -501,11 +555,18 @@ def createRitalinToolsMenu():
 
 	try:
 		RitalinToolsMenu = (cmds.menu ("RitalinToolsMenu", label = 'Ritalin', tearOff = True, allowOptionBoxes = True, postMenuCommand = ("buildRitalinToolsMenu()"), parent = gMainWindow))
-		RitalinEnableMenuItem = cmds.menuItem (label='Ritalin Enabled', checkBox = RitalinEnabled, command = ('toggleRitalin (); buildRitalinToolsMenu()'), parent = RitalinToolsMenu)
+		#cmds.menuItem (label='---------- Options --------------------------', enable = False, parent = RitalinToolsMenu)
+		RitalinEnableMenuItem = cmds.menuItem (label='Ritalin Enabled', checkBox = RitalinEnabled, command = ('toggleRitalin ();buildRitalinToolsMenu()'), parent = RitalinToolsMenu)
 		RitalinHonorJointsMenuItem = cmds.menuItem (label='Honor Joints when in PaintSkinWeights mode', checkBox = RitalinHonorInfluenceJoints, command = ('toggleRitalinHonorSkinJoints()'), parent = RitalinToolsMenu)
-		RitalinRememberSelectionsMenuItem = cmds.menuItem (label='Remember Component Selections', checkBox = RitalinRememberSelections, command = ('toggleRitalinRememberSelections()'), parent = RitalinToolsMenu)
+		RitalinRememberSelectionsMenuItem = cmds.menuItem (label='Remember Component Selections', checkBox = RitalinRememberSelections, command = ('toggleRCS ()'), parent = RitalinToolsMenu)
+		RitalinCleanRCSDataMenuItem = cmds.menuItem (label='Remove Stored Component Selections', command = ('cleanStoredComponentSelectionData()'), echoCommand = True, parent = RitalinToolsMenu)
+		#P4CheckoutMenuItem = cmds.menuItem (label='Checkout current Scene from P4', command = ("P4CheckoutCurrentSceneFile()"), echoCommand = True, enable = False, image = "P4Checkout.bmp", parent = PerforceToolsMenu)
+
+				
+		print ("Ritalin Menu successsfully created in Main Window")
 		Continue = True
-	except:
+	except: #SproingToolsMenu could not be created? Maybe because Sproing_Functions.py is missing or not yet loaded 
+		Warning ("Ritalin Menu already exists or could not be created!")
 		Continue = False
 	
 	if Continue == True:
@@ -530,8 +591,12 @@ mel.eval ("global proc  toggleRitalin () {python(\"toggleRitalin ()\");}")
 #MEL wrapper for toggleRitalinHonorSkinJoints
 mel.eval ("global proc toggleRitalinHonorSkinJoints () {python(\"toggleRitalinHonorSkinJoints ()\");}")	
 #MEL wrapper for toggleRitalinRememberSelections()
-mel.eval ("global proc toggleRitalinRememberSelections() {python(\"toggleRitalinRememberSelections()\");}")	
+mel.eval ("global proc toggleRCS () {python(\"toggleRCS ()\");}")	
+#Mel wrapper for cleanStoredComponentSelectionData()
+mel.eval ("global proc cleanStoredComponentSelectionData() {python(\"cleanStoredComponentSelectionData()\");}")	
 
 #Create the Ritalin Menu after Maya has started up and there is a UI we can attach to:
-cmds.evalDeferred ("createRitalinToolsMenu();", lowestPriority = True)  
-cmds.evalDeferred ("enableRitalin(True);", lowestPriority = False)
+sourceMel ("dagMenuProc.mel"); #print("Source dagMenuProc.mel") #We must load the default Right-Click Menu procedure so we can overwrite it with our own one right after this step.
+cmds.evalDeferred ("createRitalinToolsMenu();", lowestPriority = True)
+cmds.evalDeferred ("enableRitalin(" + str(RitalinEnabled) + ");", lowestPriority = True)
+cmds.evalDeferred ("enableRCS (" + str(RitalinRememberSelections) +");", lowestPriority = True)
