@@ -25,6 +25,11 @@ for View in Views:
 		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
 """
 
+# TODO: Finish QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names 8TO find out if we are in component mode and what objects are hilited)
+# TODO: Add chooser to menu items to list switches, script items, or both
+# TODO: Add same type of input variables to items, switches, menus and menu contexts (self, ...)
+
+#Report: Pick session does not work in XSI when called from a timer event (event does not wait for session to return...)
 #Report: it is not possible to categorize ones own commands
 #Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere...
 #Article about delayed events 
@@ -104,6 +109,7 @@ from win32com.client import constants as c
 from win32com.client import dynamic as d
 
 import os
+import gc #Import garbage collector module
 #import os.path
 #import win32con
 #import win32process #, pythoncom
@@ -732,6 +738,7 @@ def XSILoadPlugin( in_reg ):
 	#Register Custom QMenu Commands
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
 	in_reg.RegisterCommand( "QMenuExecuteMenuItem" , "QMenuExecuteMenuItem" )
+	in_reg.RegisterCommand( "QMenuGetMenuItemByName" , "QMenuGetMenuItemByName" )
 	in_reg.RegisterCommand( "QMenuCreateConfiguratorCustomProperty", "QMenuCreateConfiguratorCustomProperty" )
 	
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_0", "QMenuDisplayMenuSet_0" )
@@ -750,8 +757,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
 	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
 		
-	in_reg.RegisterCommand( "InspectOp" , "InspectOp" )
-	in_reg.RegisterCommand( "CallInspectOp" , "CallInspectOp" )
+
 	return True
 
 def XSIUnloadPlugin( in_reg ):
@@ -979,7 +985,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	
 	oLayout.AddRow()
-	oLayout.AddGroup("Existing QMenu Script Items")
+	oLayout.AddGroup("Existing QMenu Switches and Script Items")
 	
 	oLayout.AddRow()
 	oLayout.AddEnumControl ("MenuItem_Category", None, "Category",c.siControlCombo)
@@ -3710,154 +3716,163 @@ def QMenuSaveConfiguration(fileName):
 	#Lets check if the path exists
 	folderName = os.path.dirname (fileName) #.rsplit("\\")
 	if os.path.exists(folderName):
-		globalQMenu_MenuItems = GetGlobalObject("globalQMenu_MenuItems").items
-		globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus").items
-		globalQMenu_MenuSets = GetGlobalObject("globalQMenu_MenuSets").items
-		globalQMenu_MenuDisplayContexts = GetGlobalObject("globalQMenu_MenuDisplayContexts").items
-		globalQMenuViewSignatures = GetGlobalObject("globalQMenuViewSignatures").items
-		globalQMenuDisplayEvents = GetGlobalObject("globalQMenuDisplayEvents").items
+		if os.path.isfile(fileName) == True: #Does the file already exist? Lets make a backup copy with timestamp first
+			timestring = time.strftime ("_%Y.%M.%d_%H.%M.%S")
+			fileNameSansExtension = fileName.rsplit(".",1)[0]
+			try:
+				backupFileName = (fileNameSansExtension + timestring + ".xml")
+				Print("Saving current QMenu configuration backup as " + backupFileName)
+				os.rename(fileName, (fileNameSansExtension + timestring + ".xml"))
+			except:
+				Print("Current Qmenu configuration backup file could not be created - attempting to overwrite...",c.siWarning)
+			globalQMenu_MenuItems = GetGlobalObject("globalQMenu_MenuItems").items
+			globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus").items
+			globalQMenu_MenuSets = GetGlobalObject("globalQMenu_MenuSets").items
+			globalQMenu_MenuDisplayContexts = GetGlobalObject("globalQMenu_MenuDisplayContexts").items
+			globalQMenuViewSignatures = GetGlobalObject("globalQMenuViewSignatures").items
+			globalQMenuDisplayEvents = GetGlobalObject("globalQMenuDisplayEvents").items
 
-		oConfigDoc = DOM.Document()
-		RootNode = oConfigDoc.createElement("QMenuComponents") #Create Root level node
-		oConfigDoc.appendChild(RootNode)
+			oConfigDoc = DOM.Document()
+			RootNode = oConfigDoc.createElement("QMenuComponents") #Create Root level node
+			oConfigDoc.appendChild(RootNode)
 
-		MenuItemsNode = oConfigDoc.createElement("QMenu_MenuItems")
-		RootNode.appendChild(MenuItemsNode)
-		MenusNode = oConfigDoc.createElement("QMenu_Menus")
-		RootNode.appendChild(MenusNode)
-		MenuSetsNode = oConfigDoc.createElement("QMenu_MenuSets")
-		RootNode.appendChild(MenuSetsNode)
-		MenuDisplayContextsNode = oConfigDoc.createElement("QMenu_MenuDisplayContexts")
-		RootNode.appendChild(MenuDisplayContextsNode)
-		ViewsNode = oConfigDoc.createElement("QMenuViewSignatures")
-		RootNode.appendChild(ViewsNode)
-		DisplayEventsNode = oConfigDoc.createElement("QMenuDisplayEvents")
-		RootNode.appendChild(DisplayEventsNode)
+			MenuItemsNode = oConfigDoc.createElement("QMenu_MenuItems")
+			RootNode.appendChild(MenuItemsNode)
+			MenusNode = oConfigDoc.createElement("QMenu_Menus")
+			RootNode.appendChild(MenusNode)
+			MenuSetsNode = oConfigDoc.createElement("QMenu_MenuSets")
+			RootNode.appendChild(MenuSetsNode)
+			MenuDisplayContextsNode = oConfigDoc.createElement("QMenu_MenuDisplayContexts")
+			RootNode.appendChild(MenuDisplayContextsNode)
+			ViewsNode = oConfigDoc.createElement("QMenuViewSignatures")
+			RootNode.appendChild(ViewsNode)
+			DisplayEventsNode = oConfigDoc.createElement("QMenuDisplayEvents")
+			RootNode.appendChild(DisplayEventsNode)
 
-	# === Save Menu Items ===	
-		for oMenuItem in globalQMenu_MenuItems:
-			MenuItemNode = oConfigDoc.createElement("QMenu_MenuItem")
-			MenuItemNode.setAttribute("UID", oMenuItem.UID)
-			MenuItemNode.setAttribute("name", oMenuItem.name)
-			MenuItemNode.setAttribute("type", oMenuItem.type)
-			MenuItemNode.setAttribute("category", oMenuItem.category)
-			MenuItemNode.setAttribute("language", oMenuItem.language)
-			if oMenuItem.switch:
-				MenuItemNode.setAttribute("switch", "True")
-			else:
-				MenuItemNode.setAttribute("switch", "False")
-			
-			oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.code)
-			if oMenuItem.code == "": oMenuItemCode.nodeValue = " "
-			MenuItemNode.appendChild(oMenuItemCode)
-			
-			#Test setting code as an attribute...
-			#MenuItemNode.setAttribute("code", oMenuItem.code)
-			MenuItemsNode.appendChild(MenuItemNode)	
-		
-	# === Save Menus ===
-		for oMenu in globalQMenu_Menus:
-			MenuNode = oConfigDoc.createElement("QMenu_Menu")
-			MenuNode.setAttribute("name", str(oMenu.name))
-			MenuNode.setAttribute("type", oMenu.type)
-			MenuNode.setAttribute("language", oMenu.language)
-			if oMenu.executeCode == True:
-				MenuNode.setAttribute("executeCode", "True")
-			if oMenu.executeCode == False:
-				MenuNode.setAttribute("executeCode", "False")
-				
-			oMenuCode = oConfigDoc.createTextNode (oMenu.code)
-			#oMenuCode.nodeValue = str(oMenu.code)
-			if oMenu.code == "": oMenuCode.nodeValue = " "
-			MenuNode.appendChild(oMenuCode)	
-			
-			MenuItems = getattr(oMenu, "items")
-			NameList = list()
-			for MenuItem in MenuItems:
-				if MenuItem.type == "MissingCommand":
-					NameList.append("Command")
-				elif MenuItem.type == "CommandPlaceholder":
-					NameList.append("Command")
+		# === Save Menu Items ===	
+			for oMenuItem in globalQMenu_MenuItems:
+				MenuItemNode = oConfigDoc.createElement("QMenu_MenuItem")
+				MenuItemNode.setAttribute("UID", oMenuItem.UID)
+				MenuItemNode.setAttribute("name", oMenuItem.name)
+				MenuItemNode.setAttribute("type", oMenuItem.type)
+				MenuItemNode.setAttribute("category", oMenuItem.category)
+				MenuItemNode.setAttribute("language", oMenuItem.language)
+				if oMenuItem.switch:
+					MenuItemNode.setAttribute("switch", "True")
 				else:
-					NameList.append(str(MenuItem.type)) #Finally this could only be a command or a scripted menu item
-				NameList.append(str(MenuItem.name))
-				NameList.append(str(MenuItem.UID))
+					MenuItemNode.setAttribute("switch", "False")
+				
+				oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.code)
+				if oMenuItem.code == "": oMenuItemCode.nodeValue = " "
+				MenuItemNode.appendChild(oMenuItemCode)
+				
+				#Test setting code as an attribute...
+				#MenuItemNode.setAttribute("code", oMenuItem.code)
+				MenuItemsNode.appendChild(MenuItemNode)	
 			
-			MenuItemsNames = ListToString(NameList)
-			MenuNode.setAttribute("items", MenuItemsNames)
-			MenusNode.appendChild(MenuNode)
-		
-	# === Save Menu Sets ===
-		for oMenuSet in globalQMenu_MenuSets:
-			MenuSetNode = oConfigDoc.createElement("QMenu_MenuSet")
-			MenuSetNode.setAttribute("name", oMenuSet.name)
-			MenuSetNode.setAttribute("type", oMenuSet.type)
-			
-			Attributes = ["AMenus","AContexts","BMenus","BContexts","CMenus","CContexts","DMenus","DContexts"]
-			for Attr in Attributes:
-				AttrList = list()
-				oItems = getattr(oMenuSet, Attr)
-				#Print(Attr + ": " + str(oItems))
-				for oItem in oItems:
-					if oItem != None:
-						AttrList.append (str(oItem.name))
+		# === Save Menus ===
+			for oMenu in globalQMenu_Menus:
+				MenuNode = oConfigDoc.createElement("QMenu_Menu")
+				MenuNode.setAttribute("name", str(oMenu.name))
+				MenuNode.setAttribute("type", oMenu.type)
+				MenuNode.setAttribute("language", oMenu.language)
+				if oMenu.executeCode == True:
+					MenuNode.setAttribute("executeCode", "True")
+				if oMenu.executeCode == False:
+					MenuNode.setAttribute("executeCode", "False")
+					
+				oMenuCode = oConfigDoc.createTextNode (oMenu.code)
+				#oMenuCode.nodeValue = str(oMenu.code)
+				if oMenu.code == "": oMenuCode.nodeValue = " "
+				MenuNode.appendChild(oMenuCode)	
+				
+				MenuItems = getattr(oMenu, "items")
+				NameList = list()
+				for MenuItem in MenuItems:
+					if MenuItem.type == "MissingCommand":
+						NameList.append("Command")
+					elif MenuItem.type == "CommandPlaceholder":
+						NameList.append("Command")
 					else:
-						AttrList.append("None")
-				AttrString = ListToString(AttrList)
-				#Print(AttrString)
-				MenuSetNode.setAttribute(Attr, AttrString)
-			MenuSetsNode.appendChild(MenuSetNode)
-	
-	# === Save Menu Contexts ===
-		for oDisplayContext in globalQMenu_MenuDisplayContexts:
-			DisplayContextNode = oConfigDoc.createElement("QMenu_MenuDisplayContext")
-			DisplayContextNode.setAttribute("name", oDisplayContext.name)
-			DisplayContextNode.setAttribute("type", oDisplayContext.type)
-			DisplayContextNode.setAttribute("language", oDisplayContext.language)
-			#DisplayContextNode.setAttribute("code", str(oDisplayContext.code))	
+						NameList.append(str(MenuItem.type)) #Finally this could only be a command or a scripted menu item
+					NameList.append(str(MenuItem.name))
+					NameList.append(str(MenuItem.UID))
+				
+				MenuItemsNames = ListToString(NameList)
+				MenuNode.setAttribute("items", MenuItemsNames)
+				MenusNode.appendChild(MenuNode)
 			
-			
-			oDisplayContextCode = oConfigDoc.createTextNode (oDisplayContext.code)
-			if oDisplayContext.code == "": oDisplayContextCode.nodeValue = " "
-			DisplayContextNode.appendChild(oDisplayContextCode)
-			MenuDisplayContextsNode.appendChild(DisplayContextNode)
+		# === Save Menu Sets ===
+			for oMenuSet in globalQMenu_MenuSets:
+				MenuSetNode = oConfigDoc.createElement("QMenu_MenuSet")
+				MenuSetNode.setAttribute("name", oMenuSet.name)
+				MenuSetNode.setAttribute("type", oMenuSet.type)
+				
+				Attributes = ["AMenus","AContexts","BMenus","BContexts","CMenus","CContexts","DMenus","DContexts"]
+				for Attr in Attributes:
+					AttrList = list()
+					oItems = getattr(oMenuSet, Attr)
+					#Print(Attr + ": " + str(oItems))
+					for oItem in oItems:
+						if oItem != None:
+							AttrList.append (str(oItem.name))
+						else:
+							AttrList.append("None")
+					AttrString = ListToString(AttrList)
+					#Print(AttrString)
+					MenuSetNode.setAttribute(Attr, AttrString)
+				MenuSetsNode.appendChild(MenuSetNode)
 		
-	# === Save View Signatures ===
-		for oSignature in globalQMenuViewSignatures:
-			ViewSignatureNode = oConfigDoc.createElement("QMenuViewSignature")
-			ViewSignatureNode.setAttribute("name",oSignature.name)
-			ViewSignatureNode.setAttribute("type", oSignature.type)
-			ViewSignatureNode.setAttribute("signature", str(oSignature.signature))
-			MenuSetNames = list()
-			for MenuSet in oSignature.menuSets:
-				MenuSetNames.append(MenuSet.name)
-			MenuSetNamesString = ListToString(MenuSetNames)
+		# === Save Menu Contexts ===
+			for oDisplayContext in globalQMenu_MenuDisplayContexts:
+				DisplayContextNode = oConfigDoc.createElement("QMenu_MenuDisplayContext")
+				DisplayContextNode.setAttribute("name", oDisplayContext.name)
+				DisplayContextNode.setAttribute("type", oDisplayContext.type)
+				DisplayContextNode.setAttribute("language", oDisplayContext.language)
+				#DisplayContextNode.setAttribute("code", str(oDisplayContext.code))	
+				
+				
+				oDisplayContextCode = oConfigDoc.createTextNode (oDisplayContext.code)
+				if oDisplayContext.code == "": oDisplayContextCode.nodeValue = " "
+				DisplayContextNode.appendChild(oDisplayContextCode)
+				MenuDisplayContextsNode.appendChild(DisplayContextNode)
 			
-			ViewSignatureNode.setAttribute("menuSets", MenuSetNamesString)
-			ViewsNode.appendChild(ViewSignatureNode)
+		# === Save View Signatures ===
+			for oSignature in globalQMenuViewSignatures:
+				ViewSignatureNode = oConfigDoc.createElement("QMenuViewSignature")
+				ViewSignatureNode.setAttribute("name",oSignature.name)
+				ViewSignatureNode.setAttribute("type", oSignature.type)
+				ViewSignatureNode.setAttribute("signature", str(oSignature.signature))
+				MenuSetNames = list()
+				for MenuSet in oSignature.menuSets:
+					MenuSetNames.append(MenuSet.name)
+				MenuSetNamesString = ListToString(MenuSetNames)
+				
+				ViewSignatureNode.setAttribute("menuSets", MenuSetNamesString)
+				ViewsNode.appendChild(ViewSignatureNode)
 
-	# === Save Display Events ===
-		for oDisplayEvent in globalQMenuDisplayEvents:
-			#Print("Saving Display events")
-			DisplayEventNode = oConfigDoc.createElement("QMenuDisplayEvent")
-			DisplayEventNode.setAttribute("number", str(oDisplayEvent.number))
-			DisplayEventNode.setAttribute("type", oDisplayEvent.type)
-			DisplayEventNode.setAttribute("key", str(oDisplayEvent.key))
-			DisplayEventNode.setAttribute("keyMask", str(oDisplayEvent.keyMask))
-			DisplayEventsNode.appendChild(DisplayEventNode)	
-			#Print("\nDisplayeventsnode with number " + str(oDisplayEvent.number) + " saved\n")
+		# === Save Display Events ===
+			for oDisplayEvent in globalQMenuDisplayEvents:
+				#Print("Saving Display events")
+				DisplayEventNode = oConfigDoc.createElement("QMenuDisplayEvent")
+				DisplayEventNode.setAttribute("number", str(oDisplayEvent.number))
+				DisplayEventNode.setAttribute("type", oDisplayEvent.type)
+				DisplayEventNode.setAttribute("key", str(oDisplayEvent.key))
+				DisplayEventNode.setAttribute("keyMask", str(oDisplayEvent.keyMask))
+				DisplayEventsNode.appendChild(DisplayEventNode)	
+				#Print("\nDisplayeventsnode with number " + str(oDisplayEvent.number) + " saved\n")
 
-		#Finally write out the whole configuration document as an xml file
-		try:
-			ConfigDocFile = open(fileName,"w")
-			oConfigDoc.writexml(ConfigDocFile,indent = "",addindent = "", newl = "")
-			ConfigDocFile.close()
-			return True
-		except:
-			return False
+			#Finally write out the whole configuration document as an xml file
+			try:
+				ConfigDocFile = open(fileName,"w")
+				oConfigDoc.writexml(ConfigDocFile,indent = "",addindent = "", newl = "")
+				ConfigDocFile.close()
+				return True
+			except:
+				return False
 	else:
 		Print("Cannot save QMenu Configuration to '" + fileName + "' because the folder does not exist. Please correct the file path and try again.", c.siError)
-	
+		
 def QMenuLoadConfiguration(fileName):
 	Print("QMenu: QMenuLoadConfiguration called", c.siVerbose)
 
@@ -4079,8 +4094,9 @@ def QMenuLoadConfiguration(fileName):
 #===================================== Command Callback Functions ========================================================
 #=========================================================================================================================
 
-#This is the main function that creates 
+#This is the main function that creates the string describing the Menu to render
 def DisplayMenuSet( MenuSetIndex ):
+	
 	#Print("DisplayQMenu_MenuSet_Execute called", c.siVerbose)
 	ViewSignature = (GetView(True))[0] #get the short/nice view signature
 	WindowPos = ViewSignature[2]
@@ -4148,8 +4164,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			oCMenu = None; #CMenuItemList = list()
 			oDMenu = None; #DMenuItemList = list()
 			oMenus = list()
-			
-			
+				
 			#Quadrants = ((oMenuSet.AContexts,oMenuSet.AMenus),(oMenuSet.BContexts,oMenuSet.BMenus),(oMenuSet.CContexts,oMenuSet.CMenus),(oMenuSet.DContexts,oMenuSet.DMenus))
 			
 			#Find menu A by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
@@ -4275,7 +4290,7 @@ def DisplayMenuSet( MenuSetIndex ):
 										Language = oItem.language
 										#result = False
 										self = oItem
-										if Language == "Python":
+										if Language == "Python": #Execute Python code natively, it's faster this way
 											Code = (oItem.code + ("\nresult = Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets)"))
 											exec (Code)
 										else:
@@ -4324,18 +4339,18 @@ def DisplayMenuSet( MenuSetIndex ):
 				t3 = time.clock() #Time 
 				
 				#ShowString = App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString")
-				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString"):
+				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString") == True or 1:
 					Print(MenuString) #Debug option to actually print out the string that will be passed to the QMenu menu renderer
 				
-				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes"):
+				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes") == true or 1:
 					Print("Time taken to get menus A-D was " + str(t1 - t0) + " seconds.")
 					Print("Time taken to get submenus without duplicates was " + str(t2 - t1) + " seconds.")
 					Print("Time taken to prepare the QMenu menu string from the menus list was " + str(t3 - t2) + " seconds.")
 					Print("Total QMenu preparation time was " + str(t3 - t0) + " seconds.")
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
+				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug Qpop command and find out why Operator Inspection fails after it has been called in some cases
 				MenuItemToExecute = App.QPop(MenuString)
-				
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
@@ -4382,6 +4397,7 @@ def DisplayMenuSet( MenuSetIndex ):
 								oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]]
 				
 				if oClickedMenuItem != None:
+					
 					return oClickedMenuItem
 				else:
 					return None
@@ -4401,6 +4417,21 @@ def QMenuRepeatLastCommand_Execute():
 	if oQMenu_MenuItem != None:
 		App.QMenuExecuteMenuItem ( oQMenu_MenuItem )
 
+def QMenuGetMenuItemByName_Init(in_Ctxt):
+	oCmd = in_Ctxt.Source
+	oCmd.ReturnValue = True
+	oArgs = oCmd.Arguments
+	oArgs.Add("strMenuItemName")
+	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
+	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
+	oCmd.SetFlag(c.siNoLogging, True)
+	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	return True
+	
+def QMenuGetMenuItemByName_Execute( strMenuItemName ):
+	oMenuItem = getQMenu_MenuItemByName(strMenuItemName)
+	return oMenuItem
+	
 def QMenuDisplayMenuSet_0_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
 	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
@@ -4413,6 +4444,7 @@ def QMenuDisplayMenuSet_0_Execute():
 	Print("QMenuDisplayMenuSet_0_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(0)
+		#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity")
 		if oQMenu_MenuItem != None:
 			globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
 			globalQMenuLastUsedItem.set(oQMenu_MenuItem)			
@@ -4421,7 +4453,7 @@ def QMenuDisplayMenuSet_0_Execute():
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
+									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 				
 def QMenuDisplayMenuSet_1_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4443,7 +4475,7 @@ def QMenuDisplayMenuSet_1_Execute():
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
+									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
 def QMenuDisplayMenuSet_2_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4465,7 +4497,7 @@ def QMenuDisplayMenuSet_2_Execute():
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
+									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
 def QMenuDisplayMenuSet_3_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4487,44 +4519,11 @@ def QMenuDisplayMenuSet_3_Execute():
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage'S Edit menu
+									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
 									
-def CallInspectOp_Init( in_Ctxt ):
-	oCmd = in_Ctxt.Source
-	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
-	oCmd.SetFlag(c.siCannotBeUsedInBatch, False)
-	oCmd.SetFlag(c.siNoLogging, False)
-	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is false otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
-	return True	
-	
-def CallInspectOp_Execute (): 
-	Application.InspectOp()
-									
-def InspectOp_Init( in_Ctxt ):
-	oCmd = in_Ctxt.Source
-	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
-	oCmd.SetFlag(c.siCannotBeUsedInBatch, False)
-	oCmd.SetFlag(c.siNoLogging, False)
-	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is false otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
-	return True	
-	
-def InspectOp_Execute (): 
-	#Application.InspectObj("arc.crvlist.SetCrvKnotMultiplicity")
+								
 
-	knots = list()
-	Sel = Application.Selection
-	for obj in Sel:
-		if obj.Type == "knotSubComponent":
-			knots.append(obj)
-
-	Result = Application.ApplyTopoOp("SetNurbsCrvKnotMultiplicity", knots, 3, "siPersistentOperation", "")
-	Application.LogMessage("Result is: " + str(Result))
-	if Result != None:
-		#Application.Preferences.SetPreferenceValue( "xsiprivate_unclassified.OperationMode",True )
-		Application.InspectObj("arc.crvlist.SetCrvKnotMultiplicity","","",4,False) #Open a modal Property page to inspect the operator before we procede
-
-	
 def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
 	oCmd.ReturnValue = True
@@ -4551,7 +4550,7 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem ):
 		if oQMenu_MenuItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
 			try:
 				#Print("Executing command with UID of: " + str(oQMenu_MenuItem.UID)) 
-				oCmd =  App.GetCommandByUID(oQMenu_MenuItem.UID)
+				oCmd =  App.GetCommandByUID(oQMenu_MenuItem.UID) #We used a compiled command now fast enough to look up commands by their UID, we avoid executing the false one with the same name (there are duplicates of commands in softimage sharing the same name)
 				#oCmd= App.Commands(oQMenu_MenuItem.name) #We use the name to identify the command because finding by UID would be too slow 
 				oCmd.Execute()
 				return True
@@ -4681,13 +4680,13 @@ def QMenuCreateConfiguratorCustomProperty_Execute(bCheckSingle = true):
     boolTest = false
     
     if bCheckSingle == true:
-        colGrannyGlobals = XSIFactory.CreateActiveXObject( "XSI.Collection" )
+        colQMenuConfigurator = XSIFactory.CreateActiveXObject( "XSI.Collection" )
         A = App.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" ) #Find all Custom Properties
         
         for o in A:
-            if o.Type == ("QMenuConfigurator"): #Find all Custom Properties of Type "GrannyGlobals"
-                colGrannyGlobals.Add (o) #And store them in a Collection
-        if colGrannyGlobals.Count > 0: boolTest = true
+            if o.Type == ("QMenuConfigurator"): #Find all Custom Properties of Type "QMenuConfigurator"
+                colQMenuConfigurator.Add (o) #And store them in a Collection
+        if colQMenuConfigurator.Count > 0: boolTest = true
                 
     if boolTest == false:
         a = App.AddProp( "QMenuConfigurator", App.ActiveSceneRoot, 0, "QMenuConfigurator", "" )
@@ -4699,7 +4698,7 @@ def QMenuCreateConfiguratorCustomProperty_Execute(bCheckSingle = true):
     
     if boolTest == true:
         Print("QMenuConfigurator Property already defined - Inspecting existing Property instead of creating a new one", c.siWarning)
-        App.InspectObj (colGrannyGlobals(0))
+        App.InspectObj (QMenuConfigurator(0))
         return false
 
 
@@ -4708,7 +4707,7 @@ def QMenuCreateConfiguratorCustomProperty_Execute(bCheckSingle = true):
 #=========================================================================================================================		
 # ========================================= Event Callback Functions =====================================================
 #=========================================================================================================================
-
+#"On selection changed" event to collect information about currently selected Objects
 def QMenuGetSelectionDetails_OnEvent(in_ctxt):
 	#Print("QMenu: QMenuGetSelectionDetails_OnEvent called",c.siVerbose)
 	
@@ -4720,12 +4719,17 @@ def QMenuGetSelectionDetails_OnEvent(in_ctxt):
 		Print("QMenuGetSelectionDetails event took: " + str(timeTaken) + "seconds")
 
 def QMenuGetSelectionDetails():
-	#Print("QMenu: QMenuGetSelectionDetails called",c.siVerbose)
-	oSelDetails = None
+	Print("QMenu: QMenuGetSelectionDetails called",c.siVerbose)
 	oSelDetails = GetGlobalObject("globalQMenuSceneSelectionDetails")
 	if oSelDetails != None:
+		
 		oSelection = Application.Selection
-		#SelCount = oSelection.Count
+		SelCount = oSelection.Count
+		
+		lsSelectionTypes_old = list(oSelDetails.Types)
+		Print("Old Selection's Types are: " + str(lsSelectionTypes_old))
+		lsSelectionClassNames_old = list(oSelDetails.ClassNames)
+		Print("Old Selection's Class Names are: " + str(lsSelectionClassNames_old))
 		
 		lsSelectionTypes = list() #
 		lsSelectionClassNames = list() #
@@ -4774,25 +4778,33 @@ def QMenuGetSelectionDetails():
 			lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
 		
 		#Fill the SelectionInfo Object with the Data we have aquired
-		#oSelDetails.storeSelection(oSelection)
-		oSelDetails.recordTypes (lsSelectionTypes)
+
+		
 		#Print("Recording Selection Types: " + str(lsSelectionTypes))
+		if SelCount > 0: #If currently nothing is selected we assume we are dealing with the previous object
+			oSelDetails.recordTypes (lsSelectionTypes)
+		else:
+			oSelDetails.recordTypes (lsSelectionTypes_old)
 		
-		oSelDetails.recordClassNames (lsSelectionClassNames)
 		#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
-		
-		oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames) 
+		if SelCount > 0:
+			oSelDetails.recordClassNames (lsSelectionClassNames)
+		else:
+			oSelDetails.recordClassNames (lsSelectionClassNames_old)
+			
 		#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
+		oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames) 
 		
-		oSelDetails.recordComponentParents (lsSelectionComponentParents)
 		#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
+		oSelDetails.recordComponentParents (lsSelectionComponentParents)
 		
-		oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
 		#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
+		oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
 		
-		oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)
 		#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-	
+		oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)
+
+#Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
  	#Application.DelayedRefresh()
@@ -4840,6 +4852,7 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 					#Finally display the corresponding menu set associated with the display event and get the users input
 					oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
 					
+					gc.collect()
 					if oChosenMenuItem != None:
 						globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
 						globalQMenuLastUsedItem.set(oChosenMenuItem)
@@ -5243,9 +5256,11 @@ def getQMenu_MenuDisplayContextByName (menuDisplayContextName):
 			
 def getQMenu_MenuItemByName (menuItemName):
 	globalQMenu_Menus = GetGlobalObject("globalQMenu_MenuItems")
-	for menuItem in globalQMenu_Menus.items:
-		if menuItem.name == menuItemName:
-			return menuItem
+	oMenuItem = None
+	for oMenuItem in globalQMenu_Menus.items:
+		if oMenuItem.name == menuItemName:
+			break
+	return oMenuItem
 
 def getQMenuSeparatorByName (separatorName):
 	globalQMenuSeparators = GetGlobalObject("globalQMenuSeparators")
