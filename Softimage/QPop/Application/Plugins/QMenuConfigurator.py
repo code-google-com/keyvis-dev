@@ -25,9 +25,10 @@ for View in Views:
 		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
 """
 
-# TODO: Finish QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names 8TO find out if we are in component mode and what objects are hilited)
+#TODO: Alphabetically sort Menu chooser list
+# TODO: Research if feasible:  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names 8TO find out if we are in component mode and what objects are hilited)
 # TODO: Add chooser to menu items to list switches, script items, or both
-# TODO: Add same type of input variables to items, switches, menus and menu contexts (self, ...)
+# TODO: Add same type of input variables to items, switches, menus and menu contexts (self, ...). Is "selection" argument really required?
 
 #Report: Pick session does not work in XSI when called from a timer event (event does not wait for session to return...)
 #Report: it is not possible to categorize ones own commands
@@ -4726,10 +4727,15 @@ def QMenuGetSelectionDetails():
 		oSelection = Application.Selection
 		SelCount = oSelection.Count
 		
+		"""
 		lsSelectionTypes_old = list(oSelDetails.Types)
-		Print("Old Selection's Types are: " + str(lsSelectionTypes_old))
 		lsSelectionClassNames_old = list(oSelDetails.ClassNames)
-		Print("Old Selection's Class Names are: " + str(lsSelectionClassNames_old))
+		lsSelectionComponentClassNames_old = list(oSelDetails.ComponentClassNames)
+		lsSelectionComponentParents_old = list(oSelDetails.ComponentParents)
+		lsSelectionComponentParentTypes_old = list(oSelDetails.ComponentParentTypes)
+		lsSelectionComponentParentClassNames_old = list(oSelDetails.ComponentParentClassNames)
+		"""
+		
 		
 		lsSelectionTypes = list() #
 		lsSelectionClassNames = list() #
@@ -4772,38 +4778,71 @@ def QMenuGetSelectionDetails():
 					SelectionComponentParentClassName = ""
 			
 			#Finally add remaining items to the lists
-			lsSelectionComponentClassNames.append(SelectionComponentClassName) 
+			lsSelectionComponentClassNames.append(SelectionComponentClassName)
 			lsSelectionComponentParents.append (SelectionComponentParent)
 			lsSelectionComponentParentTypes.append (SelectionComponentParentType)
 			lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
-		
+	
+	
 		#Fill the SelectionInfo Object with the Data we have aquired
 
-		
-		#Print("Recording Selection Types: " + str(lsSelectionTypes))
-		if SelCount > 0: #If currently nothing is selected we assume we are dealing with the previous object
-			oSelDetails.recordTypes (lsSelectionTypes)
-		else:
+		#If currently nothing is selected we assume we are dealing with the previously selected object(s)
+		if (SelCount < 1) and (Application.Selection.Filter.Name != "object"):
+			pass
+			"""
 			oSelDetails.recordTypes (lsSelectionTypes_old)
-		
-		#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
-		if SelCount > 0:
-			oSelDetails.recordClassNames (lsSelectionClassNames)
-		else:
+			Print("Recorded Types: " + str(lsSelectionTypes_old))
 			oSelDetails.recordClassNames (lsSelectionClassNames_old)
+			Print("Recorded ClassNames: " + str(lsSelectionClassNames_old))
 			
-		#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
-		oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames) 
+			oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames_old)
+			Print("Recorded ComponentClassNames: " + str(lsSelectionComponentClassNames_old))
+			oSelDetails.recordComponentParents (lsSelectionComponentParents_old)
+			Print("Recorded ComponentParents: " + str(lsSelectionComponentParents_old))
+			
+			oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes_old)
+			Print("Recorded ComponentParentTypes: " + str(lsSelectionComponentParentTypes_old))
+			oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames_old)
+			Print("Recorded ComponentParents: " + str(lsSelectionComponentParentClassNames_old))
+			"""
+ 
+		else: #Something is selected
 		
-		#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
-		oSelDetails.recordComponentParents (lsSelectionComponentParents)
-		
-		#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
-		oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
-		
-		#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-		oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)
+			#Print("Recording Selection Types: " + str(lsSelectionTypes))
+			oSelDetails.recordTypes (lsSelectionTypes)
+			#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
+			oSelDetails.recordClassNames (lsSelectionClassNames)
+			
+			#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
+			oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames)
+			
+			#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
+			oSelDetails.recordComponentParents (lsSelectionComponentParents)
+			
+			#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
+			oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
+			
+			#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
+			oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)	
+"""
+from win32com.client import constants as c
 
+Sel = Application.Selection.GetAsText()
+print Sel
+#Fil = Application.Selection.Filter
+#print Fil.Type
+#print Fil.Name
+
+#Application.SelectObjectFilter()
+Application.SetSelFilter ("Object")
+Sel2 = Application.Selection.GetAsText()
+print Sel2
+Application.SetSelFilter ("Vertex")
+#Sel = Application.Selection.GetAsText()
+#Application.SelectObj(Sel)
+#Sel3 = Application.Selection.GetAsText()
+#print Sel3
+"""		
 #Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
@@ -4843,7 +4882,7 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 				App.SetValue("preferences.QMenu.DisplayEventKeys_Record",False)
 		
 		QMenuEnabled = App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
-		if (QMenuEnabled == True) or (QMenuEnabled == 1) or (QMenuEnabled == 'True') and (Consumed == False): #Is QMenu enabled and the event has't been consumed yet?
+		if (QMenuEnabled == True) or (QMenuEnabled == 1) or (QMenuEnabled == 'True') and (Consumed == False): #Is QMenu enabled and the event hasn't been consumed yet?
 			#Check known display events whether there is one that should react to the currently pressed key(s)
 			for oDispEvent in globalQMenuDisplayEvents:
 				if ((oDispEvent.key == KeyPressed) and (oDispEvent.keyMask == KeyMask )): #We have found a display event that matches the key(s) that were just pressed
@@ -4852,11 +4891,12 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 					#Finally display the corresponding menu set associated with the display event and get the users input
 					oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
 					
-					gc.collect()
+					
 					if oChosenMenuItem != None:
 						globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
 						globalQMenuLastUsedItem.set(oChosenMenuItem)
 						#QMenuExecuteMenuItem_Execute(oChosenMenuItem)
+						gc.collect()
 						App.QMenuExecuteMenuItem(oChosenMenuItem)
 						#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 						#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
