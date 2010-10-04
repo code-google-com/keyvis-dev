@@ -756,6 +756,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup )
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
+	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
 		
 
@@ -898,7 +899,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 
 	aUIitems = (CustomGFXFilesPath + "QMenu_MenuA.bmp", 0, CustomGFXFilesPath + "QMenu_MenuB.bmp", 1, CustomGFXFilesPath + "QMenu_MenuD.bmp", 3, CustomGFXFilesPath + "QMenu_MenuC.bmp",2)
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("Select Quad")
+	oLayout.AddStaticText("Select a Quad")
 	oMenuSelector = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
@@ -1215,10 +1216,12 @@ def QMenuConfigurator_CodeEditorHeight_OnChanged():
 def QMenuConfigurator_ShowQMenu_MenuString_OnChanged():
 	val = PPG.ShowQMenu_MenuString.Value
 	Application.Preferences.SetPreferenceValue("QMenu.ShowQMenu_MenuString",val)
+	print("Setting preference QMenu.ShowQMenu_MenuString to: " + str(val))
 	
 def QMenuConfigurator_ShowQMenuTimes_OnChanged():
 	val = PPG.ShowQMenuTimes.Value
 	Application.Preferences.SetPreferenceValue("QMenu.ShowQMenuTimes",val)
+	print("Setting preference QMenu.ShowQMenuTimes to: " + str(val))
 	
 def QMenuConfigurator_CommandList_OnChanged():
 	Print("QMenuConfigurator_CommandList_OnChanged called", c.siVerbose)
@@ -4340,10 +4343,14 @@ def DisplayMenuSet( MenuSetIndex ):
 				t3 = time.clock() #Time 
 				
 				#ShowString = App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString")
-				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString") == True or 1:
+				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString") == True:
+					#Print ("QMenu.ShowQMenu_MenuString is:" + str(App.Preferences.GetPreferenceValue("QMenu.ShowQMenu_MenuString")))
+					
 					Print(MenuString) #Debug option to actually print out the string that will be passed to the QMenu menu renderer
 				
-				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes") == true or 1:
+				if App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes") == True:
+					#Print ("QMenu.ShowQMenuTimes:" + str(App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes")))
+					
 					Print("Time taken to get menus A-D was " + str(t1 - t0) + " seconds.")
 					Print("Time taken to get submenus without duplicates was " + str(t2 - t1) + " seconds.")
 					Print("Time taken to prepare the QMenu menu string from the menus list was " + str(t3 - t2) + " seconds.")
@@ -4523,8 +4530,7 @@ def QMenuDisplayMenuSet_3_Execute():
 									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
 									
-								
-
+							
 def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
 	oCmd.ReturnValue = True
@@ -4551,8 +4557,8 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem ):
 		if oQMenu_MenuItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
 			try:
 				#Print("Executing command with UID of: " + str(oQMenu_MenuItem.UID)) 
-				oCmd =  App.GetCommandByUID(oQMenu_MenuItem.UID) #We used a compiled command now fast enough to look up commands by their UID, we avoid executing the false one with the same name (there are duplicates of commands in softimage sharing the same name)
-				#oCmd= App.Commands(oQMenu_MenuItem.name) #We use the name to identify the command because finding by UID would be too slow 
+				#oCmd =  App.GetCommandByUID(oQMenu_MenuItem.UID) #We used a compiled command now fast enough to look up commands by their UID, we avoid executing the false one with the same name (there are duplicates of commands in softimage sharing the same name)
+				oCmd= App.Commands(oQMenu_MenuItem.name) #We use the name to identify the command because finding by UID would be too slow 
 				oCmd.Execute()
 				return True
 			except:
@@ -4594,6 +4600,9 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem ):
 				else:
 					#try:
 					#exec(Code + '\nScript_Execute ("", "", "", "")')
+					#print("\n")
+					#print("Code is: ")
+					#print(Code)
 					App.ExecuteScriptCode( Code, Language , "Script_Execute", ArgList )
 					return True
 					#except:
@@ -4844,6 +4853,13 @@ Application.SetSelFilter ("Vertex")
 #print Sel3
 """		
 #Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
+def QMenuPrintValueChanged_OnEvent( in_ctxt):
+	Object = in_ctxt.GetAttribute("Object")
+	print ("Changed Object is: " + str(Object))
+	print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
+	print Object.Type 
+	
+
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
  	#Application.DelayedRefresh()
