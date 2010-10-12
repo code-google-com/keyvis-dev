@@ -28,11 +28,20 @@ except:
 	pass
 	
 global RitalinHonorInfluenceJoints; RitalinHonorInfluenceJoints = cmds.optionVar (q='RitalinHonorInfluenceJoints')
+
 global RitalinEnabled; RitalinEnabled = cmds.optionVar (q='RitalinEnabled')
-global RitalinScriptJobs; RitalinScriptJobs = list()
-global resetTumbleToolToCOI; resetTumbleToolToCOI = False
-global RitalinDoComputeBB; RitalinDoComputeBB = True
+if RitalinEnabled == None: 
+	RitalinEnabled = True
+
+	
 global RitalinRememberSelections; RitalinRememberSelections = cmds.optionVar (q = "RitalinRememberSelections")
+if RitalinRememberSelections == None: 
+	RitalinRememberSelections = False
+	
+global RitalinScriptJobs; RitalinScriptJobs = list()
+
+global resetTumbleToolToCOI; resetTumbleToolToCOI = False
+
 global RCSScriptJobs; RCSScriptJobs = list()
 
 # ======================
@@ -450,23 +459,23 @@ def cleanRCSScriptJobs():
 # =============================================================================================================
 
 def cleanStoredComponentSelectionData():
-	print("Attempting to clean...")
+	#print("Attempting to clean...")
 	shapes = cmds.ls(sl = True, shapes = true, dag = True, objectsOnly = True )
-	print ("Cleaning up on selected objects: " + str(shapes))
+	#print ("Cleaning up on selected objects: " + str(shapes))
 	if len(shapes) < 1:
 		print("Nothing selected, cleaning Stored Component Selection Data from whole scene.")
 		shapes = cmds.ls(dag =True, shapes = True, geometry = True, type = "mesh")
 	
-	print ("length of array is :" + str(len(shapes)) )
+	#print ("length of array is :" + str(len(shapes)) )
 	if (len(shapes) > 0):
 		print ("Cleaning up on: " + str(shapes))
 		for shape in shapes:
 			BDnodes = cmds.listConnections(shape, type = "polyBlindData")
-			print("Found Blind Data Nodes connected: " + str(BDnodes))
+			#print("Found Blind Data Nodes connected: " + str(BDnodes))
 			if BDnodes != None:
 				for node in BDnodes:
 					if (cmds.getAttr (node +".typeId")) == 99410 or 99411 or 99412:
-						print ("Deleting " + str(node))
+						#print ("Deleting " + str(node))
 						cmds.delete (node)
 
 def enableRitalin(enable = True): 
@@ -510,7 +519,7 @@ def enableRCS(enable = True):
 	global RitalinRememberSelections
 	global RCSScriptJobs
 	
-	if enable == True:
+	if enable == True or 1:
 
 		cleanRCSScriptJobs()
 
@@ -523,7 +532,7 @@ def enableRCS(enable = True):
 			storeSelectionData()
 			cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection.mel")')
 	
-	if enable == False:
+	if enable == False or 0:
 		#print ("Attempting to disable Ritalin - Deleting script Jobs")
 		cleanRCSScriptJobs()
 		cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection_default.mel")')

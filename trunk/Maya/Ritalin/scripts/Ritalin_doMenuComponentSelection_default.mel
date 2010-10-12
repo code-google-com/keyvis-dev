@@ -20,4 +20,4 @@ global proc doMenuComponentSelection(string $item, string $mask)
 	eval $selectCmd;
 }
 
-print ("Default component selection mode\n");
+print ("Default component selection Enabled\n");
