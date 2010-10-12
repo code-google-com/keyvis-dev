@@ -30,6 +30,7 @@ for View in Views:
 # TODO: Add chooser to menu items to list switches, script items, or both
 # TODO: Add same type of input variables to items, switches, menus and menu contexts (self, ...). Is "selection" argument really required?
 
+#Report: Curve Fillet command does not work in Immed mode
 #Report: Pick session does not work in XSI when called from a timer event (event does not wait for session to return...)
 #Report: it is not possible to categorize ones own commands
 #Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere...
