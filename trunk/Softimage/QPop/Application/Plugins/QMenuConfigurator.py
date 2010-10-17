@@ -8,21 +8,17 @@
 
 """
 Views = Application.Desktop.ActiveLayout.Views
-#Application.LogMessage(Views[1].FullName)
-for view in Views:
-	if view.Floating:
-		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle))
-	
 Sel = Views[1].GetAttributeValue("selection")
 Application.LogMessage(Sel)
 
-=========
+=============================================
 
 Views = Application.Desktop.ActiveLayout.Views
-for View in Views:
-	if View.Visible == True:
-		ViewPlacement = View.Rectangle
-		print ("View " + str(View) + " is at: " + (str(ViewPlacement)))
+#Application.LogMessage(Views[1].FullName)
+for view in Views:
+	if view.Floating:
+	#if view.Visible:
+		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
 # TODO: Save version number with file
 # TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
@@ -4381,8 +4377,13 @@ def DisplayMenuSet( MenuSetIndex ):
 					Print("Total QMenu preparation time was " + str(t3 - t0) + " seconds.")
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
-				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug Qpop command and find out why Operator Inspection fails after it has been called in some cases
-				MenuItemToExecute = App.QPop(MenuString)
+				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug QMenuRender command and find out why Operator Inspection fails after it has been called in some cases
+				CursorPos = win32gui.GetCursorPos()
+				WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
+				
+				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
+				
+				win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
@@ -5003,7 +5004,7 @@ def QMenuInitialize_OnEvent (in_ctxt):
 	
 	#App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
-	App.QPop("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
+	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def QMenuDestroy_OnEvent (in_ctxt): 
 	globalQMenuConfigStatus = GetGlobalObject("globalQMenuConfigStatus")
@@ -5045,19 +5046,26 @@ def QMenuConfiguratorMenuClicked( in_ctxt ):
 
 def GetView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
-
+	#WindowPos = win32gui.GetWindowPlacement(hwnd)
+	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
-	WindowData = getDS_ChildName(WinUnderMouse)
-	WindowSignature = WindowData[0]
-	WindowPos = WindowData[1]
-	#print ("Type of WindowPos is " + str(type(WindowPos)))
-	WindowPos[0] = (WindowPos[0] + 4)
-	WindowPos[2] = (WindowPos[2] + 4)
-	WindowPos[3] = (WindowPos[3] + 30)
+	WindowSignature = getDS_ChildName(WinUnderMouse)
+	
+	#WindowPlacement = win32gui.GetWindowPlacement(WinUnderMouse)
+	#Print ("WindowPlacement is " + str(WindowPlacement))
+	##WindowPos[0] = (WindowPos[0] + 4)
+	##WindowPos[2] = (WindowPos[2] + 4)
+	##WindowPos[3] = (WindowPos[3] + 30)
+	
+	#ClientRect = win32gui.GetClientRect(WinUnderMouse)
+	#Print ("ClientRect is " + str(ClientRect))
+	
+	#WindowRect = win32gui.GetWindowRect (WinUnderMouse)
+	#Print ("WindowRect is " + str(WindowRect))	
 	
 	#Lets make a clean version of the string without spaces or numbers
 	WindowSignatureShort = str()
-	WindowSignature = WindowSignature.replace(" ","")
+	WindowSignature = WindowSignature.replace(" ","") #Remove spaces from the string
 	for char in WindowSignature: #Remove numbers from the string
 		if not char.isdigit():
 			WindowSignatureShort = (WindowSignatureShort + char)
@@ -5069,8 +5077,8 @@ def GetView( Silent = False):
 	Signatures = list()
 	Signatures.append (WindowSignatureShort)
 	Signatures.append (WindowSignature)
-	Signatures.append (WindowPos)
-	#Print(Signatures)
+	#Signatures.append (WindowPos)
+	Print(Signatures)
 	return Signatures
 	
 def GetDefaultConfigFilePath(FileNameToAppend):
@@ -5217,7 +5225,7 @@ def ListToString(List):
 def getDS_ChildName( hwnd): #, clean = True):
 	#Print("GetDS_ChildName called", c.siVerbose)
 	ViewSignature = ""
-	ViewData = []
+	#ViewData = []
 	#WindowTitle = win32gui.GetWindowText(hwnd)
 	MainWindowReached = False
 	while MainWindowReached == False:
@@ -5226,15 +5234,15 @@ def getDS_ChildName( hwnd): #, clean = True):
 			if WindowTitle != "": #We only care for non-empty strings...
 				DelimitedWindowTitle = (WindowTitle + ";")
 				ViewSignature = (ViewSignature + DelimitedWindowTitle) #Append new window's title to existing window signature string
-				WindowPos = win32gui.GetWindowPlacement(hwnd)
+				#WindowPos = win32gui.GetWindowPlacement(hwnd)
 				#Print (WindowPos)
 			hwnd = win32gui.GetParent(hwnd)
 		else:
 			MainWindowReached = True
-			WindowPos = win32gui.GetWindowPlacement(hwnd)
-			ViewData.append(ViewSignature)
-			ViewData.append(list(WindowPos[4]))
-	return ViewData
+			#WindowPos = win32gui.GetWindowPlacement(hwnd)
+			#ViewData.append(ViewSignature)
+			#ViewData.append(list(WindowPos[4]))
+	return ViewSignature
       
 def splitAlphaNum(name):
 	name = str(name)
