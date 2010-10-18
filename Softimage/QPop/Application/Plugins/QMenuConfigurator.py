@@ -26,7 +26,8 @@ for view in Views:
 # TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode)
 #		-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
 
-#Report: Remove Transform Group also deleted non-Transform-Group objects, even when they are not in a Transform group
+#TODO: SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
+#Report: Remove Transform Group also deletes non-Transform-Group objects, even when they are not in a Transform group
 #Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera is is looking through
 #Report: Curve Fillet command does not work in Immed mode
 
@@ -4378,12 +4379,12 @@ def DisplayMenuSet( MenuSetIndex ):
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
 				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug QMenuRender command and find out why Operator Inspection fails after it has been called in some cases
-				CursorPos = win32gui.GetCursorPos()
-				WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
+				#CursorPos = win32gui.GetCursorPos()
+				#WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
 				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
 				
-				win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
+				#win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
@@ -5003,7 +5004,7 @@ def QMenuInitialize_OnEvent (in_ctxt):
 		#App.SetValue("preferences.QMenu.QMenuEnabled", false, "")
 	
 	#App.Preferences.SaveChanges()
-	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
+	#Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
 	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def QMenuDestroy_OnEvent (in_ctxt): 
@@ -5078,7 +5079,7 @@ def GetView( Silent = False):
 	Signatures.append (WindowSignatureShort)
 	Signatures.append (WindowSignature)
 	#Signatures.append (WindowPos)
-	Print(Signatures)
+	#Print(Signatures)
 	return Signatures
 	
 def GetDefaultConfigFilePath(FileNameToAppend):
