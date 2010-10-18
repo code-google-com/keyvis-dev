@@ -267,6 +267,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="$(XSISDK_ROOT)\include"
 				PreprocessorDefinitions="WIN64;NDEBUG;_WINDOWS"
 				RuntimeTypeInfo="true"
@@ -287,9 +288,10 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="sicppsdk.lib sicoresdk.lib"
 				OutputFile="..\Application\Plugins\QPop.64.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86-64"
 				EnableUAC="false"
+				UACUIAccess="false"
 				GenerateDebugInformation="false"
 				RandomizedBaseAddress="1"
 				SupportUnloadOfDelayLoadedDLL="true"
