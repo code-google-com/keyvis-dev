@@ -2707,7 +2707,10 @@ def QMenuConfigurator_FindItem_OnClicked():
 			#if oSelectedItem.type != "Separator":
 			if oSelectedItem.type == "CommandPlaceholder":
 				oCmd = getCommandByUID(oSelectedItem.UID)
-				PPG.CommandCategory.Value = oCmd.categories[0]
+				if len(oCmd.categories) > 0:
+					PPG.CommandCategory.Value = oCmd.categories[0]
+				else:
+					PPG.CommandCategory.Value = "_ALL_"
 				PPG.CommandFilter.Value = ""
 				RefreshCommandList()
 				PPG.CommandList.Value = oCmd.UID
@@ -4378,13 +4381,14 @@ def DisplayMenuSet( MenuSetIndex ):
 					Print("Total QMenu preparation time was " + str(t3 - t0) + " seconds.")
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
+				
 				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug QMenuRender command and find out why Operator Inspection fails after it has been called in some cases
-				#CursorPos = win32gui.GetCursorPos()
-				#WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
+				CursorPos = win32gui.GetCursorPos()
+				WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
 				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
 				
-				#win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
+				win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
@@ -4779,48 +4783,57 @@ def QMenuGetSelectionDetails():
 		lsSelectionComponentParentTypes = list() #
 		lsSelectionComponentParentClassNames = list()
 		
-		for oSel in oSelection:
+		#To speed up context evaluation we add at least an empty string in case nothing is selected
+		if SelCount == 0:
+			lsSelectionTypes.append ("")
+			lsSelectionClassNames.append ("")		
+			lsSelectionComponentClassNames.append("")
+			lsSelectionComponentParents.append ("")
+			lsSelectionComponentParentTypes.append ("")
+			lsSelectionComponentParentClassNames.append ("")
 			
-			SelectionType = oSel.Type
-			SelectionClassName = getClassName(oSel)
-			#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
-			SelectionComponentClassName = ""
-			SelectionComponentParent = ""
-			SelectionComponentParentType = ""
-			SelectionComponentParentClassName = ""
-						
-			#Start appending values to the lists
-			lsSelectionTypes.append (SelectionType)
-			lsSelectionClassNames.append (SelectionClassName)
-			
-			#Let's get subcomponent collection data if there is any (otherwise the above (None and "") values are used later on
-			if SelectionClassName == "CollectionItem":
-				try:
-					SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
-				except:
-					SelectionComponentClassName = ""
-				try:
-					SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
-				except:
-					SelectionComponentParent = ""
-				try:
-					SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
-				except:
-					SelectionComponentParentType = ""
-				try:
-					SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
-				except:
-					SelectionComponentParentClassName = ""
-			
-			#Finally add remaining items to the lists
-			lsSelectionComponentClassNames.append(SelectionComponentClassName)
-			lsSelectionComponentParents.append (SelectionComponentParent)
-			lsSelectionComponentParentTypes.append (SelectionComponentParentType)
-			lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
+		else:
+			for oSel in oSelection:
+				
+				SelectionType = oSel.Type
+				SelectionClassName = getClassName(oSel)
+				#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
+				SelectionComponentClassName = ""
+				SelectionComponentParent = ""
+				SelectionComponentParentType = ""
+				SelectionComponentParentClassName = ""
+							
+				#Start appending values to the lists
+				lsSelectionTypes.append (SelectionType)
+				lsSelectionClassNames.append (SelectionClassName)
+				
+				#Let's get subcomponent collection data if there is any (otherwise the above (None and "") values are used later on
+				if SelectionClassName == "CollectionItem":
+					try:
+						SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
+					except:
+						SelectionComponentClassName = ""
+					try:
+						SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
+					except:
+						SelectionComponentParent = ""
+					try:
+						SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
+					except:
+						SelectionComponentParentType = ""
+					try:
+						SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
+					except:
+						SelectionComponentParentClassName = ""
+				
+				#Finally add remaining component items to the lists
+				lsSelectionComponentClassNames.append(SelectionComponentClassName)
+				lsSelectionComponentParents.append (SelectionComponentParent)
+				lsSelectionComponentParentTypes.append (SelectionComponentParentType)
+				lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
 	
 	
 		#Fill the SelectionInfo Object with the Data we have aquired
-
 		#If currently nothing is selected we assume we are dealing with the previously selected object(s)
 		if (SelCount < 1) and (Application.Selection.Filter.Name != "object"):
 			pass
@@ -5004,7 +5017,7 @@ def QMenuInitialize_OnEvent (in_ctxt):
 		#App.SetValue("preferences.QMenu.QMenuEnabled", false, "")
 	
 	#App.Preferences.SaveChanges()
-	#Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
+	Application.ExecuteScriptCode("pass", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
 	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def QMenuDestroy_OnEvent (in_ctxt): 
