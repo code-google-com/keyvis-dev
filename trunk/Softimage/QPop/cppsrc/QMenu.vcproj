@@ -172,6 +172,7 @@
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
 			ManagedExtensions="1"
+			EnableManagedIncrementalBuild="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -209,8 +210,8 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="sicppsdk.lib sicoresdk.lib"
 				OutputFile="..\Application\Plugins\QPop.32.dll"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86-32"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86"
 				EnableUAC="false"
 				GenerateDebugInformation="false"
 				RandomizedBaseAddress="1"
