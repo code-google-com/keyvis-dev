@@ -23,7 +23,7 @@
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="C:\Softimage\XSI_7.01_x64\XSISDK\mkfiles\Debug-x86.vsprops"
+			InheritedPropertySheets="C:\Program Files\Autodesk\Softimage 2011 SP1\XSISDK\mkfiles\Debug-x86.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -58,7 +58,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="GetCommandByUID.dll"
+				OutputFile=".\Application\Plugins\keyvisCommands.dll"
+				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -160,7 +161,7 @@
 			OutputDirectory=".\Application\Plugins"
 			IntermediateDirectory=".\temp"
 			ConfigurationType="2"
-			InheritedPropertySheets="C:\Softimage\XSI_7.01_x64\XSISDK\mkfiles\Release-x86.vsprops"
+			InheritedPropertySheets="C:\Program Files (x86)\Autodesk\Softimage 2011 SP1\XSISDK\mkfiles\Release-x86.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -197,8 +198,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile=".\Application\Plugins\keyvisCommands.32.dll"
+				OutputFile="..\Application\Plugins\keyvisCommands.32.dll"
 				Version="0.1"
+				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -229,7 +231,7 @@
 			OutputDirectory=".\Application\Plugins"
 			IntermediateDirectory=".\temp"
 			ConfigurationType="2"
-			InheritedPropertySheets="C:\Softimage\XSI_7.01_x64\XSISDK\mkfiles\Release-x64.vsprops"
+			InheritedPropertySheets="C:\Program Files\Autodesk\Softimage 2011 SP1\XSISDK\mkfiles\Release-x64.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -269,6 +271,7 @@
 				ShowProgress="0"
 				OutputFile=".\Application\Plugins\keyvisCommands.64.dll"
 				Version="0.1"
+				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86-64"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
