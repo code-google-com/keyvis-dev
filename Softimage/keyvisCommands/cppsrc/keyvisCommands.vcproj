@@ -158,7 +158,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Application\Plugins"
+			OutputDirectory="..\Application\Plugins"
 			IntermediateDirectory=".\temp"
 			ConfigurationType="2"
 			InheritedPropertySheets="C:\Program Files (x86)\Autodesk\Softimage 2011 SP1\XSISDK\mkfiles\Release-x86.vsprops"
@@ -228,7 +228,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory=".\Application\Plugins"
+			OutputDirectory="..\Application\Plugins"
 			IntermediateDirectory=".\temp"
 			ConfigurationType="2"
 			InheritedPropertySheets="C:\Program Files\Autodesk\Softimage 2011 SP1\XSISDK\mkfiles\Release-x64.vsprops"
@@ -269,7 +269,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				ShowProgress="0"
-				OutputFile=".\Application\Plugins\keyvisCommands.64.dll"
+				OutputFile="..\Application\Plugins\keyvisCommands.64.dll"
 				Version="0.1"
 				AdditionalLibraryDirectories="$(XSISDK_ROOT)/lib/nt-x86-64"
 				RandomizedBaseAddress="1"
