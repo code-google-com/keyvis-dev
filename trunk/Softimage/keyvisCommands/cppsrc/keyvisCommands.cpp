@@ -15,7 +15,7 @@ using namespace XSI;
 XSIPLUGINCALLBACK CStatus XSILoadPlugin( PluginRegistrar& in_reg )
 {
 	in_reg.PutAuthor(L"Stefan Kubicek");
-	in_reg.PutName(L"keyvisCommands");
+	in_reg.PutName(L"keyvisCompiledCommands");
 	in_reg.PutEmail(L"");
 	in_reg.PutURL(L"");
 	in_reg.PutVersion(1,0);
