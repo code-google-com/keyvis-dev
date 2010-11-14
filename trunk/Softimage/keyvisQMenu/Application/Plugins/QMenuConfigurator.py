@@ -729,7 +729,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Email = "stefan@tidbit-images.com"
 	in_reg.URL = "mailto:stefan@tidbit-images.com"
 	in_reg.Major = 0
-	in_reg.Minor = 98
+	in_reg.Minor = 9
 
 	#Register the QMenu configurator custom property
 	in_reg.RegisterProperty( "QMenuConfigurator" )
@@ -3741,8 +3741,11 @@ def QMenuSaveConfiguration(fileName):
 	folderName = os.path.dirname (fileName) #.rsplit("\\")
 	if os.path.exists(folderName):
 		if os.path.isfile(fileName) == True: #Does the file already exist? Lets make a backup copy with timestamp first
-			timestring = time.strftime ("_%Y.%M.%d_%H.%M.%S")
+			#timestring = time.strftime ("_%Y.%M.%d_%H.%M.%S")
+			fileData = os.stat(fileName) #get some file information, including last changed date and time, which we will use to create a unique backup file name
+			changeDate = time.localtime(fileData.st_atime) #Get a readable form of the file change date 
 			fileNameSansExtension = fileName.rsplit(".",1)[0]
+			timestring = ("_" + str(changeDate.tm_year) + "." + str(changeDate.tm_mon) + "." + str(changeDate.tm_mday) + "_" + str(changeDate.tm_hour) + "." + str(changeDate.tm_min) + "." + str(changeDate.tm_sec))
 			try:
 				backupFileName = (fileNameSansExtension + timestring + ".xml")
 				Print("Saving current QMenu configuration backup as " + backupFileName)
@@ -3760,6 +3763,9 @@ def QMenuSaveConfiguration(fileName):
 			RootNode = oConfigDoc.createElement("QMenuComponents") #Create Root level node
 			oConfigDoc.appendChild(RootNode)
 
+			#VersionNode = oConfigDoc.createElement("QMenu_Version")
+			RootNode.setAttribute("QMenu_Version", (str(Application.Plugins("QMenuConfigurator").Major) + "." +str(Application.Plugins("QMenuConfigurator").Minor)))
+			
 			MenuItemsNode = oConfigDoc.createElement("QMenu_MenuItems")
 			RootNode.appendChild(MenuItemsNode)
 			MenusNode = oConfigDoc.createElement("QMenu_Menus")
