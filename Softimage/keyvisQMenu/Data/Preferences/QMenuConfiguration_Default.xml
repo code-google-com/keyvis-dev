@@ -1,11 +1,11 @@
-<?xml version="1.0" ?><QMenuComponents QMenu_Version="0.9"><QMenu_MenuItems><QMenu_MenuItem UID="{022CB953-362C-46B2-B92F-3D752393F3F8}" category="Preferences" language="Python" name="Extrude duplicated Polygons" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+<?xml version="1.0" ?><QMenuComponents QMenu_Version="0.9"><QMenu_MenuItems><QMenu_MenuItem UID="{2E18C54F-D8EC-4033-84BD-89D42708AC95}" category="Preferences" language="Python" name="Extrude duplicated Polygons" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	if Application.Preferences.GetPreferenceValue(&quot;duplicate.polygons&quot;) == 1:
 		return True
 	return False
 
 def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	Application.SetValue(&quot;Preferences.duplicate.polygons&quot;, not Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets))
-</QMenu_MenuItem><QMenu_MenuItem UID="{FC7C2754-F873-4DBE-A51E-905FD1553EB3}" category="Property Editing" language="Python" name="+10%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{CD485FFE-9C6D-4F31-BB66-336FF936C006}" category="Property Editing" language="Python" name="+10%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -19,7 +19,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal*1.1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{E9C1EBFB-F4EA-4D2F-A3F0-006D43338FE3}" category="Property Editing" language="Python" name="+50%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal*1.1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{DF30D972-9E53-4D1D-A2F7-2D11F4CC5AB9}" category="Property Editing" language="Python" name="+50%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -33,7 +33,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal*1.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{FA509434-E435-46D9-806B-F3F9D804A715}" category="Property Editing" language="Python" name="+100%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal*1.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{7728F3AE-87CF-4A5D-912D-29E2E7944D83}" category="Property Editing" language="Python" name="+100%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -47,7 +47,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal*2,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{58DBF1E9-2617-4649-BC83-E34132C0E158}" category="Property Editing" language="Python" name="-10%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal*2,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{DEE48197-A354-44CA-AD11-4CA28BC2B6E5}" category="Property Editing" language="Python" name="-10%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -61,7 +61,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal*0.9,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{69E5F629-6700-4C90-A880-1EDE6D57AFBA}" category="Property Editing" language="Python" name="-50%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal*0.9,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{B6141FC6-66CC-41F6-84E0-3D20D27F772D}" category="Property Editing" language="Python" name="-50%" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -75,7 +75,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal*0.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{5F143D1A-41C1-4951-9BC8-0E5658867371}" category="Property Editing" language="Python" name="0,1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal*0.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{03C035A1-EFE8-4C12-96CB-84CC009C3836}" category="Property Editing" language="Python" name="0,1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -88,7 +88,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,0.1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{9737E4B2-55D7-4401-847B-5BAF83ED4973}" category="Property Editing" language="Python" name="0,5" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,0.1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{A3744A64-7CC6-4161-98AE-494AF44F6786}" category="Property Editing" language="Python" name="0,5" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -101,7 +101,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,0.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{6643885C-EDE0-4F24-B21E-E3EA91FA5362}" category="Property Editing" language="Python" name="1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,0.5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{B70C1393-84B1-40D9-8E8F-1130277BB730}" category="Property Editing" language="Python" name="1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -116,7 +116,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						for Parameter in Params.Parameters:
 							Application.SetValue (Parameter.FullName,1,&quot;&quot;)
 							
-						</QMenu_MenuItem><QMenu_MenuItem UID="{BD293B92-D3FF-423D-8D7F-BDFA530E3C96}" category="Property Editing" language="Python" name="5" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+						</QMenu_MenuItem><QMenu_MenuItem UID="{F3724980-FA87-4501-ABEE-B9FA0DEEAC67}" category="Property Editing" language="Python" name="5" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -129,7 +129,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{2A93DFC1-BD6B-4991-B9D6-21BB35A6A254}" category="Property Editing" language="Python" name="10" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,5,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{6AC1FCF2-41F1-42B7-B226-FF9D275AB41F}" category="Property Editing" language="Python" name="10" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -142,7 +142,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,10,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{002A3B83-A20D-4E49-A70C-1A81E31A6061}" category="Property Editing" language="Python" name="0" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,10,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{5D056ACB-13B4-4CE0-A4E1-522A44E0E0CC}" category="Property Editing" language="Python" name="0" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -155,9 +155,9 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,0,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{1D816091-F5FC-4419-83C0-F12023E25D01}" category="Polygon Modeling" language="Python" name="Weld Points to COG" switch="False" type="QMenu_MenuItem">def Script_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,0,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{9588B1F8-C19C-4FAD-81DA-1C250FC5C05F}" category="Polygon Modeling" language="Python" name="Weld Points to COG" switch="False" type="QMenu_MenuItem">def Script_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	print (self.name)
-	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{EB5BFE51-45DD-44E6-A739-3DC4CACEDBD0}" category="Preferences" language="Python" name="Raycast Select in Shaded Mode" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{686DF094-820C-4EDE-913F-83C32CD2C952}" category="Preferences" language="Python" name="Raycast Select in Shaded Mode" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	if Application.Preferences.GetPreferenceValue(&quot;Select.rectraycast&quot;) == 1:
 		return True
 	return False
@@ -165,20 +165,20 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	Application.SetValue(&quot;preferences.Select.rectraycast&quot;, not Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets))
-</QMenu_MenuItem><QMenu_MenuItem UID="{F1E829E6-61AA-4A17-8B15-37BCC0617AE4}" category="Views" language="Python" name="Top View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+</QMenu_MenuItem><QMenu_MenuItem UID="{59978B25-4445-4C4E-A341-B63BE9765193}" category="Views" language="Python" name="Top View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Top\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{83ABFEF0-947D-4493-B239-B3AD26B44D58}" category="Preferences" language="Python" name="Raycast Select - Include Backfacing Polygons" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{6FA5589D-9041-44C8-953E-E09150C1995B}" category="Preferences" language="Python" name="Raycast Select - Include Backfacing Polygons" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	if Application.Preferences.GetPreferenceValue(&quot;Select.raycastbackfacing&quot;) == 1:
 		return True
 	return False
 
 def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	Application.SetValue(&quot;preferences.Select.raycastbackfacing&quot;, not Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets))
-</QMenu_MenuItem><QMenu_MenuItem UID="{114DD238-5D86-4E7A-8239-BDAF9A45D830}" category="Preferences" language="Python" name="Orbit Around Selection" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{E20B7D25-6FFB-4985-AEE0-45CDA99F5C76}" category="Preferences" language="Python" name="Orbit Around Selection" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;Camera.orbitselected&quot;) == 2
 	return State
 
@@ -190,7 +190,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 		Application.SetValue(&quot;preferences.Camera.orbitselected&quot;, 0, &quot;&quot;)
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{CB93DADB-94AE-45FF-B974-6F4ADBD7A63B}" category="Preferences" language="Python" name="Orbit Around Selection - Components only" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{7E44BB12-98C1-449A-814E-6880D1562259}" category="Preferences" language="Python" name="Orbit Around Selection - Components only" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;Camera.orbitselected&quot;) == 1
 	return State
 
@@ -203,10 +203,10 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{3356164A-2629-4383-BC23-753EB1DE3199}" category="Polygon Modeling" language="Python" name="Cap" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{7F9D367B-C125-412A-806F-1CF8F90FA290}" category="Polygon Modeling" language="Python" name="Cap" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	Application.LogMessage(&quot;Sorry, the Cap script item is WIP and not yet functional&quot;)
 	#Weld selected points towards their common center
-	#Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{1B0CB9E8-4276-4904-8315-51F19A4DC56F}" category="Clusters Editing" language="Python" name="Merge Clusters with same Material" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	#Application.ApplyTopoOp(&quot;WeldPoints&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{92CD01FA-A647-4535-8AB2-A42DCDF22DA8}" category="Clusters Editing" language="Python" name="Merge Clusters with same Material" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	Sel = Application.Selection
 	oSel = list()
 	for Obj in Sel:
@@ -243,17 +243,17 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 	Application.Application.DeselectAll()
 	Application.SelectObj(oSel)
-</QMenu_MenuItem><QMenu_MenuItem UID="{8CDB06B2-AEA4-41C1-9C41-FA73710F19C1}" category="Views" language="Python" name="User View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+</QMenu_MenuItem><QMenu_MenuItem UID="{000DFAA6-5FB7-4146-BE72-AB1D28F5D5F0}" category="Views" language="Python" name="User View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;User\&quot;)&quot;)
-	eval(stri)</QMenu_MenuItem><QMenu_MenuItem UID="{66C7E66A-B877-4B67-83D2-28A32EE12847}" category="Views" language="Python" name="Right View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	eval(stri)</QMenu_MenuItem><QMenu_MenuItem UID="{21723D07-7F58-47CF-826E-055BFC23A5D9}" category="Views" language="Python" name="Right View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Right\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{C80D60E1-C4B9-4B3E-A443-A06FD39AB80C}" category="Views" language="Python" name="Back View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{31088ADC-DE8C-4282-B6DF-42B39D02EC6E}" category="Views" language="Python" name="Back View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Front\&quot;)&quot;)
@@ -261,14 +261,14 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	Application.AlignViewCamera (3,True,&quot;&quot;, viewIndices[oView])
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{CC1289D2-3350-4EDF-A5E1-DFC6CC080812}" category="Views" language="Python" name="Front View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+</QMenu_MenuItem><QMenu_MenuItem UID="{CADF081C-5CB0-43F2-807F-A880EF9B7439}" category="Views" language="Python" name="Front View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Front\&quot;)&quot;)
 	eval(cmd)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	Application.AlignViewCamera (&quot;&quot;,&quot;&quot;,&quot;&quot;, viewIndices[oView])
-</QMenu_MenuItem><QMenu_MenuItem UID="{A203054D-97F3-4B84-9516-A2417E8AE4D0}" category="Property Editing" language="Python" name="None" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{6A7D59EA-D4C3-47EB-8F61-B40D6FFD2E90}" category="Property Editing" language="Python" name="None" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -281,7 +281,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,&quot;&quot;,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{31C3C3CE-F394-4BAC-8A34-253071249C79}" category="Property Editing" language="Python" name="-1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,&quot;&quot;,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{03141EFF-38CF-4D42-BCAF-13D3D25BEF95}" category="Property Editing" language="Python" name="-1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -294,19 +294,19 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 					else:
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
-							Application.SetValue (Parameter.FullName,-1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{C584ECD8-B9F4-4A56-A3F6-BF82A3B919D1}" category="Views" language="Python" name="Bottom View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+							Application.SetValue (Parameter.FullName,-1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{7F6FD388-326B-45C0-A10D-546A7E897876}" category="Views" language="Python" name="Bottom View" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	stri = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Top\&quot;)&quot;)
 	eval(stri)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (2,True,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{D47FB2AB-99C4-461C-9514-42C6D508BCB4}" category="Views" language="Python" name="LeftView" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.AlignViewCamera (2,True,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{E85E8294-5639-48AE-8D22-A4003000D17C}" category="Views" language="Python" name="LeftView" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	cmd = (&quot;oVM.SetAttributeValue(&quot; + &quot;\&quot;activecamera:&quot; + oView + &quot;\&quot;,\&quot;Right\&quot;)&quot;)
 	eval(cmd)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
-	Application.AlignViewCamera (1,True,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{CDBC2D5A-A9A1-4815-97D6-1CEA64EFBB4D}" category="Property Editing" language="Python" name="add 1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+	Application.AlignViewCamera (1,True,&quot;&quot;, viewIndices[oView])</QMenu_MenuItem><QMenu_MenuItem UID="{8823412E-54CA-4D6E-8502-AA16D17BBA43}" category="Property Editing" language="Python" name="add 1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -320,7 +320,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal+1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{DA123D13-7FBE-4818-A212-5100615EBBD6}" category="Property Editing" language="Python" name="subtract 1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+							Application.SetValue (Parameter.FullName,CurrentVal+1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{7817412E-3612-4A05-BC19-A7C940F1EE6E}" category="Property Editing" language="Python" name="subtract 1" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	MarkedParams = Application.GetMarking()
 	if MarkedParams != None:
 		if len(MarkedParams) &gt; 0:
@@ -334,65 +334,65 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 						Params = Application.Dictionary.GetObject(FullParamName)
 						for Parameter in Params.Parameters:
 							CurrentVal = Application.GetValue(Parameter.FullName)
-							Application.SetValue (Parameter.FullName,CurrentVal-1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{0C157FFB-566C-4E2E-BC9B-5D569210B791}" category="Views" language="Python" name="Set Wireframe Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+							Application.SetValue (Parameter.FullName,CurrentVal-1,&quot;&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{9FFA9497-F2E9-4B54-8E04-02D8A96AE153}" category="Views" language="Python" name="Set Wireframe Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;wireframe&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{EE29BD4B-4D98-4594-BD6A-67E52BAD2BEA}" category="Views" language="Python" name="Set Bounding Box Display mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;wireframe&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{011FA6E9-49CF-4C34-8862-FE04E58EA8AD}" category="Views" language="Python" name="Set Bounding Box Display mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;bbox&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{302A2E79-DCDE-43DA-90B2-930544303CB0}" category="Views" language="Python" name="Set Depth Cue Dispay Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;bbox&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{1484901E-3BB5-4891-841C-93CD392E571B}" category="Views" language="Python" name="Set Depth Cue Dispay Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;depthcue&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{340AFF3E-6CED-4B4D-BCF4-67E2963C015D}" category="Views" language="Python" name="Set Hidden Line Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;depthcue&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{0B6BB701-11A2-4D43-B3D3-82823F9C8980}" category="Views" language="Python" name="Set Hidden Line Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;hiddenline&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{1C8252C2-0592-4E85-8E63-2B99CE97FB95}" category="Views" language="Python" name="Set Constant Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;hiddenline&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{E44578F0-A99E-4EA3-AAC8-A8C3080359BB}" category="Views" language="Python" name="Set Constant Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;constant&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{ACB88C45-EDE6-422D-95B8-09B6B713A3F6}" category="Views" language="Python" name="Set Shaded Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;constant&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{75D5CF6F-0198-429A-B8D7-EF55D72E7165}" category="Views" language="Python" name="Set Shaded Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;shaded&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{635F1747-58A3-4F3F-A54F-170D23D637A0}" category="Views" language="Python" name="Set Textured Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;shaded&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{6468FFDF-3543-4279-B998-2B9FDDD2AA39}" category="Views" language="Python" name="Set Textured Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;textured&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{8FCB6F0A-C9D4-4CC9-87AF-9970AEDA41B5}" category="Views" language="Python" name="Set Textured Decal Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;textured&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{9C252767-B471-4E0A-84A1-F2C715868558}" category="Views" language="Python" name="Set Textured Decal Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;texturedecal&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{6693C177-5907-49B2-BDEB-0862A0CE4AE7}" category="Views" language="Python" name="Set Realtime Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
+	Application.SetDisplayMode(oCam.FullName,&quot;texturedecal&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{F71FAEB8-C414-4737-AAD6-5D266DDA9ECB}" category="Views" language="Python" name="Set Realtime Display Mode" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):
 	oVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )
 	oView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)
 	viewIndices = dict (A = 0, B = 1, C = 2, D = 3)
 	oCam = Application.GetViewCamera(viewIndices[oView])
-	Application.SetDisplayMode(oCam.FullName,&quot;realtimeshaders&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{A1BC5507-BC32-487C-BA2F-06508522209C}" category="Curve Modeling" language="Python" name="Align Bezier Handles" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.SetDisplayMode(oCam.FullName,&quot;realtimeshaders&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{20E68412-2E90-44CC-8536-CD6B5DEFF405}" category="Curve Modeling" language="Python" name="Align Bezier Handles" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,2)
-</QMenu_MenuItem><QMenu_MenuItem UID="{C3CEB03B-7844-475E-8526-11A56F4BC0E7}" category="Curve Modeling" language="Python" name="Align Bezier Handles Forward to Back" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{306CA9D7-A931-4A1D-AFE7-FEE8A97B272F}" category="Curve Modeling" language="Python" name="Align Bezier Handles Forward to Back" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,0)
-</QMenu_MenuItem><QMenu_MenuItem UID="{2FF8CF4E-1F8D-4109-B4C6-876869FF401C}" category="Curve Modeling" language="Python" name="Align Bezier Handles Back to Forward" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{AE6A24B5-C21D-485B-931E-B6A85D847D51}" category="Curve Modeling" language="Python" name="Align Bezier Handles Back to Forward" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,1)
-</QMenu_MenuItem><QMenu_MenuItem UID="{A698E28A-4F37-42C8-9BD6-E265E62F3956}" category="Curve Modeling" language="Python" name="Make Bezier-Knots Corners" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{B8AE325F-C216-4ECF-9AE5-F8D1F655961E}" category="Curve Modeling" language="Python" name="Make Bezier-Knots Corners" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,7)
-</QMenu_MenuItem><QMenu_MenuItem UID="{FEDD3E54-5884-46BD-82D2-C307D4F9A450}" category="Curve Modeling" language="Python" name="Make Knot Segments Linear" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{B44C72D3-3DFF-4018-A24B-611B555D3C8B}" category="Curve Modeling" language="Python" name="Make Knot Segments Linear" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.AlignBezierKnotsTangents(Application.Selection,&quot;&quot;,5)
-</QMenu_MenuItem><QMenu_MenuItem UID="{9AF1B0E6-AA44-4171-B0EF-EB058180D9DD}" category="Preferences" language="Python" name="Inspect Duplicate Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.duplicate&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{C946C316-FD73-4B85-BA3E-19F98335BE6E}" category="Preferences" language="Python" name="Inspect Selection Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.select&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{7540ACEE-A39A-4E69-BF74-FCD1E35AB97E}" category="Preferences" language="Python" name="Inspect Camera Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InspectObj(&quot;preferences.Camera&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{3B16F4BA-A8C9-48DC-86E3-C2A437F990F4}" category="Curve Modeling" language="Python" name="Extract Edges as Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{80559DD1-538E-4EE9-8739-DBFF67C7AB62}" category="Preferences" language="Python" name="Inspect Duplicate Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.duplicate&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{69C2390D-C8C9-45D0-8BCF-5BA797C42974}" category="Preferences" language="Python" name="Inspect Selection Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.select&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{A03E7275-E976-4E75-A346-22DB0A6F757F}" category="Preferences" language="Python" name="Inspect Camera Preferences" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InspectObj(&quot;preferences.Camera&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{ED935919-38FD-4DF2-A1E1-E117BC44CCFA}" category="Curve Modeling" language="Python" name="Extract Edges as Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	sel = Application.Selection(0)
 	ImmedMode = 0
 	if Application.Preferences.GetPreferenceValue( &quot;xsiprivate_unclassified.OperationMode&quot; ) == True:
@@ -400,7 +400,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 	result= Application.ApplyGenOp(&quot;ExtractEdgeLoopOp&quot;, &quot;&quot;, sel, &quot;&quot;, ImmedMode, &quot;&quot;, &quot;&quot;)
 	Application.InspectObj(result)
 	
-	</QMenu_MenuItem><QMenu_MenuItem UID="{A2A9738D-37CF-47A5-8EB1-73C7CE2DD301}" category="Curve Modeling" language="Python" name="Remove Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	</QMenu_MenuItem><QMenu_MenuItem UID="{3ECE0803-5935-4B63-AE55-3FF7EEAE52F5}" category="Curve Modeling" language="Python" name="Remove Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	ImmedMode = Application.Preferences.GetPreferenceValue( &quot;xsiprivate_unclassified.OperationMode&quot; ) #Is ImmediateMode enabled?
 	curveList = list()
 	for knot in Application.Selection:
@@ -408,7 +408,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 			curveList.append(knot.SubComponent.Parent3DObject) #Add curve to list of curves
 			Application.SetCurveKnotMultiplicity(knot, 0, ImmedMode)
 				
-</QMenu_MenuItem><QMenu_MenuItem UID="{1C6430C8-C3A4-45D2-BC90-732093443BB9}" category="Curve Modeling" language="Python" name="Create Blend Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{83626121-32BA-49CB-9FF0-A9E59FBBA884}" category="Curve Modeling" language="Python" name="Create Blend Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	if len(Application.Selection) &gt;0 :
 		if (Application.Selection(0).Type == &quot;crvbndrySubComponent&quot;):
 			FirstBoundary = Application.Selection(0)
@@ -450,7 +450,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 			if bAutoInspect and bCtrlDown==False or bAutoInspect==False and bCtrlDown:
 				Application.InspectObj(Result,&quot;&quot;,&quot;&quot;,1,False)
 	
-</QMenu_MenuItem><QMenu_MenuItem UID="{DB0443FC-209A-494A-9364-122F2C85A34A}" category="Curve Modeling" language="Python" name="Set Curve Knot Multiplicity" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{C3DD72F9-0FE9-4B78-A2D6-047C3C161D00}" category="Curve Modeling" language="Python" name="Set Curve Knot Multiplicity" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	#ImmedMode = Application.Preferences.GetPreferenceValue( &quot;xsiprivate_unclassified.OperationMode&quot; ) #Is ImmediateMode enabled?
 	#Application.LogMessage(&quot;ImmedMode at start is: &quot; + str(ImmedMode))
 	knots = list()
@@ -493,8 +493,8 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 		#pass
 	
 	#Application.Preferences.SetPreferenceValue( &quot;xsiprivate_unclassified.OperationMode&quot;,ImmedMode )
-	&quot;&quot;&quot;</QMenu_MenuItem><QMenu_MenuItem UID="{18980310-5EA5-433C-943E-575873AC8D7B}" category="Curve Modeling" language="Python" name="Tweak Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.Commands( &quot;Direct Manip Tool&quot;  ).Execute()</QMenu_MenuItem><QMenu_MenuItem UID="{6B37FA0B-CE19-4B31-9C8A-049C6AAC2710}" category="Preferences" language="Python" name="Log Verbose Messages" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+	&quot;&quot;&quot;</QMenu_MenuItem><QMenu_MenuItem UID="{29E73019-41BE-4350-9D54-BEEB11BC92CA}" category="Curve Modeling" language="Python" name="Tweak Curve" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.Commands( &quot;Direct Manip Tool&quot;  ).Execute()</QMenu_MenuItem><QMenu_MenuItem UID="{A274748E-92A8-49C2-8BF8-09BCD0C1D0A3}" category="Preferences" language="Python" name="Log Verbose Messages" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;scripting.msglogverbose&quot;) == True
 	return State
 
@@ -504,7 +504,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{4D623E48-F495-48AB-91BE-6D41E7F5457C}" category="Preferences" language="Python" name="Log Messages" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{13FB857A-E9C5-45AC-9B91-3FF2D979E753}" category="Preferences" language="Python" name="Log Messages" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;scripting.msglog&quot;) == True
 	return State
 
@@ -514,7 +514,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{FACC745A-F2CC-46D4-A88E-63FEF9F35721}" category="Preferences" language="Python" name="Show Hyperlinks" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{68792408-7C7D-4295-A105-4692FA6D800F}" category="Preferences" language="Python" name="Show Hyperlinks" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;scripting.cmdlinks&quot;) == True
 	return State
 
@@ -524,7 +524,7 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{50C2A879-530F-484B-A3F3-F5C53DFDD4BE}" category="Preferences" language="Python" name="Log Messages Real-Time" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+</QMenu_MenuItem><QMenu_MenuItem UID="{0923E208-BFBD-4D93-B097-CAFD9E3ACB3F}" category="Preferences" language="Python" name="Log Messages Real-Time" switch="True" type="QMenu_MenuItem">def Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	State = Application.Preferences.GetPreferenceValue(&quot;scripting.msglogrealtime&quot;) == True
 	return State
 
@@ -533,13 +533,13 @@ def Switch_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't r
 	Application.SetValue(&quot;preferences.scripting.msglogrealtime&quot;, not LogState, &quot;&quot;)
 
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{FDC48F4F-CD90-4564-83D3-E510671413A6}" category="Preferences" language="Python" name="Edit QMenus" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{7EAAE3FC-8A41-4346-A2BB-25F9DF1984C1}" category="Preferences" language="Python" name="Edit QMenus" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	CustomParams = Application.FindObjects( &quot;&quot;, &quot;{76332571-D242-11d0-B69C-00AA003B3EA6}&quot; )
 	for CP in CustomParams:
 		if CP.Type == (&quot;QMenuConfigurator&quot;):
 			Application.InspectObj (CP)
 			return
-			</QMenu_MenuItem><QMenu_MenuItem UID="{168E6793-3973-4517-9DCD-3E34FF83ADE8}" category="Preferences" language="Python" name="QPop enabled" switch="True" type="QMenu_MenuItem">def Switch_Init (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
+			</QMenu_MenuItem><QMenu_MenuItem UID="{DE097DC1-D26A-4DC5-85B1-5C8F48ADA996}" category="Preferences" language="Python" name="QPop enabled" switch="True" type="QMenu_MenuItem">def Switch_Init (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function
 	state = Application.GetValue(&quot;preferences.QMenu.QMenuEnabled&quot;)
 	return state
 	
@@ -548,14 +548,14 @@ def Switch_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't 
 	state = Application.GetValue(&quot;preferences.QMenu.QMenuEnabled&quot;)
 	Application.SetValue(&quot;preferences.QMenu.QMenuEnabled&quot;, not state)
 
-</QMenu_MenuItem><QMenu_MenuItem UID="{FCC0439A-0218-4AC8-8DF7-04E38C5694E5}" category="Curve Modeling" language="Python" name="Make Knots Bezier" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.SetCurveKnotMultiplicity(Application.Selection, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{2BE55C49-D73D-4F43-90D2-94A22E353465}" category="Curve Modeling" language="Python" name="Make Knots Non-Bezier" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.SetCurveKnotMultiplicity(Application.Selection, 1, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{37CDFB34-962B-4D8A-9F22-E108C5437031}" category="Curve Modeling" language="Python" name="Insert Bezier Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InsertCurveKnot(Application.Selection, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{627680B9-EF34-48F4-899B-1D70F11EFB91}" category="Curve Modeling" language="Python" name="Insert Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InsertCurveKnot(&quot;arc.isopnt[(0,0.375)]&quot;, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{3FA0E883-D9DD-4B32-A02D-DC47E96FF2F5}" category="Property Editing" language="Python" name="Rename" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{6D311CEF-AA33-4E86-A9E8-E8C892BB9908}" category="Curve Modeling" language="Python" name="Make Knots Bezier" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.SetCurveKnotMultiplicity(Application.Selection, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{BE24F8ED-7403-4769-8399-07663FBFFEBF}" category="Curve Modeling" language="Python" name="Make Knots Non-Bezier" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.SetCurveKnotMultiplicity(Application.Selection, 1, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{D771BE99-E7A5-4BFE-97BC-FBCDDFECFFF5}" category="Curve Modeling" language="Python" name="Insert Bezier Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InsertCurveKnot(Application.Selection, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{A439E627-6DB4-42AF-8C81-3624705E8DDE}" category="Curve Modeling" language="Python" name="Insert Knot" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InsertCurveKnot(&quot;arc.isopnt[(0,0.375)]&quot;, 3, &quot;siPersistentOperation&quot;)</QMenu_MenuItem><QMenu_MenuItem UID="{000CB026-1DEB-42C5-8281-F9CF65CB1FBB}" category="Property Editing" language="Python" name="Rename" switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Application.InspectObj(Application.Selection, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;)
-</QMenu_MenuItem><QMenu_MenuItem UID="{4228C1A2-7ABF-40A0-B216-8F15F90FC8C1}" category="Selection" language="Python" name="Info Selection..." switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
-	Application.InfoSelection(Application.Selection.GetAsText())</QMenu_MenuItem><QMenu_MenuItem UID="{628E0E7F-0BBC-4903-B134-4C0D88904846}" category="Selection" language="Python" name="Inspect Materials..." switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+</QMenu_MenuItem><QMenu_MenuItem UID="{8600636D-9209-4DC4-9683-E88F76A526B3}" category="Selection" language="Python" name="Info Selection..." switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
+	Application.InfoSelection(Application.Selection.GetAsText())</QMenu_MenuItem><QMenu_MenuItem UID="{C57E96F8-061A-4C31-B559-F62045569BBE}" category="Selection" language="Python" name="Inspect Materials..." switch="False" type="QMenu_MenuItem">def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function 
 	Mats = list()
 	for oObj in Application.Selection:
 		try:
@@ -563,62 +563,64 @@ def Switch_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't 
 		except:
 			pass
 
-	Application.InspectObj(Mats)</QMenu_MenuItem></QMenu_MenuItems><QMenu_Menus><QMenu_Menu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Weld Points to COG;{1D816091-F5FC-4419-83C0-F12023E25D01};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Weld Points to Target;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5F394BB-72F7-49AC-B3A9-E1F7AE5E9D48};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh Points" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	Application.InspectObj(Mats)</QMenu_MenuItem></QMenu_MenuItems><QMenu_Menus><QMenu_Menu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Weld Points to COG;{9588B1F8-C19C-4FAD-81DA-1C250FC5C05F};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Weld Points to Target;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5F394BB-72F7-49AC-B3A9-E1F7AE5E9D48};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B}" language="Python" name="Edit Polymesh Points" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};Command;Set Edge Crease Value;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E9FEE12-2D9E-11D4-B841-009027BC6587};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Select Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{A6ED1DB7-45B1-11D6-80CD-00A0C9ED67BD};Command;Select Boundary Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{5432F035-CC9F-44B1-BFF3-9F4609B35057};Command;Select Parallel Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{7C6E8253-85C0-4020-989E-774D582FE9D8};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Subdivide Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{8F1FA2AF-3635-11D4-A8AF-00C04F8EDF15};Command;Split Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{904FB220-46B2-11D4-8C28-009027BC3A0E};Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Cap;{3356164A-2629-4383-BC23-753EB1DE3199};Command;Weld Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{61467638-32CE-48C9-971C-904D60579F1A};QMenu_MenuItem;Extract Edges as Curve;{3B16F4BA-A8C9-48DC-86E3-C2A437F990F4};Command;Bridge Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{3AEF5A2C-40E4-4B08-AE6D-ABBC7C199907}" language="Python" name="Edit Polymesh Edges" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Mark Hard Edge Vertex;{50830560-31B5-11D0-82E7-00A0243E268D}:{71CFB7B5-2B33-11D4-B840-009027BC6587};Command;Set Edge Crease Value;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E9FEE12-2D9E-11D4-B841-009027BC6587};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Select Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{A6ED1DB7-45B1-11D6-80CD-00A0C9ED67BD};Command;Select Boundary Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{5432F035-CC9F-44B1-BFF3-9F4609B35057};Command;Select Parallel Edge Loop;{50830560-31B5-11D0-82E7-00A0243E268D}:{7C6E8253-85C0-4020-989E-774D582FE9D8};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Subdivide Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{8F1FA2AF-3635-11D4-A8AF-00C04F8EDF15};Command;Split Edge;{50830560-31B5-11D0-82E7-00A0243E268D}:{904FB220-46B2-11D4-8C28-009027BC3A0E};Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Cap;{7F9D367B-C125-412A-806F-1CF8F90FA290};Command;Weld Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{61467638-32CE-48C9-971C-904D60579F1A};QMenu_MenuItem;Extract Edges as Curve;{ED935919-38FD-4DF2-A1E1-E117BC44CCFA};Command;Bridge Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{3AEF5A2C-40E4-4B08-AE6D-ABBC7C199907}" language="Python" name="Edit Polymesh Edges" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Inset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{61DB5CAA-03FB-497F-8AAC-A9BB5B6C72BE};Command;Offset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{A3F7B88C-7B09-4B70-B55D-54B6D6D01BC5};Command;Local Subdivision;{50830560-31B5-11D0-82E7-00A0243E268D}:{F8842CA7-78FD-11D4-B851-009027BC6587};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};Command;Invert Selected Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{11BEB110-85B1-11D4-8C31-009027BC3A0E};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Polygon Detach;{50830560-31B5-11D0-82E7-00A0243E268D}:{4F25DC5B-7EE8-487C-B639-D1E7946A53FC};Command;Polygon Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{598E1068-B64F-47F4-8F08-99443D94B0B5};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};Command;Slice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{3FCF7E6F-5E01-4932-9D1A-201A269255C5};Command;Split Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{52964382-BCB8-11D4-8C4B-009027BC3A0E};Command;Subdivide Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{BC8CCEEF-370F-11D4-A8B0-00C04F8EDF15};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Bridge Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{95983629-72EA-11D4-A8C2-00C04F8EDF15};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Duplicate Polygons Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{D1343A2C-97E5-4236-9F41-3DBD21CAD8CB}" language="Python" name="Edit Polymesh Polygons" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Dissolve &amp; Clean Adjacent Vertices;{50830560-31B5-11D0-82E7-00A0243E268D}:{1D09DE94-79BA-4ADD-8F8A-ED34588877AA};Command;Dissolve Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{B39B38C0-90C4-11D4-A9E3-009027BC65D7};Command;Inset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{61DB5CAA-03FB-497F-8AAC-A9BB5B6C72BE};Command;Offset Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{A3F7B88C-7B09-4B70-B55D-54B6D6D01BC5};Command;Local Subdivision;{50830560-31B5-11D0-82E7-00A0243E268D}:{F8842CA7-78FD-11D4-B851-009027BC6587};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};Command;Invert Selected Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{11BEB110-85B1-11D4-8C31-009027BC3A0E};Command;Dice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{86B4DB7E-3569-4FD0-B8D3-05C11AA054D5};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Polygon Detach;{50830560-31B5-11D0-82E7-00A0243E268D}:{4F25DC5B-7EE8-487C-B639-D1E7946A53FC};Command;Polygon Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{598E1068-B64F-47F4-8F08-99443D94B0B5};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};Command;Slice Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{3FCF7E6F-5E01-4932-9D1A-201A269255C5};Command;Split Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{52964382-BCB8-11D4-8C4B-009027BC3A0E};Command;Subdivide Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{BC8CCEEF-370F-11D4-A8B0-00C04F8EDF15};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Bridge Polygon;{50830560-31B5-11D0-82E7-00A0243E268D}:{95983629-72EA-11D4-A8C2-00C04F8EDF15};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Duplicate Polygons Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{D1343A2C-97E5-4236-9F41-3DBD21CAD8CB}" language="Python" name="Edit Polymesh Polygons" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Gator;{50830560-31B5-11D0-82E7-00A0243E268D}:{7DC64A1A-9888-4616-971E-707A802DF006};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Mesh Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{AB9A5C20-5839-11D4-8C2A-009027BC3A0E};Command;Mesh Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{EB16D9E0-5CC1-11D4-8C2C-009027BC3A0E};Command;Boolean Union;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E8-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Intersection;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E9-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Difference;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E7-8E7A-11D4-8094-00A0C9ED67BD};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Unhide All Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{7BC3B51D-8FCA-4546-B99F-BDC4AE964409}" language="Python" name="Edit Polymeshes (multiple)" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Gator;{50830560-31B5-11D0-82E7-00A0243E268D}:{7DC64A1A-9888-4616-971E-707A802DF006};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Mesh Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{AB9A5C20-5839-11D4-8C2A-009027BC3A0E};Command;Mesh Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{EB16D9E0-5CC1-11D4-8C2C-009027BC3A0E};Command;Boolean Union;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E8-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Intersection;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E9-8E7A-11D4-8094-00A0C9ED67BD};Command;Boolean Difference;{50830560-31B5-11D0-82E7-00A0243E268D}:{BDF752E7-8E7A-11D4-8094-00A0C9ED67BD};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Unhide All Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{7BC3B51D-8FCA-4546-B99F-BDC4AE964409}" language="Python" name="Edit Polymeshes (multiple)" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Toggle Background Color;{50830560-31B5-11D0-82E7-00A0243E268D}:{D90C33E1-23CB-498A-9B2C-A4860E4E515C};Command;Isolate Selected;{50830560-31B5-11D0-82E7-00A0243E268D}:{153189E9-79CF-4333-89A2-35D123A8B003};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_Menu;Preferences - Tools - Camera;{DF75AE7D-F779-4FC2-8274-28CEDA21D264};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Set Realtime Display Mode;{6693C177-5907-49B2-BDEB-0862A0CE4AE7};QMenu_MenuItem;Set Textured Decal Display Mode;{8FCB6F0A-C9D4-4CC9-87AF-9970AEDA41B5};QMenu_MenuItem;Set Textured Display Mode;{635F1747-58A3-4F3F-A54F-170D23D637A0};QMenu_MenuItem;Set Shaded Display Mode;{ACB88C45-EDE6-422D-95B8-09B6B713A3F6};QMenu_MenuItem;Set Constant Display Mode;{1C8252C2-0592-4E85-8E63-2B99CE97FB95};QMenu_MenuItem;Set Hidden Line Display Mode;{340AFF3E-6CED-4B4D-BCF4-67E2963C015D};QMenu_MenuItem;Set Depth Cue Dispay Mode;{302A2E79-DCDE-43DA-90B2-930544303CB0};QMenu_MenuItem;Set Wireframe Display Mode;{0C157FFB-566C-4E2E-BC9B-5D569210B791};QMenu_MenuItem;Set Bounding Box Display mode;{EE29BD4B-4D98-4594-BD6A-67E52BAD2BEA};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Toggle Headlight Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{24D69496-C507-4447-AB77-AB60904B17DC};Command;Toggle Wire On Shaded Display;{50830560-31B5-11D0-82E7-00A0243E268D}:{2218CD14-9A9A-49CA-A33F-B61A4710BFE8};Command;Toggle Shaded Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{CEBDE6E3-7C57-4349-B4E9-83234DFB91D3};Command;Maximize/Restore Current Viewport;{50830560-31B5-11D0-82E7-00A0243E268D}:{2343C950-0D21-11D3-BFE5-00A0248F9397}" language="Python" name="Display Modes" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Toggle Background Color;{50830560-31B5-11D0-82E7-00A0243E268D}:{D90C33E1-23CB-498A-9B2C-A4860E4E515C};Command;Isolate Selected;{50830560-31B5-11D0-82E7-00A0243E268D}:{153189E9-79CF-4333-89A2-35D123A8B003};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_Menu;Preferences - Tools - Camera;{CD491104-0BE0-4F70-9512-E869CF548856};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Set Realtime Display Mode;{F71FAEB8-C414-4737-AAD6-5D266DDA9ECB};QMenu_MenuItem;Set Textured Decal Display Mode;{9C252767-B471-4E0A-84A1-F2C715868558};QMenu_MenuItem;Set Textured Display Mode;{6468FFDF-3543-4279-B998-2B9FDDD2AA39};QMenu_MenuItem;Set Shaded Display Mode;{75D5CF6F-0198-429A-B8D7-EF55D72E7165};QMenu_MenuItem;Set Constant Display Mode;{E44578F0-A99E-4EA3-AAC8-A8C3080359BB};QMenu_MenuItem;Set Hidden Line Display Mode;{0B6BB701-11A2-4D43-B3D3-82823F9C8980};QMenu_MenuItem;Set Depth Cue Dispay Mode;{1484901E-3BB5-4891-841C-93CD392E571B};QMenu_MenuItem;Set Wireframe Display Mode;{9FFA9497-F2E9-4B54-8E04-02D8A96AE153};QMenu_MenuItem;Set Bounding Box Display mode;{011FA6E9-49CF-4C34-8862-FE04E58EA8AD};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Toggle Headlight Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{24D69496-C507-4447-AB77-AB60904B17DC};Command;Toggle Wire On Shaded Display;{50830560-31B5-11D0-82E7-00A0243E268D}:{2218CD14-9A9A-49CA-A33F-B61A4710BFE8};Command;Toggle Shaded Display Mode;{50830560-31B5-11D0-82E7-00A0243E268D}:{CEBDE6E3-7C57-4349-B4E9-83234DFB91D3};Command;Maximize/Restore Current Viewport;{50830560-31B5-11D0-82E7-00A0243E268D}:{2343C950-0D21-11D3-BFE5-00A0248F9397}" language="Python" name="Display Modes" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Duplicate Multiple Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{6F74FAC0-5E7A-11D4-8C2C-009027BC3A0E};Command;Duplicate Single Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{AF4EDB50-5E63-11D4-8C2C-009027BC3A0E};Command;Extrude Component Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{C8436D81-4851-11D4-B7F3-0008C7A011A6};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_Menu;Preferences - Commands - Duplicate Options;{2071BBB9-2824-4517-BC4F-313AED8BDE50};QMenu_Menu;Preferences - Tools - Polygon;{243FFBDE-29E2-4CF5-919C-E8DC79C6E752};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Invert Selection Using Filter;{50830560-31B5-11D0-82E7-00A0243E268D}:{558B6839-03E9-11D3-B89E-080036F3CC02};Command;Grow Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{6218A21F-1147-11D4-A89D-00C04F8EDF15};Command;Shrink Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{69D3398B-73E6-4AB1-B3E5-7108216EF805};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Slice Polygons Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{6CA134E9-64EA-494B-A7EE-E47BF8D16931};Command;Split Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB7D9160-46B2-11D4-8C28-009027BC3A0E};Command;Split Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{C6737510-67EA-11D4-8C2D-009027BC3A0E};Command;Weld Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{45BA55DB-1280-46FC-96F2-D8385916D61F};Command;Add Vertex Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{64578190-B32E-11D4-8C47-009027BC3A0E};Command;Add Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{87F68420-4782-11D4-8C27-009027BC3A0E};Command;Add Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EFC008C0-3317-11D4-8C24-009027BC3A0E};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Extrude Comp. Axis;{50830560-31B5-11D0-82E7-00A0243E268D}:{9E734592-4B92-11D4-B7F3-0008C7A011A6};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};Command;Bevel;{50830560-31B5-11D0-82E7-00A0243E268D}:{9589E229-4BB4-11D4-A8B7-00C04F8EDF15};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Unhide All Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{7BC3B51D-8FCA-4546-B99F-BDC4AE964409};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};Command;Cursor Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{401C5B7B-3CA8-4675-AC2F-6383B855F747};Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF}" language="Python" name="Edit Polymesh (general)" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Duplicate Multiple Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{6F74FAC0-5E7A-11D4-8C2C-009027BC3A0E};Command;Duplicate Single Mesh Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{AF4EDB50-5E63-11D4-8C2C-009027BC3A0E};Command;Extrude Component Along Curve;{50830560-31B5-11D0-82E7-00A0243E268D}:{C8436D81-4851-11D4-B7F3-0008C7A011A6};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_Menu;Preferences - Commands - Duplicate Options;{8456CD55-95AF-40E1-B93B-5B78151F78B8};QMenu_Menu;Preferences - Tools - Polygon;{809BAC14-4C5D-4B2B-A3D3-3BB7C846C7F6};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Invert Selection Using Filter;{50830560-31B5-11D0-82E7-00A0243E268D}:{558B6839-03E9-11D3-B89E-080036F3CC02};Command;Grow Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{6218A21F-1147-11D4-A89D-00C04F8EDF15};Command;Shrink Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{69D3398B-73E6-4AB1-B3E5-7108216EF805};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Slice Polygons Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{6CA134E9-64EA-494B-A7EE-E47BF8D16931};Command;Split Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB7D9160-46B2-11D4-8C28-009027BC3A0E};Command;Split Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{C6737510-67EA-11D4-8C2D-009027BC3A0E};Command;Weld Point Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{45BA55DB-1280-46FC-96F2-D8385916D61F};Command;Add Vertex Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{64578190-B32E-11D4-8C47-009027BC3A0E};Command;Add Edge Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{87F68420-4782-11D4-8C27-009027BC3A0E};Command;Add Polygon Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{EFC008C0-3317-11D4-8C24-009027BC3A0E};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Disconnect Component;{50830560-31B5-11D0-82E7-00A0243E268D}:{8582A7F9-EF44-4C3E-8C38-472BFD0C8414};Command;Extrude Comp. Axis;{50830560-31B5-11D0-82E7-00A0243E268D}:{9E734592-4B92-11D4-B7F3-0008C7A011A6};Command;Collapse;{50830560-31B5-11D0-82E7-00A0243E268D}:{7F392188-2520-11D4-97F2-0800360BFF02};Command;Bevel;{50830560-31B5-11D0-82E7-00A0243E268D}:{9589E229-4BB4-11D4-A8B7-00C04F8EDF15};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Unhide All Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{7BC3B51D-8FCA-4546-B99F-BDC4AE964409};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};Command;Cursor Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{401C5B7B-3CA8-4675-AC2F-6383B855F747};Command;Tweak Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0D41FF0C-8AF4-4E18-9C1B-83277ACF12EF}" language="Python" name="Edit Polymesh (general)" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Invert All Normals;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC71-F6B6-11D2-AC7E-00A02485CECB};Command;Invert Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{8DE9E423-B5F0-11D4-87B1-00A0C9ED6CE2};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Dice Object;{50830560-31B5-11D0-82E7-00A0243E268D}:{6AF65230-4EDA-42EB-9AC5-192F4F3916BA};Command;Subdivide;{50830560-31B5-11D0-82E7-00A0243E268D}:{60D7DF7E-B5B0-11D4-814F-00A0C9AC19A9};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;PolyMesh Subdivide With Center;{50830560-31B5-11D0-82E7-00A0243E268D}:{412F8EE6-C4E2-11D4-B863-009027BC6587}" language="Python" name="Edit Polymesh" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Filter Edges;{50830560-31B5-11D0-82E7-00A0243E268D}:{053894C2-8E7C-4F76-B1BB-283C34E3C420};Command;Filter Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{AD25FA37-856E-4AA4-83F3-352713319986};Command;Filter Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{1067D621-96FC-4DED-983F-E83C4D121372};Command;Polygon Reduction;{50830560-31B5-11D0-82E7-00A0243E268D}:{0488BE6A-6E7E-416B-9CAE-2A6A987BF75C};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Invert All Normals;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC71-F6B6-11D2-AC7E-00A02485CECB};Command;Invert Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{8DE9E423-B5F0-11D4-87B1-00A0C9ED6CE2};Command;Symmetrize Polygons;{50830560-31B5-11D0-82E7-00A0243E268D}:{669FD6AA-D338-4311-9B7E-CB4A923311D1};Command;Quadrangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E71C2255-9AAF-4FF4-ABAC-4A6855C97C78};Command;Triangulate;{50830560-31B5-11D0-82E7-00A0243E268D}:{FB5B671D-C1A0-4DB6-8FF9-950A5029C2CD};Command;Paint Push Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{0EB424E5-84F7-11D4-8094-00A0C9ED67BD};Command;Dice Object;{50830560-31B5-11D0-82E7-00A0243E268D}:{6AF65230-4EDA-42EB-9AC5-192F4F3916BA};Command;Subdivide;{50830560-31B5-11D0-82E7-00A0243E268D}:{60D7DF7E-B5B0-11D4-814F-00A0C9AC19A9};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;PolyMesh Subdivide With Center;{50830560-31B5-11D0-82E7-00A0243E268D}:{412F8EE6-C4E2-11D4-B863-009027BC6587}" language="Python" name="Edit Polymesh" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;RelaxUVW;{50830560-31B5-11D0-82E7-00A0243E268D}:{ED3B4730-7798-45D8-9C23-5BCF3F8A7FEF}" language="Python" name="Edit UVs" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;RelaxUVW;{50830560-31B5-11D0-82E7-00A0243E268D}:{ED3B4730-7798-45D8-9C23-5BCF3F8A7FEF}" language="Python" name="Edit UVs" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Tweak Curve;{18980310-5EA5-433C-943E-575873AC8D7B};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Add Point on Curve Tool by CVs;{50830560-31B5-11D0-82E7-00A0243E268D}:{2BB0233A-293A-44DF-8A83-FEEA941BCE9B};Command;Add Point on Curve Tool by Bezier-Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5AB5B29-A386-4CC5-A040-34956CD44199};Command;Add Point on Curve Tool by Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{46353ACD-408A-4F3F-A0BB-0244A6CC9AF5};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{E0A2FA73-6831-47AF-A7E0-428E416F041B}" language="Python" name="Edit NURBS Curve (general)" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Tweak Curve;{29E73019-41BE-4350-9D54-BEEB11BC92CA};Command;Proportional Transform Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{FA9493C0-0A22-41F4-8980-6E63AD875E0B};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Add Point on Curve Tool by CVs;{50830560-31B5-11D0-82E7-00A0243E268D}:{2BB0233A-293A-44DF-8A83-FEEA941BCE9B};Command;Add Point on Curve Tool by Bezier-Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{E5AB5B29-A386-4CC5-A040-34956CD44199};Command;Add Point on Curve Tool by Knot Points;{50830560-31B5-11D0-82E7-00A0243E268D}:{46353ACD-408A-4F3F-A0BB-0244A6CC9AF5};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Delete Point on Curve Tool;{50830560-31B5-11D0-82E7-00A0243E268D}:{56F7ECF0-CD24-11D3-A9BA-009027BC65D7};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{E0A2FA73-6831-47AF-A7E0-428E416F041B}" language="Python" name="Edit NURBS Curve (general)" type="QMenu_Menu">def QMenu_Menu_Execute( oContext.CurrentObject ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Align Bezier Handles;{A1BC5507-BC32-487C-BA2F-06508522209C};QMenu_MenuItem;Align Bezier Handles Back to Forward;{2FF8CF4E-1F8D-4109-B4C6-876869FF401C};QMenu_MenuItem;Align Bezier Handles Forward to Back;{C3CEB03B-7844-475E-8526-11A56F4BC0E7};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Make Knots Bezier;{FCC0439A-0218-4AC8-8DF7-04E38C5694E5};QMenu_MenuItem;Make Bezier-Knots Corners;{A698E28A-4F37-42C8-9BD6-E265E62F3956};QMenu_MenuItem;Make Knot Segments Linear;{FEDD3E54-5884-46BD-82D2-C307D4F9A450};QMenu_MenuItem;Make Knots Non-Bezier;{2BE55C49-D73D-4F43-90D2-94A22E353465};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Set Curve Knot Multiplicity;{DB0443FC-209A-494A-9364-122F2C85A34A};QMenu_MenuItem;Remove Knot;{A2A9738D-37CF-47A5-8EB1-73C7CE2DD301};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curve Knot" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Align Bezier Handles;{20E68412-2E90-44CC-8536-CD6B5DEFF405};QMenu_MenuItem;Align Bezier Handles Back to Forward;{AE6A24B5-C21D-485B-931E-B6A85D847D51};QMenu_MenuItem;Align Bezier Handles Forward to Back;{306CA9D7-A931-4A1D-AFE7-FEE8A97B272F};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Make Knots Bezier;{6D311CEF-AA33-4E86-A9E8-E8C892BB9908};QMenu_MenuItem;Make Bezier-Knots Corners;{B8AE325F-C216-4ECF-9AE5-F8D1F655961E};QMenu_MenuItem;Make Knot Segments Linear;{B44C72D3-3DFF-4018-A24B-611B555D3C8B};QMenu_MenuItem;Make Knots Non-Bezier;{BE24F8ED-7403-4769-8399-07663FBFFEBF};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Set Curve Knot Multiplicity;{C3DD72F9-0FE9-4B78-A2D6-047C3C161D00};QMenu_MenuItem;Remove Knot;{3ECE0803-5935-4B63-AE55-3FF7EEAE52F5};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curve Knot" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Insert Knot;{627680B9-EF34-48F4-899B-1D70F11EFB91};QMenu_MenuItem;Insert Bezier Knot;{37CDFB34-962B-4D8A-9F22-E108C5437031};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{E0A2FA73-6831-47AF-A7E0-428E416F041B}" language="Python" name="Edit NURBS Curve IsoPoint" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Insert Knot;{A439E627-6DB4-42AF-8C81-3624705E8DDE};QMenu_MenuItem;Insert Bezier Knot;{D771BE99-E7A5-4BFE-97BC-FBCDDFECFFF5};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Insert Curve Knot;{50830560-31B5-11D0-82E7-00A0243E268D}:{E0A2FA73-6831-47AF-A7E0-428E416F041B}" language="Python" name="Edit NURBS Curve IsoPoint" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Extract Segment;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9A-F6B6-11D2-AC7E-00A02485CECB};Command;Subcurve Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB8498F3-CA7B-403B-9C97-BB79D465C2DE}" language="Python" name="Edit NURBS Curve Subcurve" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#This function must not be renamed!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Extract Segment;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9A-F6B6-11D2-AC7E-00A02485CECB};Command;Subcurve Extract;{50830560-31B5-11D0-82E7-00A0243E268D}:{CB8498F3-CA7B-403B-9C97-BB79D465C2DE}" language="Python" name="Edit NURBS Curve Subcurve" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#This function must not be renamed!
 	#Add your script code here
 	pass</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Light Selector (+Ctrl to inspect)" type="QMenu_Menu">#The following code adds a menu item per light in the scene to the bottom of the menu 
 # which selects the respective light (or inspects it when ctrl key is pressed at the same time)
 
-def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+def QMenu_Menu_Execute( oContext ):	#Don't rename this function!
+	self = oContext.CurrentObject
 	self.removeAllTempMenuItems() #Clear the temp menu items so they don't pile up in the mneu after subsequent calls
 	Lights = Application.ActiveSceneRoot.FindChildren(&quot;&quot;, &quot;light&quot;, &quot;&quot;, True)
 	for oLight in Lights:
 		oLightItem = Application.QMenuCreateObject(&quot;MenuItem&quot;)
 		oLightItem.name = oLight.FullName
 		
-		Code = ('def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):\n')
+		Code = ('def Script_Execute ( oContext ):\n')
 		Code += &quot;\tbCtrlDown = (Application.GetKeyboardState()[1]) == 2\n&quot;
 		Code += &quot;\tbAutoInspect = Application.GetValue('preferences.Interaction.autoinspect')\n&quot;
 		Code += &quot;\tif bAutoInspect and bCtrlDown or bAutoInspect==False and bCtrlDown==False: Application.InspectObj(\&quot;&quot; + oLight.FullName  + &quot;\&quot;);\n&quot;
 		Code += (&quot;\telse: Application.SelectObj('&quot; + oLight.FullName + &quot;','','');&quot;)
 		oLightItem.code = Code
-		self.appendTempMenuItem (oLightItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Top View;{F1E829E6-61AA-4A17-8B15-37BCC0617AE4};QMenu_MenuItem;Right View;{66C7E66A-B877-4B67-83D2-28A32EE12847};QMenu_MenuItem;Front View;{CC1289D2-3350-4EDF-A5E1-DFC6CC080812};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Bottom View;{C584ECD8-B9F4-4A56-A3F6-BF82A3B919D1};QMenu_MenuItem;LeftView;{D47FB2AB-99C4-461C-9514-42C6D508BCB4};QMenu_MenuItem;Back View;{C80D60E1-C4B9-4B3E-A443-A06FD39AB80C};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;User View;{8CDB06B2-AEA4-41C1-9C41-FA73710F19C1};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_Menu;Look Through Camera;{C52BFDF2-C35C-4DA9-A7D4-93EAE53AF14F};QMenu_Menu;Look Through Spotlight;{2C88EEBE-C3B3-4AEF-8E5C-36EF30CEABA6}" language="Python" name="Set View to..." type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="" language="Python" name="Edit Shading Nodes" type="QMenu_Menu">def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+		self.appendTempMenuItem (oLightItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Top View;{59978B25-4445-4C4E-A341-B63BE9765193};QMenu_MenuItem;Right View;{21723D07-7F58-47CF-826E-055BFC23A5D9};QMenu_MenuItem;Front View;{CADF081C-5CB0-43F2-807F-A880EF9B7439};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Bottom View;{7F6FD388-326B-45C0-A10D-546A7E897876};QMenu_MenuItem;LeftView;{E85E8294-5639-48AE-8D22-A4003000D17C};QMenu_MenuItem;Back View;{31088ADC-DE8C-4282-B6DF-42B39D02EC6E};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;User View;{000DFAA6-5FB7-4146-BE72-AB1D28F5D5F0};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_Menu;Look Through Camera;{B62684BD-4601-4EC1-BA15-CBC4400C8531};QMenu_Menu;Look Through Spotlight;{0557E9C7-70D7-4372-A5E8-7785A1D5B642}" language="Python" name="Set View to..." type="QMenu_Menu">def QMenu_Menu_Execute( oContext ): #Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="" language="Python" name="Edit Shading Nodes" type="QMenu_Menu">def QMenu_Menu_Execute ( oContext ):	#Don't rename this function!
 	oLO = Application.Desktop.ActiveLayout;
 	i = 0
 	Application.LogMessage(oLO.Views(i).Name)
 	Application.LogMessage(oLO.Views(i).GetAttributeValue(&quot;selection&quot;));
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;+100%;{FA509434-E435-46D9-806B-F3F9D804A715};QMenu_MenuItem;+50%;{E9C1EBFB-F4EA-4D2F-A3F0-006D43338FE3};QMenu_MenuItem;+10%;{FC7C2754-F873-4DBE-A51E-905FD1553EB3};QMenu_MenuItem;add 1;{CDBC2D5A-A9A1-4815-97D6-1CEA64EFBB4D}" language="Python" name="Property Editing - Add Value" type="QMenu_Menu">def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;+100%;{7728F3AE-87CF-4A5D-912D-29E2E7944D83};QMenu_MenuItem;+50%;{DF30D972-9E53-4D1D-A2F7-2D11F4CC5AB9};QMenu_MenuItem;+10%;{CD485FFE-9C6D-4F31-BB66-336FF936C006};QMenu_MenuItem;add 1;{8823412E-54CA-4D6E-8502-AA16D17BBA43}" language="Python" name="Property Editing - Add Value" type="QMenu_Menu">def QMenu_Menu_Execute ( oContext ):	#Don't rename this function!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;subtract 1;{DA123D13-7FBE-4818-A212-5100615EBBD6};QMenu_MenuItem;-10%;{58DBF1E9-2617-4649-BC83-E34132C0E158};QMenu_MenuItem;-50%;{69E5F629-6700-4C90-A880-1EDE6D57AFBA}" language="Python" name="Property Editing - Subtract Value" type="QMenu_Menu">def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;subtract 1;{7817412E-3612-4A05-BC19-A7C940F1EE6E};QMenu_MenuItem;-10%;{DEE48197-A354-44CA-AD11-4CA28BC2B6E5};QMenu_MenuItem;-50%;{B6141FC6-66CC-41F6-84E0-3D20D27F772D}" language="Python" name="Property Editing - Subtract Value" type="QMenu_Menu">def QMenu_Menu_Execute ( oContext ):	#Don't rename this function!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;10;{2A93DFC1-BD6B-4991-B9D6-21BB35A6A254};QMenu_MenuItem;5;{BD293B92-D3FF-423D-8D7F-BDFA530E3C96};QMenu_MenuItem;1;{6643885C-EDE0-4F24-B21E-E3EA91FA5362};QMenu_MenuItem;0,5;{9737E4B2-55D7-4401-847B-5BAF83ED4973};QMenu_MenuItem;0,1;{5F143D1A-41C1-4951-9BC8-0E5658867371};QMenu_MenuItem;0;{002A3B83-A20D-4E49-A70C-1A81E31A6061};QMenu_MenuItem;-1;{31C3C3CE-F394-4BAC-8A34-253071249C79};QMenu_MenuItem;None;{A203054D-97F3-4B84-9516-A2417E8AE4D0}" language="Python" name="Property Editing - Set Value" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;10;{6AC1FCF2-41F1-42B7-B226-FF9D275AB41F};QMenu_MenuItem;5;{F3724980-FA87-4501-ABEE-B9FA0DEEAC67};QMenu_MenuItem;1;{B70C1393-84B1-40D9-8E8F-1130277BB730};QMenu_MenuItem;0,5;{A3744A64-7CC6-4161-98AE-494AF44F6786};QMenu_MenuItem;0,1;{03C035A1-EFE8-4C12-96CB-84CC009C3836};QMenu_MenuItem;0;{5D056ACB-13B4-4CE0-A4E1-522A44E0E0CC};QMenu_MenuItem;-1;{03141EFF-38CF-4D42-BCAF-13D3D25BEF95};QMenu_MenuItem;None;{6A7D59EA-D4C3-47EB-8F61-B40D6FFD2E90}" language="Python" name="Property Editing - Set Value" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):  #Don't rename this function!
 	#Add your script code here
 	pass</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Camera Selector (+Ctrl to inspect)" type="QMenu_Menu">#The following code adds a menu item per existing camera to the bottom of the menu 
 # which selects the respective camera (or inspects it when ctrl key is pressed at the same time)
 
-def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+def QMenu_Menu_Execute (oContext):	#Don't rename this function!
+	self = oContext.CurrentObject #Get this menu code object
 	self.removeAllTempMenuItems() #Clear the temp menu items so they don't pile up in the menu after subsequent calls
 	Cams = Application.ActiveSceneRoot.FindChildren(&quot;&quot;, &quot;camera&quot;, &quot;&quot;, True)
 
@@ -632,14 +634,14 @@ def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Do
 		Code += ('\tbAutoInspect = Application.GetValue(\&quot;preferences.Interaction.autoinspect\&quot;)\n')
 		Code += ('\tif bAutoInspect and bCtrlDown or bAutoInspect==False and bCtrlDown==False: Application.InspectObj(\&quot;' + oCam.FullName + '.Camera\&quot;,)')
 		oCamItem.code = Code
-		self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_Menu;Light Selector (+Ctrl to inspect);{E2F3C1BE-AD01-4EA8-BE71-68ED1828E4F5};QMenu_Menu;Camera Selector (+Ctrl to inspect);{C29EA088-8D46-4F5C-A517-B21E142E2627}" language="Python" name="Shading Properties" type="QMenu_Menu">def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+		self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_Menu;Light Selector (+Ctrl to inspect);{59C734AD-45A7-4BD8-BF1F-996907FB71F0};QMenu_Menu;Camera Selector (+Ctrl to inspect);{2877F7E7-01D6-4E6B-919E-E0E9E680A441}" language="Python" name="Shading Properties" type="QMenu_Menu">def QMenu_Menu_Execute ( oContext ):	#Don't rename this function!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Orbit Around Selection - Components only;{CB93DADB-94AE-45FF-B974-6F4ADBD7A63B};QMenu_MenuItem;Orbit Around Selection;{114DD238-5D86-4E7A-8239-BDAF9A45D830};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Inspect Camera Preferences;{7540ACEE-A39A-4E69-BF74-FCD1E35AB97E}" language="Python" name="Preferences - Tools - Camera" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Orbit Around Selection - Components only;{7E44BB12-98C1-449A-814E-6880D1562259};QMenu_MenuItem;Orbit Around Selection;{E20B7D25-6FFB-4985-AEE0-45CDA99F5C76};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Inspect Camera Preferences;{A03E7275-E976-4E75-A346-22DB0A6F757F}" language="Python" name="Preferences - Tools - Camera" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ): #Don't rename this function!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Merge Clusters with same Material;{1B0CB9E8-4276-4904-8315-51F19A4DC56F};Command;Create Texture Subprojection;{50830560-31B5-11D0-82E7-00A0243E268D}:{479C4EF9-509D-4F8B-99BC-42A06F13D56F};Command;Create PlanarXY Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A2-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarXZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A4-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarYZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A3-0B13-11D4-B4AE-00AA0068D2C0}" language="Python" name="Create Texture Projection" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Merge Clusters with same Material;{92CD01FA-A647-4535-8AB2-A42DCDF22DA8};Command;Create Texture Subprojection;{50830560-31B5-11D0-82E7-00A0243E268D}:{479C4EF9-509D-4F8B-99BC-42A06F13D56F};Command;Create PlanarXY Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A2-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarXZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A4-0B13-11D4-B4AE-00AA0068D2C0};Command;Create PlanarYZ Texture Projection;{50830560-31B5-11D0-82E7-00A0243E268D}:{8E3FD9A3-0B13-11D4-B4AE-00AA0068D2C0}" language="Python" name="Create Texture Projection" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function!
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Look Through Spotlight" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
-
+	pass</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Look Through Spotlight" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function!
+	self = oContext.CurrentObject
 	self.removeAllTempMenuItems() #Clear the temp menu items so they don't pile up in the menu after subsequent calls
 	Cams = Application.ActiveSceneRoot.FindChildren(&quot;&quot;, &quot;Light&quot;, &quot;&quot;, True)
 	
@@ -649,13 +651,13 @@ def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Do
 			oCamItem = Application.QMenuCreateObject(&quot;MenuItem&quot;)
 			oCamItem.name = oCam.FullName
 
-			Code = ('def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):\n\toVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )\n')
+			Code = ('def Script_Execute ( oContext ):\n\toVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )\n')
 			Code+= ('\toView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)\n')
 			Code += ('\toVM.SetAttributeValue(&quot;activecamera:&quot; + oView + &quot;\&quot;,&quot;' + oCam.FullName + '&quot;)\n')
 
 			oCamItem.code = Code
-			self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Look Through Camera" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function!
-
+			self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="True" items="" language="Python" name="Look Through Camera" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function!
+	self = oContext.CurrentObject
 	self.removeAllTempMenuItems() #Clear the temp menu items so they don't pile up in the menu after subsequent calls
 	Cams = Application.ActiveSceneRoot.FindChildren(&quot;&quot;, &quot;Camera&quot;, &quot;&quot;, True)
 
@@ -663,101 +665,102 @@ def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Do
 		oCamItem = Application.QMenuCreateObject(&quot;MenuItem&quot;)
 		oCamItem.name = oCam.FullName
 
-		Code = ('def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):\n\toVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )\n')
+		Code = ('def Script_Execute ( oContext ):\n\toVM = Application.Desktop.ActiveLayout.Views.Find( &quot;View Manager&quot; )\n')
 		Code+= ('\toView = oVM.GetAttributeValue(&quot;focusedviewport&quot;)\n')
 		Code += ('\toVM.SetAttributeValue(&quot;activecamera:&quot; + oView + &quot;\&quot;,&quot;' + oCam.FullName + '&quot;)\n')
 
 		oCamItem.code = Code
-		self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Raycast Select in Shaded Mode;{EB5BFE51-45DD-44E6-A739-3DC4CACEDBD0};QMenu_MenuItem;Raycast Select - Include Backfacing Polygons;{83ABFEF0-947D-4493-B239-B3AD26B44D58};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Inspect Selection Preferences;{C946C316-FD73-4B85-BA3E-19F98335BE6E}" language="Python" name="Preferences - Tools - Polygon" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+		self.appendTempMenuItem (oCamItem)</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Raycast Select in Shaded Mode;{686DF094-820C-4EDE-913F-83C32CD2C952};QMenu_MenuItem;Raycast Select - Include Backfacing Polygons;{6FA5589D-9041-44C8-953E-E09150C1995B};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Inspect Selection Preferences;{69C2390D-C8C9-45D0-8BCF-5BA797C42974}" language="Python" name="Preferences - Tools - Polygon" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ): #Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Extrude duplicated Polygons;{022CB953-362C-46B2-B92F-3D752393F3F8};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};QMenu_MenuItem;Inspect Duplicate Preferences;{9AF1B0E6-AA44-4171-B0EF-EB058180D9DD}" language="Python" name="Preferences - Commands - Duplicate Options" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Extrude duplicated Polygons;{2E18C54F-D8EC-4033-84BD-89D42708AC95};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};QMenu_MenuItem;Inspect Duplicate Preferences;{80559DD1-538E-4EE9-8739-DBFF67C7AB62}" language="Python" name="Preferences - Commands - Duplicate Options" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):  #Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{8BD3C851-183C-11D3-A979-00A024190119};Command;Curve Fillet;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9E-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC8D-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curves (multiple)" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Blend;{50830560-31B5-11D0-82E7-00A0243E268D}:{8BD3C851-183C-11D3-A979-00A024190119};Command;Curve Fillet;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9E-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Merge;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC8D-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curves (multiple)" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Log Messages;{4D623E48-F495-48AB-91BE-6D41E7F5457C};QMenu_MenuItem;Log Verbose Messages;{6B37FA0B-CE19-4B31-9C8A-049C6AAC2710};QMenu_MenuItem;Log Messages Real-Time;{50C2A879-530F-484B-A3F3-F5C53DFDD4BE};QMenu_MenuItem;Show Hyperlinks;{FACC745A-F2CC-46D4-A88E-63FEF9F35721}" language="Python" name="Preferences - Scripting" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Log Messages;{13FB857A-E9C5-45AC-9B91-3FF2D979E753};QMenu_MenuItem;Log Verbose Messages;{A274748E-92A8-49C2-8BF8-09BCD0C1D0A3};QMenu_MenuItem;Log Messages Real-Time;{0923E208-BFBD-4D93-B097-CAFD9E3ACB3F};QMenu_MenuItem;Show Hyperlinks;{68792408-7C7D-4295-A105-4692FA6D800F}" language="Python" name="Preferences - Scripting" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):  #Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Edit QMenus;{FDC48F4F-CD90-4564-83D3-E510671413A6};QMenu_MenuItem;QPop enabled;{168E6793-3973-4517-9DCD-3E34FF83ADE8}" language="Python" name="Preferences -  QMenu" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Edit QMenus;{7EAAE3FC-8A41-4346-A2BB-25F9DF1984C1};QMenu_MenuItem;QPop enabled;{DE097DC1-D26A-4DC5-85B1-5C8F48ADA996}" language="Python" name="Preferences -  QMenu" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Inverse;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC72-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Open/Close;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC89-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Shift;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC74-F6B6-11D2-AC7E-00A02485CECB};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Curve Clean;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BCA6-F6B6-11D2-AC7E-00A02485CECB};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Curve Reparameterize;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC7C-F6B6-11D2-AC7E-00A02485CECB};Command;Set Curve Knot Multiplicity;{50830560-31B5-11D0-82E7-00A0243E268D}:{F296A100-1154-43B6-A647-F083A5A2E592};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curve" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Curve Inverse;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC72-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Open/Close;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC89-F6B6-11D2-AC7E-00A02485CECB};Command;Curve Shift;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC74-F6B6-11D2-AC7E-00A02485CECB};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Curve Clean;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BCA6-F6B6-11D2-AC7E-00A02485CECB};Command;Raise Nurbs Curve Degree;{50830560-31B5-11D0-82E7-00A0243E268D}:{8C80C39D-F376-45DD-BE99-510CD7820EB3};Command;Curve Reparameterize;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC7C-F6B6-11D2-AC7E-00A02485CECB};Command;Set Curve Knot Multiplicity;{50830560-31B5-11D0-82E7-00A0243E268D}:{F296A100-1154-43B6-A647-F083A5A2E592};Command;Curve Stitch;{50830560-31B5-11D0-82E7-00A0243E268D}:{2861BC9F-F6B6-11D2-AC7E-00A02485CECB}" language="Python" name="Edit NURBS Curve" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Rename;{3FA0E883-D9DD-4B32-A02D-DC47E96FF2F5};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Select Tree;{50830560-31B5-11D0-82E7-00A0243E268D}:{32DDA350-0A24-11D3-B8A0-080036F3CC02};Command;Select Model;{50830560-31B5-11D0-82E7-00A0243E268D}:{C973C090-1FAB-11D3-8BE6-00AA006130EF};Command;SelectMaterials;{50830560-31B5-11D0-82E7-00A0243E268D}:{31E095B8-43C8-4BCD-8B4B-192CDCA534FF};Command;Invert Selection Using Filter;{50830560-31B5-11D0-82E7-00A0243E268D}:{558B6839-03E9-11D3-B89E-080036F3CC02};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Duplicate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E2B59DF2-9C38-11D3-8106-00A0C9AC19A9};Command;Clone Single;{50830560-31B5-11D0-82E7-00A0243E268D}:{E2B59DF3-9C38-11D3-8106-00A0C9AC19A9};Command;Instantiate;{50830560-31B5-11D0-82E7-00A0243E268D}:{AC8A969A-3858-42B2-9B45-24D973C44360};Command;Duplicate/Instantiate Options;{50830560-31B5-11D0-82E7-00A0243E268D}:{291E04D0-6068-11D1-9987-00A0243F0E60};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Create Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{DBB3A7E0-893D-11D2-B906-00A024C78EE3};Command;Add to Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{DBB3A7E1-893D-11D2-B906-00A024C78EE3};Command;Remove from Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{48F78661-894D-11D2-B906-00A024C78EE3};Command;Create Transform Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{23424001-3DAB-45C7-874E-3B0B1CA1186F};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Select Constraining Objects from Constrained;{50830560-31B5-11D0-82E7-00A0243E268D}:{CFDE8B8C-BDE2-4161-9F0B-C81F138D53DB};Command;Select Constrained Objects from Constraining;{50830560-31B5-11D0-82E7-00A0243E268D}:{89592423-7166-401B-93FA-4A8FF0F9DE1A};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Copy All Animation;{50830560-31B5-11D0-82E7-00A0243E268D}:{848D650F-5B83-11D5-80AC-00A0C9ED67BD};Command;Paste All Animation;{50830560-31B5-11D0-82E7-00A0243E268D}:{77F8D691-8F15-11D4-BE8E-00A0C982DDD4};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Set Thumbnail From Region;{50830560-31B5-11D0-82E7-00A0243E268D}:{12866D18-D141-48D1-B6EE-60A674994A31};Command;Set Thumbnail;{50830560-31B5-11D0-82E7-00A0243E268D}:{F3FF68D5-30AA-4C40-92E3-8C716F35CC43};Command;Clear Thumbnail;{50830560-31B5-11D0-82E7-00A0243E268D}:{01936020-4F1E-4623-856B-0DBAA97B7B58};QMenuSeparator;NewSeparator;{21ECA68E-5BC8-42AB-848E-08AD8430188F};Command;Set User Keyword;{50830560-31B5-11D0-82E7-00A0243E268D}:{E4A18706-9D03-4B8F-A70C-89FB9D85C20D}" language="Python" name="Edit Selection 1" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="QMenu_MenuItem;Rename;{000CB026-1DEB-42C5-8281-F9CF65CB1FBB};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Select Tree;{50830560-31B5-11D0-82E7-00A0243E268D}:{32DDA350-0A24-11D3-B8A0-080036F3CC02};Command;Select Model;{50830560-31B5-11D0-82E7-00A0243E268D}:{C973C090-1FAB-11D3-8BE6-00AA006130EF};Command;SelectMaterials;{50830560-31B5-11D0-82E7-00A0243E268D}:{31E095B8-43C8-4BCD-8B4B-192CDCA534FF};Command;Invert Selection Using Filter;{50830560-31B5-11D0-82E7-00A0243E268D}:{558B6839-03E9-11D3-B89E-080036F3CC02};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Duplicate;{50830560-31B5-11D0-82E7-00A0243E268D}:{E2B59DF2-9C38-11D3-8106-00A0C9AC19A9};Command;Clone Single;{50830560-31B5-11D0-82E7-00A0243E268D}:{E2B59DF3-9C38-11D3-8106-00A0C9AC19A9};Command;Instantiate;{50830560-31B5-11D0-82E7-00A0243E268D}:{AC8A969A-3858-42B2-9B45-24D973C44360};Command;Duplicate/Instantiate Options;{50830560-31B5-11D0-82E7-00A0243E268D}:{291E04D0-6068-11D1-9987-00A0243F0E60};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Create Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{DBB3A7E0-893D-11D2-B906-00A024C78EE3};Command;Add to Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{DBB3A7E1-893D-11D2-B906-00A024C78EE3};Command;Remove from Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{48F78661-894D-11D2-B906-00A024C78EE3};Command;Create Transform Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{23424001-3DAB-45C7-874E-3B0B1CA1186F};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Select Constraining Objects from Constrained;{50830560-31B5-11D0-82E7-00A0243E268D}:{CFDE8B8C-BDE2-4161-9F0B-C81F138D53DB};Command;Select Constrained Objects from Constraining;{50830560-31B5-11D0-82E7-00A0243E268D}:{89592423-7166-401B-93FA-4A8FF0F9DE1A};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Copy All Animation;{50830560-31B5-11D0-82E7-00A0243E268D}:{848D650F-5B83-11D5-80AC-00A0C9ED67BD};Command;Paste All Animation;{50830560-31B5-11D0-82E7-00A0243E268D}:{77F8D691-8F15-11D4-BE8E-00A0C982DDD4};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Set Thumbnail From Region;{50830560-31B5-11D0-82E7-00A0243E268D}:{12866D18-D141-48D1-B6EE-60A674994A31};Command;Set Thumbnail;{50830560-31B5-11D0-82E7-00A0243E268D}:{F3FF68D5-30AA-4C40-92E3-8C716F35CC43};Command;Clear Thumbnail;{50830560-31B5-11D0-82E7-00A0243E268D}:{01936020-4F1E-4623-856B-0DBAA97B7B58};QMenuSeparator;NewSeparator;{95D9E372-5853-4A17-AB21-3FFB5AF90F0F};Command;Set User Keyword;{50830560-31B5-11D0-82E7-00A0243E268D}:{E4A18706-9D03-4B8F-A70C-89FB9D85C20D}" language="Python" name="Edit Selection 1" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Remove Transform Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{B8ECB928-8AA6-4F73-8698-C50F1AFC0547}" language="Python" name="Edit Transform Groups" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Remove Transform Group;{50830560-31B5-11D0-82E7-00A0243E268D}:{B8ECB928-8AA6-4F73-8698-C50F1AFC0547}" language="Python" name="Edit Transform Groups" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Info Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{4BDCDC62-E18E-11D3-8079-00A0C9ED67BD};Command;Open Transient Explorer;{50830560-31B5-11D0-82E7-00A0243E268D}:{C80E3C80-3D4E-44BF-803C-BD0EAD5B6B6F};Command;Open Attachments;{50830560-31B5-11D0-82E7-00A0243E268D}:{F9250A38-F848-11D4-BEAF-00A0C982DDD4};Command;Inspect Kinematics;{50830560-31B5-11D0-82E7-00A0243E268D}:{FAD01101-9132-11D3-B4A7-009027BC38D5};Command;Open Animation Editor on Kinematics;{50830560-31B5-11D0-82E7-00A0243E268D}:{E1336909-1FE2-11D5-BCEE-00D0B719022B};QMenu_MenuItem;Inspect Materials...;{628E0E7F-0BBC-4903-B134-4C0D88904846};Command;Last Operator in Stack;{50830560-31B5-11D0-82E7-00A0243E268D}:{CBC44EA0-5121-11D4-BC98-00D0B719022B}" language="Python" name="Edit Selection 2" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="Command;Info Selection;{50830560-31B5-11D0-82E7-00A0243E268D}:{4BDCDC62-E18E-11D3-8079-00A0C9ED67BD};Command;Open Transient Explorer;{50830560-31B5-11D0-82E7-00A0243E268D}:{C80E3C80-3D4E-44BF-803C-BD0EAD5B6B6F};Command;Open Attachments;{50830560-31B5-11D0-82E7-00A0243E268D}:{F9250A38-F848-11D4-BEAF-00A0C982DDD4};Command;Inspect Kinematics;{50830560-31B5-11D0-82E7-00A0243E268D}:{FAD01101-9132-11D3-B4A7-009027BC38D5};Command;Open Animation Editor on Kinematics;{50830560-31B5-11D0-82E7-00A0243E268D}:{E1336909-1FE2-11D5-BCEE-00D0B719022B};QMenu_MenuItem;Inspect Materials...;{C57E96F8-061A-4C31-B559-F62045569BBE};Command;Last Operator in Stack;{50830560-31B5-11D0-82E7-00A0243E268D}:{CBC44EA0-5121-11D4-BC98-00D0B719022B}" language="Python" name="Edit Selection 2" type="QMenu_Menu">def QMenu_Menu_Execute( oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="" language="Python" name="Edit NURBS Surface" type="QMenu_Menu">def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Don't rename this function
+	pass</QMenu_Menu><QMenu_Menu executeCode="False" items="" language="Python" name="Edit NURBS Surface" type="QMenu_Menu">def QMenu_Menu_Execute(  oContext ):	#Don't rename this function
 	#Add your script code here
-	pass</QMenu_Menu></QMenu_Menus><QMenu_MenuSets><QMenu_MenuSet AContexts="Transform Group;NURBS_Curve (multiple);NURBS_Curve (or components);Polymesh (multiple);Polymesh (or components);Default" AMenus="Edit Transform Groups;Edit NURBS Curves (multiple);Edit NURBS Curve (general);Edit Polymeshes (multiple);Edit Polymesh (general);None" BContexts="Default" BMenus="Edit Selection 1" CContexts="Default" CMenus="Edit Selection 2" DContexts="Polymesh (single);Polymesh_Polygons;Polymesh_Edges;Polymesh_Points;NURBS_Curve (single);NURBS_Curve_Subcurve;NURBS_Curve_IsoPoint;NURBS_Curve_Knot;NURBS_Curve_Point;NURBS_Surface (single);NURBS_Subsurface;NURBS_Surface Isoline;Default" DMenus="Edit Polymesh;Edit Polymesh Polygons;Edit Polymesh Edges;Edit Polymesh Points;Edit NURBS Curve;Edit NURBS Curve Subcurve;Edit NURBS Curve IsoPoint;Edit NURBS Curve Knot;None;None;None;None;None" name="Modeling" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Edit UVs" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="UV Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Edit Shading Nodes" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Shader Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Polymesh (or components);Default" AMenus="Create Texture Projection;None" BContexts="Default" BMenus="Shading Properties" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Lighting and shading" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Property Editing - Set Value" BContexts="Default" BMenus="Property Editing - Add Value" CContexts="Default" CMenus="Property Editing - Subtract Value" DContexts="Default" DMenus="None" name="Property Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Set View to..." BContexts="Default" BMenus="Display Modes" CContexts="Default" CMenus="Preferences -  QMenu" DContexts="Default" DMenus="None" name="Views" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="None" BContexts="Default" BMenus="Preferences - Scripting" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Scripting" type="QMenu_MenuSet"/></QMenu_MenuSets><QMenu_MenuDisplayContexts><QMenu_MenuDisplayContext language="Python" name="Polymesh (or components)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
-	Type = Types[0]
+	pass</QMenu_Menu></QMenu_Menus><QMenu_MenuSets><QMenu_MenuSet AContexts="Transform Group;NURBS_Curve (multiple);NURBS_Curve (or components);Polymesh (multiple);Polymesh (or components);Default" AMenus="Edit Transform Groups;Edit NURBS Curves (multiple);Edit NURBS Curve (general);Edit Polymeshes (multiple);Edit Polymesh (general);None" BContexts="Default" BMenus="Edit Selection 1" CContexts="Default" CMenus="Edit Selection 2" DContexts="Polymesh (single);Polymesh_Polygons;Polymesh_Edges;Polymesh_Points;NURBS_Curve (single);NURBS_Curve_Subcurve;NURBS_Curve_IsoPoint;NURBS_Curve_Knot;NURBS_Curve_Point;NURBS_Surface (single);NURBS_Subsurface;NURBS_Surface Isoline;Default" DMenus="Edit Polymesh;Edit Polymesh Polygons;Edit Polymesh Edges;Edit Polymesh Points;Edit NURBS Curve;Edit NURBS Curve Subcurve;Edit NURBS Curve IsoPoint;Edit NURBS Curve Knot;None;None;None;None;None" name="Modeling" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Edit UVs" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="UV Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Edit Shading Nodes" BContexts="Default" BMenus="None" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Shader Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Polymesh (or components);Default" AMenus="Create Texture Projection;None" BContexts="Default" BMenus="Shading Properties" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Lighting and shading" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Property Editing - Set Value" BContexts="Default" BMenus="Property Editing - Add Value" CContexts="Default" CMenus="Property Editing - Subtract Value" DContexts="Default" DMenus="None" name="Property Editing" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="Set View to..." BContexts="Default" BMenus="Display Modes" CContexts="Default" CMenus="Preferences -  QMenu" DContexts="Default" DMenus="None" name="Views" type="QMenu_MenuSet"/><QMenu_MenuSet AContexts="Default" AMenus="None" BContexts="Default" BMenus="Preferences - Scripting" CContexts="Default" CMenus="None" DContexts="Default" DMenus="None" name="Scripting" type="QMenu_MenuSet"/></QMenu_MenuSets><QMenu_MenuDisplayContexts><QMenu_MenuDisplayContext language="Python" name="Polymesh (or components)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	Type = oContext.Types[0]
 	if Type == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
 		return True
 	if ((Type == &quot;edgeSubComponent&quot;) or (Type == &quot;pntSubComponent&quot;) or (Type == &quot;polySubComponent&quot;)):
-		if ComponentParentTypes[0] == &quot;polymsh&quot;:  #Is the parent of the selected component(s) a polymesh?
+		if oContext.ComponentParentTypes[0] == &quot;polymsh&quot;:  #Is the parent of the selected component(s) a polymesh?
 			return True								
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Default" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #Don't rename this function
-	#print (&quot;Selected object Types are: &quot; + str( Types[0]))
-	return True</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Points" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
-	if (Types[0] == &quot;pntSubComponent&quot;):
-		if ComponentParentTypes[0] == &quot;polymsh&quot;: #Is the parent of the selected component(s) a polymesh?
+	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Default" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #Don't rename this function
+	return True #Default Context Item always returns True</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Points" type="QMenu_MenuDisplayContext">def QMenuContext_Execute (oContext ): #This function must not be renamed!
+	if (oContext.Types[0] == &quot;pntSubComponent&quot;):
+		if oContext.ComponentParentTypes[0] == &quot;polymsh&quot;: #Is the parent of the selected component(s) a polymesh?
 			return True								
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Edges" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames):  #This function must not be renamed!
+	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Edges" type="QMenu_MenuDisplayContext">def QMenuContext_Execute ( oContext ):  #This function must not be renamed!
 	#Is the first selected object an edge of on a Polymesh?
-	if Types[0] == &quot;edgeSubComponent&quot;: 
-		#if ComponentParentTypes[0] == &quot;polymsh&quot;: 	
-		return True	#This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Polygons" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	if oContext.Types[0] == &quot;edgeSubComponent&quot;: 
+		return True #This function must return a boolean!
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh_Polygons" type="QMenu_MenuDisplayContext">def QMenuContext_Execute ( oContext ): #This function must not be renamed!
 	#Is the first selected object a polygont on a Polymesh?
-	if Types[0] == &quot;polySubComponent&quot;:
+	if oContext.Types[0] == &quot;polySubComponent&quot;:
 		return True #This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Subcurve" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames ): #This function must not be renamed!
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Subcurve" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
 	#Is the first selected object a subcurve of a NURBS curve list?
-	if Types[0] == &quot;subcrvSubComponent&quot;: 	
-		return True #This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh (multiple)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents ,ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
+	if oContext.Types[0] == &quot;subcrvSubComponent&quot;: 	
+		return True  #This function must return a boolean!
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh (multiple)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	Types = oContext.Types
 	if (len(Types) &gt; 1): #Is something selected?
 		if Types[0] == &quot;polymsh&quot; and Types[1] == &quot;polymsh&quot;: #Are the first two selected objects polymeshes?
 			return True #This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Polymesh (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	if oContext.Types[0] == &quot;polymsh&quot;:  #Is the first selected object a Polymesh?
 		return True
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute (selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
+	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute ( oContext ): #This function must not be renamed!
 	#Is the first selected object a NURBS curvelist?
-	if Types[0] == &quot;crvlist&quot;: 
+	if oContext.Types[0] == &quot;crvlist&quot;: 
 		return True #This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (or components)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (or components)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	Types = oContext.Types
 	if Types[0] == &quot;crvlist&quot;:  #Is the first selected object a curve list?
 		return True
 	if ((Types[0] == &quot;knotSubComponent&quot;) or (Types[0] == &quot;isopntSubComponent&quot;) or (Types[0] == &quot;pntSubComponent&quot;) or (Types[0] ==&quot;subcrvSubComponent&quot;)):
-		if ComponentParentTypes[0] == &quot;crvlist&quot;:  #Is the parent of the selected component(s) a polymesh?
+		if oContext.ComponentParentTypes[0] == &quot;crvlist&quot;:  #Is the parent of the selected component(s) a polymesh?
 			return True								
-	return False  #This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Point" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;pntSubComponent&quot;:
-		if ComponentParentTypes[0] == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
+	return False  #This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Point" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext): #This function must not be renamed!
+	if oContext.Types[0] == &quot;pntSubComponent&quot;:
+		if oContext.ComponentParentTypes[0] == &quot;crvlist&quot;:   #Is the parent of the selected component(s) a curve list?
 			return True								
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_IsoPoint" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): 	#This function must not be renamed!
-	if Types[0] == &quot;isopntSubComponent&quot;:
-		if ComponentParentTypes[0] == &quot;crvlist&quot;:	#Is the parent of the selected component(s) a curve list?
-			return True								
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Knot" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;knotSubComponent&quot;:
-		if ComponentParentTypes[0] == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
-			return True								
-	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (multiple)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames): #This function must not be renamed!
+	return False	#This function must return a boolean!</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_IsoPoint" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ):   #This function must not be renamed!
+	if oContext.Types[0] == &quot;isopntSubComponent&quot;:
+		if oContext.ComponentParentTypes[0] == &quot;crvlist&quot;:  #Is the parent of the selected component(s) a curve list?
+			return True  #This function must return a boolean!							
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve_Knot" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	if oContext.Types[0] == &quot;knotSubComponent&quot;:
+		if oContext.ComponentParentTypes[0] == &quot;crvlist&quot;: 		#Is the parent of the selected component(s) a curve list?
+			return True	#This function must return a boolean!							
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Curve (multiple)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	Types = oContext.Types
 	if (len(Types) &gt; 1): #Is more than one obj selected?
 		if Types[0] == &quot;crvlist&quot; and Types[1] == &quot;crvlist&quot;: #Are the first two selected objects curves?
 			return True #This function must return a boolean!
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="JScript" name="Jscript_Test_DisplayContext" type="QMenu_MenuDisplayContext">function QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames) //This function must not be renamed!
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="JScript" name="Test_JScript_DisplayContext" type="QMenu_MenuDisplayContext">function QMenuContext_Execute(oContext) //This function must not be renamed!
 {
 	Application.LogMessage(&quot;Executing Jscript_Test_DisplayContext&quot;)
-	#Application.LogMessage(selection)
-	Application.LogMessage(ClassNames)
-	Application.LogMessage(ComponentClassNames)
-	Application.LogMessage(ComponentParents)
-	Application.LogMessage(ComponentParentTypes)
-	Application.LogMessage(ComponentParentClassNames)
+	Application.LogMessage(oContext.ClassNames(0))
+	//Application.LogMessage(ClassNames)
+	//Application.LogMessage(ComponentClassNames)
+	//Application.LogMessage(ComponentParents)
+	//Application.LogMessage(ComponentParentTypes)
+	//Application.LogMessage(ComponentParentClassNames)
 	return true	//This function must return a boolean
-}</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="VBScript" name="VBScript_Test_DisplayContext" type="QMenu_MenuDisplayContext">Function QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames) 'This function must not be renamed!
+}</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="VBScript" name="Test_VBScript_DisplayContext" type="QMenu_MenuDisplayContext">Function QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames) 'This function must not be renamed!
 	LogMessage(&quot;Executing VBScript_Test_DisplayContext&quot;)
 	#Application.LogMessage(selection)
 	Application.LogMessage(ClassNames)
@@ -766,15 +769,16 @@ def QMenu_Menu_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):	#Do
 	Application.LogMessage(ComponentParentTypes)
 	Application.LogMessage(ComponentParentClassNames)
 	QMenuContext_Execute =  True	'This function must return a boolean
- end Function</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Transform Group" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;TransfoGroup&quot;:
+ end Function</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="Transform Group" type="QMenu_MenuDisplayContext">def QMenuContext_Execute ( oContext ): #This function must not be renamed!
+	if oContext.Types[0] == &quot;TransfoGroup&quot;:
 		return True	#This function must return a boolean
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Surface (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;surfmeh&quot;:
-		return True		#This function must return a boolean
-	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Surface Isoline" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;isolinevSubComponent&quot; or &quot;isolineuSubComponent&quot;:
-		return True	#This function must return a boolean</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Subsurface" type="QMenu_MenuDisplayContext">def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!
-	if Types[0] == &quot;subsrfSubComponent&quot;:
-		return True	#This function must return a boolean
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Surface (single)" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	if oContext.Types[0] == &quot;surfmeh&quot;:
+		return True  #This function must return a boolean
+	return False</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Surface Isoline" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext ): #This function must not be renamed!
+	if oContext.Types[0] == &quot;isolinevSubComponent&quot; or &quot;isolineuSubComponent&quot;:
+		return True #This function must return a boolean</QMenu_MenuDisplayContext><QMenu_MenuDisplayContext language="Python" name="NURBS_Subsurface" type="QMenu_MenuDisplayContext">def QMenuContext_Execute( oContext): #This function must not be renamed!
+	if oContext.Types[0] == &quot;pntSubComponent&quot;:
+		if oContext.ComponentParentTypes[0] == &quot;crvlist&quot;:   #Is the parent of the selected component(s) a curve list?
+			return True  #This function must return a boolean!						
 	return False</QMenu_MenuDisplayContext></QMenu_MenuDisplayContexts><QMenuViewSignatures><QMenuViewSignature menuSets="Modeling;Lighting and shading;Views" name="3D Views" signature="Viewer;DS_ChildViewManager;DS_ChildRelationalView;TrayClientWindow;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="UV Editing" name="Texture Editor" signature="" type="QMenuViewSignature"/><QMenuViewSignature menuSets="Shader Editing" name="Render Tree" signature="" type="QMenuViewSignature"/><QMenuViewSignature menuSets="" name="Animation Editor  - FCurve Editor" signature="FcurveViewer;DS_ChildAnimationEditor;TrayClientWindow;XSIFloatingView;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="" name="Animation Mixer" signature="DS_ChildAnimationMixer;TrayClientWindow;XSIFloatingView;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="" name="Animation Editor - DopeSheet" signature="DopesheetView;DS_ChildDopeSheet;TrayClientWindow;XSIFloatingView;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="" name="Shape Manager" signature="Viewer;DS_ChildViewManager;DS_ChildRelationalView;TrayClientWindow;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="Property Editing" name="Property Editor" signature="DSPropertyInspectorPagesArea;Tab;DS_ChildPropertyEditor;TrayClientWindow;XSIFloatingView;" type="QMenuViewSignature"/><QMenuViewSignature menuSets="Scripting" name="Script History" signature="ScintillaTabControl;DS_ChildScriptEditor;TrayClientWindow;XSIFloatingView;" type="QMenuViewSignature"/></QMenuViewSignatures><QMenuDisplayEvents><QMenuDisplayEvent key="49" keyMask="0" number="0" type="QMenuDisplayEvent"/><QMenuDisplayEvent key="50" keyMask="0" number="0" type="QMenuDisplayEvent"/><QMenuDisplayEvent key="220" keyMask="0" number="0" type="QMenuDisplayEvent"/></QMenuDisplayEvents></QMenuComponents>
