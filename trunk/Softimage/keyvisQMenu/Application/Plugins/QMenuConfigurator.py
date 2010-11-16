@@ -20,15 +20,16 @@ for view in Views:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
-# TODO: Save version number with file
+# TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
+# TODO: Finish replacing switches and script item functions with oCOntext object as sole argument
 # TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
-# TODO: Add same type of input variables to items, switches, menus and menu contexts (self, ...). Is "selection" argument really required?
+
 # TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode)
 #		-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
+#      -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
 
-#TODO: SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
 #Report: Remove Transform Group also deletes non-Transform-Group objects, even when they are not in a Transform group
-#Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera is is looking through
+#Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
 #Report: Curve Fillet command does not work in Immed mode
 
 #Report: it is not possible to categorize ones own commands
@@ -636,7 +637,7 @@ class QMenuMissingCommand:
 	 # Declare list of exported attributes
 	_public_attrs_ = ['type','name','UID']
 	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
+	_readonly_attrs_ = ['type']
 	
 	def __init__(self):
 		 # Initialize exported attributes:
@@ -652,7 +653,7 @@ class QMenuCommandPlaceholder:
 	 # Declare list of exported attributes
 	_public_attrs_ = ['type','name','UID']
 	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
+	_readonly_attrs_ = ['type']
 	
 	def __init__(self):
 		 # Initialize exported attributes:
@@ -660,65 +661,88 @@ class QMenuCommandPlaceholder:
 		self.name = ""
 		self.UID = ""
 
-#QMenuSceneSelectionDetails is a class that's serves as a global data container for all kinds of selection-specific date.
+#QMenuContext is a class that's serves as a global data container for all kinds of selection-specific date.
 #It is fed by a Selection Change Event.
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
-class QMenuSceneSelectionDetails:
+class QMenuContext:
  # Declare list of exported functions:
-	_public_methods_ = ['storeSelection','recordTypes','recordClassNames','recordComponentClassNames','recordComponentParents','recordComponentParentTypes','recordComponentParentClassNames']
+	_public_methods_ = ['storeCurrentObj','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','selection','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames' ]
+	_public_attrs_ = ['type','CurrentObject','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts' ]
 	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
+	_readonly_attrs_ = ['type']
 	
-	def __init__(self):
+	def __init__( self ):
 		 # Initialize exported attributes:
-		self.type = "SceneSelectionDetails"
-		self.selection = list()
+		#self.data = XSIFactory.CreateGridData();
+		self.type = "Context"
+		self.CurrentObject = None
 		self.Types = list()
 		self.ClassNames = list()
 		self.ComponentClassNames = list()
 		self.ComponentParents = list()
 		self.ComponentParentTypes = list()
 		self.ComponentParentClassNames = list()
+		self.MenuItems = None
+		self.Menus = None
+		self.MenuSets = None
+		self.MenuContexts = None
+		self.DispalyContexts = None
+
+	def storeCurrentObj ( self, oObj ):
+		self.CurrentObject = oObj
 	
-	def storeSelection (self, sel):
-		self.selection = list()
-		#for obj in App.Selection:
-			#self.selection.append(obj)
-	
-	def recordTypes (self, TypeList):
+	def storeSelectionTypes (self, TypeList ):
 		self.Types = list()
 		for Type in TypeList:
 			self.Types.append(Type)
 	
-	def recordClassNames (self,ClassNameList):
-		self.ClassNames = list()
+	def storeSelectionClassNames ( self, ClassNameList ):
 		for ClassName in ClassNameList:
+			#print ("Adding " + str(ClassName))
 			self.ClassNames.append(ClassName)
+		#self.data.SetRowValues(1,ClassNameList)
+		#print ("Could not add " + str(ClassNameList) + " to Grid Data")
+				
+	#def getSelectionClassNames( self ):
+		#return self.data.GetRowValues(1)
 
-	def recordComponentClassNames (self,ComponentClassNameList):
+	def storeSelectionComponentClassNames ( self , ComponentClassNameList ):
 		self.ComponentClassNames = list()
 		for ComponentClassName in ComponentClassNameList:
 			self.ComponentClassNames.append(ComponentClassName)
 	
-	def recordComponentParents (self, ComponentParentList):
+	def storeSelectionComponentParents (self, ComponentParentList):
 		self.ComponentParents = list()
 		for ComponentParent in ComponentParentList:
 			self.ComponentParents.append (ComponentParent)
 	
-	def recordComponentParentTypes (self, ComponentParentTypeList):
+	def storeSelectionComponentParentTypes (self, ComponentParentTypeList):
 		self.ComponentParentTypes = list()
 		for ComponentParentType in ComponentParentTypeList:
 			self.ComponentParentTypes.append (ComponentParentType)
 			
-	def recordComponentParentClassNames (self, ComponentParentClassNameList):
+	def storeSelectionComponentParentClassNames (self, ComponentParentClassNameList):
 		self.ComponentParentClassNames = list()
 		for ComponentParentClassName in ComponentParentClassNameList:
 			self.ComponentParentClassNames.append (ComponentParentClassName)
 
+	def storeMenuItems (self, oMenuItems):
+		self.MenuItems = oMenuItems
+			
+	def storeMenus (self, oMenus):
+		self.Menus = oMenus
+			
+	def storeMenuSets (self, oMenuSets):
+		self.MenuSets = oMenuSets
 
+	def storeMenuContexts (self, oMenuContexts):
+		self.MenuContexts = oMenuContexts
 
+	def storeDisplayContexts (self, oDispalyContexts):
+		self.DispalyContexts = oDispalyContexts
+		
+		
 #=========================================================================================================================				
 #============================================== Plugin Initialisation ====================================================
 #=========================================================================================================================	
@@ -768,7 +792,7 @@ def XSIUnloadPlugin( in_reg ):
 
 	
 #=========================================================================================================================		
-#====================================== QMenu Configurator UI Callback FUnctions  ========================================
+#====================================== QMenu Configurator UI Callback Functions  ========================================
 #=========================================================================================================================	
 def QMenuConfigurator_OnInit( ):
 	Print ("QMenu: QMenuConfigurator_OnInit called",c.siVerbose)
@@ -897,7 +921,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 
 	aUIitems = (CustomGFXFilesPath + "QMenu_MenuA.bmp", 0, CustomGFXFilesPath + "QMenu_MenuB.bmp", 1, CustomGFXFilesPath + "QMenu_MenuD.bmp", 3, CustomGFXFilesPath + "QMenu_MenuC.bmp",2)
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("Select a Quad")
+	oLayout.AddStaticText("Select a Quad to Edit")
 	oMenuSelector = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
@@ -1339,8 +1363,9 @@ def QMenuConfigurator_CommandFilter_OnChanged():
 
 def QMenuConfigurator_CreateNewScriptItem_OnClicked():
 	Print ("QMenuConfigurator_CreateNewScriptItem_OnClicked called",c.siVerbose)
-
-	Language = QueryScriptLanguage()
+	strCaption = "Please choose Scripting Language for the new Scripted Item"
+	lsItems = ["Python","JScript","VBScript"]
+	Language = UserQuery(strCaption, lsItems)
 	if Language > -1: #User did not press Cancel?
 		globalQMenu_MenuItems = GetGlobalObject("globalQMenu_MenuItems")
 		newMenuItem = App.QMenuCreateObject("MenuItem")
@@ -1383,8 +1408,9 @@ def QMenuConfigurator_CreateNewScriptItem_OnClicked():
 	
 def QMenuConfigurator_CreateNewSwitchItem_OnClicked():
 	Print ("QMenuConfigurator_CreateNewSwitchItem_OnClicked called",c.siVerbose)
-	
-	LanguageNumber = QueryScriptLanguage()
+	strCaption = "Please choose Scripting Language for the new Switch Item"
+	lsItems = ["Python","JScript","VBScript"]	
+	LanguageNumber = UserQuery(strCaption, lsItems)
 	if LanguageNumber > -1:
 		Languages = ("Python","JScript","VBScript")
 		Language = Languages [LanguageNumber]		
@@ -1449,8 +1475,9 @@ def QMenuConfigurator_MenuFilter_OnChanged():
 		
 def QMenuConfigurator_CreateNewMenu_OnClicked():
 	Print ("QMenuConfigurator_CreateNewMenu_OnClicked called",c.siVerbose)
-	
-	LanguageNumber = QueryScriptLanguage()
+	strCaption = "Please choose Scripting Language for the new Menu"
+	lsItems = ["Python","JScript","VBScript"]
+	LanguageNumber = UserQuery(strCaption, lsItems)
 	if LanguageNumber > -1:
 		globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 		listKnownQMenu_MenuNames = list()
@@ -1468,13 +1495,13 @@ def QMenuConfigurator_CreateNewMenu_OnClicked():
 		oNewMenu.language = Language
 		
 		if 	Language == "Python":
-			oNewMenu.Code = ("def QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets):\t#Don't rename this function\n\t#Add your script code here\n\tpass")
+			oNewMenu.Code = ("def QMenu_Menu_Execute( oContext ):  #Don't rename this function\n\t#Add your script code here\n\tpass")
 		
 		if 	Language == "JScript":
-			oNewMenu.Code = ("function QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets)\t//Don't rename this function\n{\n\t//Add your script code here\n}")
+			oNewMenu.Code = ("function QMenu_Menu_Execute( oContext )  //Don't rename this function\n{\n\t//Add your script code here\n}")
 
 		if 	Language == "VBScript":
-			oNewMenu.Code = ("sub QMenu_Menu_Execute(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets)\t'Don't rename this function\n\t'Add your script code here\nend Sub")			
+			oNewMenu.Code = ("sub QMenu_Menu_Execute( oContext )  'Don't rename this function\n\t'Add your script code here\nend Sub")			
 		
 		globalQMenu_Menus.addMenu(oNewMenu)
 
@@ -2074,8 +2101,10 @@ def QMenuConfigurator_RecordViewSignature_OnChanged():
 		
 def QMenuConfigurator_CreateNewDisplayContext_OnClicked():
 	Print("QMenuConfigurator_CreateNewDisplayContext_OnClicked called", c.siVerbose)
+	strCaption = "Please choose Scripting Language for the new Display Context"
+	lsItems = ["Python","JScript","VBScript"]
+	LanguageNumber = UserQuery(strCaption, lsItems)
 
-	LanguageNumber = QueryScriptLanguage()
 	if LanguageNumber > -1:
 		Languages = ("Python","JScript","VBScript")
 		Language = Languages[LanguageNumber]
@@ -2093,11 +2122,11 @@ def QMenuConfigurator_CreateNewDisplayContext_OnClicked():
 		oNewDisplayContext.language = Language
 		
 		if Language == "Python":
-			oNewDisplayContext.code = ("def QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames): #This function must not be renamed!\n\t#Add your code here\n\treturn True\t#This function must return a boolean")
+			oNewDisplayContext.code = ("def QMenuContext_Execute( oContext ): #This function must not be renamed!\n\t#Add your code here\n\treturn True\t#This function must return a boolean")
 		if Language == "JScript":
-			oNewDisplayContext.code = ("function QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames) //This function must not be renamed!\n{\n\t//Add your code here\n\treturn true\t//This function must return a boolean\n}")
+			oNewDisplayContext.code = ("function QMenuContext_Execute( oContext ) //This function must not be renamed!\n{\n\t//Add your code here\n\treturn true\t//This function must return a boolean\n}")
 		if Language == "VBScript":
-			oNewDisplayContext.code = ("Function QMenuContext_Execute(selection , Types , ClassNames , ComponentClassNames , ComponentParents , ComponentParentTypes , ComponentParentClassNames) 'This function must not be renamed!\n\t'Add your code here\n\tQMenuContext_Execute = True\t'This function must return a boolean\n end Function")
+			oNewDisplayContext.code = ("Function QMenuContext_Execute( oContext ) 'This function must not be renamed!\n\t'Add your code here\n\tQMenuContext_Execute = True\t'This function must return a boolean\n end Function")
 		
 		globalQMenu_MenuDisplayContexts.addContext(oNewDisplayContext)
 		RefreshMenuDisplayContextsList()
@@ -2591,51 +2620,55 @@ def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteDisplayContextCode_OnClicked called", c.siVerbose)
 
 	if PPG.MenuDisplayContexts.Value != "":
-		oContext = getQMenu_MenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
-		if oContext != None:
+		oQMenuDisplayContext = getQMenu_MenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
+		if oQMenuDisplayContext != None:
+			#Collect some data before we execute the Display context code
+			QMenuGlobals = GetDictionary()
+			oContext = GetGlobalObject("globalQMenuContext")
+			oContext.storeCurrentObj(oQMenuDisplayContext)
+			oContext.storeMenuItems ( QMenuGlobals("globalQMenu_MenuItems"))
+			oContext.storeMenus (QMenuGlobals("globalQMenu_Menus"))
+			oContext.storeMenuSets (QMenuGlobals("globalQMenu_MenuSets"))
+			oContext.storeDisplayContexts (QMenuGlobals("globalQMenu_DisplayEvents"))
+			oContext.storeMenuContexts (QMenuGlobals("globalQMenu_MenuDisplayContexts"))
 
-			#Collect some data before we execute the context code
-			SelInfo = GetGlobalObject("globalQMenuSceneSelectionDetails")
-
-			#SelInfo.storeSelection(App.Selection) #Store the currently selected objects in the global scene delection details object -> This is already doen in the onSelectionChange callbak
-			selection = Application.Selection #SelInfo.selection
-			Types = SelInfo.Types
-			ClassNames = SelInfo.ClassNames
-			ComponentClassNames = SelInfo.ComponentClassNames
-			ComponentParents = SelInfo.ComponentParents
-			ComponentParentTypes = SelInfo.ComponentParentTypes
-			ComponentParentClassNames = SelInfo.ComponentParentClassNames
+			#selection = Application.Selection #SelInfo.selection
+			#Types = SelInfo.Types
+			#ClassNames = SelInfo.ClassNames
+			#ComponentClassNames = SelInfo.ComponentClassNames
+			#ComponentParents = SelInfo.ComponentParents
+			#ComponentParentTypes = SelInfo.ComponentParentTypes
+			#ComponentParentClassNames = SelInfo.ComponentParentClassNames
 			
 			notSilent = False
-			ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, notSilent)
+			ExecuteDisplayContext (oQMenuDisplayContext, oContext, notSilent)
 
-def ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames, silent):
+def ExecuteDisplayContext (oQMenuDisplayContext, oContext, silent):
 	DisplayMenu = False #Let's assume the function will evaluate to false
 	ErrorOccured = False
-	if oContext != None:
-		Code = oContext.code
-		Language = oContext.language
+	if oQMenuDisplayContext != None:
+		Code = oQMenuDisplayContext.code
+		Language = oQMenuDisplayContext.language
 
 		if Language == "Python":
-			Code = Code + ("\nDisplayMenu = QMenuContext_Execute(selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames)")
+			PyCode = Code + ("\nDisplayMenu = QMenuContext_Execute(oContext)")
 			try:
-				exec (Code) #Execute Python code natively within the context of this function, all passed function variables are known
+				exec (PyCode) #Execute Python code natively within the context of this function, all passed function variables are known
 			except Exception as ContextError:
 				Print("An Error occurred executing the QMenu_MenuDiplayContext '" + oContext.name +"', use QMenu Configurator for manual execution and debugging.", c.siError)
 				DisplayMenu = False
 				ErrorOccured = True
-				#raise
+
 		else: #Language is not Python, use Softimages ExecuteScriptCode Command to execute the code
-			DisplayMenu = App.ExecuteScriptCode( oContext.code, Language, "QMenuContext_Execute",[selection, Types, ClassNames, ComponentClassNames, ComponentParents,ComponentParentTypes,ComponentParentClassNames]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
+			DisplayMenu = App.ExecuteScriptCode( Code, Language, "QMenuContext_Execute",[oContext]) #This function returns a variant containing the result of the executed function and...something else we don't care about 
 			DisplayMenu = DisplayMenu[0]
 		if silent != True: 
 			if ErrorOccured == True:
 				raise ContextError
 			if type(DisplayMenu) != bool:
-				Print("QMenu_MenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu) + ", which is not a boolean value!", c.siWarning)
+				Print("QMenu_MenuDisplayContext '" + oQMenuDisplayContext.name + "' evaluates to: " + str(DisplayMenu) + ", which is not a boolean value!", c.siWarning)
 			if type(DisplayMenu) == bool:
-				Print("QMenu_MenuDisplayContext '" + oContext.name + "' evaluates to: " + str(DisplayMenu))
-
+				Print("QMenu_MenuDisplayContext '" + oQMenuDisplayContext.name + "' evaluates to: " + str(DisplayMenu))
 
 	return DisplayMenu
 
@@ -3715,7 +3748,6 @@ def RefreshDisplayEventsKeys():
 	else:
 		PPG.DisplayEventKey.Value = 0
 		PPG.DisplayEventKeyMask = 0
-		
 		PPG.DisplayEventKey.SetCapabilityFlag (c.siReadOnly,True)
 		PPG.DisplayEventKeyMask.SetCapabilityFlag (c.siReadOnly,True)
 		PPG.DisplayEventKeys_Record.SetCapabilityFlag (c.siReadOnly,True)
@@ -4180,15 +4212,17 @@ def DisplayMenuSet( MenuSetIndex ):
 				Print("There is currently no QMenu Menu Set " + str(MenuSetIndex) + " defined for view '" + oCurrentView.name + "!", c.siVerbose)
 		
 		if oMenuSet != None:
+			oContext = GetGlobalObject("globalQMenuContext")
 			QMenuGlobals = GetDictionary()
+			
+			#oContext.storeSelection (App.Selection)
 			#ArgList.append(QMenuGlobals("globalQMenuLastUsedItem").item)
-			QMenu_MenuItems = QMenuGlobals("globalQMenu_MenuItems").items
-			QMenu_Menus = QMenuGlobals("globalQMenu_Menus").items
-			QMenu_MenuSets = QMenuGlobals("globalQMenu_MenuSets").items
-			#ArgList.append(QMenu_MenuSets)
-			#ArgList.append(QMenu_MenuItems)
-			#ArgList.append(QMenu_Menus)
-				
+			oContext.storeMenuItems ( QMenuGlobals("globalQMenu_MenuItems"))
+			oContext.storeMenus (QMenuGlobals("globalQMenu_Menus"))
+			oContext.storeMenuSets (QMenuGlobals("globalQMenu_MenuSets"))
+			oContext.storeDisplayContexts (QMenuGlobals("globalQMenu_DisplayEvents"))
+			oContext.storeMenuContexts (QMenuGlobals("globalQMenu_MenuDisplayContexts"))
+			
 			oAMenu = None; #AMenuItemList = list()
 			oBMenu = None; #BMenuItemList = list()
 			oCMenu = None; #CMenuItemList = list()
@@ -4199,21 +4233,20 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu A by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			SelInfo = GetGlobalObject("globalQMenuSceneSelectionDetails")
-			#SelInfo.storeSelection(App.Selection)
-
-			selection = App.Selection
-			Types = SelInfo.Types
-			ClassNames = SelInfo.ClassNames
-			ComponentClassNames = SelInfo.ComponentClassNames
-			ComponentParents = SelInfo.ComponentParents
-			ComponentParentTypes = SelInfo.ComponentParentTypes
-			ComponentParentClassNames = SelInfo.ComponentParentClassNames
+			#SelInfo.storeSelection(App.Selection)		
+			#Types = SelInfo.Types
+			#ClassNames = SelInfo.ClassNames
+			#ComponentClassNames = SelInfo.ComponentClassNames
+			#ComponentParents = SelInfo.ComponentParents
+			#ComponentParentTypes = SelInfo.ComponentParentTypes
+			#ComponentParentClassNames = SelInfo.ComponentParentClassNames
 			silent = True
 			
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
-				oContext = oMenuSet.AContexts[RuleIndex]
+				oQMenuDisplayContext = oMenuSet.AContexts[RuleIndex]
+				oContext.storeCurrentObj(oQMenuDisplayContext)
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext, selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
+				DisplayMenu = ExecuteDisplayContext ( oQMenuDisplayContext, oContext , silent)
 				
 				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
@@ -4223,9 +4256,10 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu B by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.BContexts)):
-				oContext = oMenuSet.BContexts[RuleIndex]
+				oQMenuDisplayContext = oMenuSet.BContexts[RuleIndex]
+				oContext.storeCurrentObj(oQMenuDisplayContext)
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
+				DisplayMenu = ExecuteDisplayContext ( oQMenuDisplayContext, oContext , silent)
 				
 				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oBMenu = oMenuSet.BMenus[RuleIndex]
@@ -4235,9 +4269,10 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu C by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.CContexts)):
-				oContext = oMenuSet.CContexts[RuleIndex]
+				oQMenuDisplayContext = oMenuSet.CContexts[RuleIndex]
+				oContext.storeCurrentObj(oQMenuDisplayContext)
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
+				DisplayMenu = ExecuteDisplayContext ( oQMenuDisplayContext, oContext , silent)
 				
 				if DisplayMenu == True:
 					oCMenu = oMenuSet.CMenus[RuleIndex]
@@ -4247,9 +4282,10 @@ def DisplayMenuSet( MenuSetIndex ):
 			
 			#Find menu D by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
 			for RuleIndex in range(0,len(oMenuSet.DContexts)):
-				oContext = oMenuSet.DContexts[RuleIndex]
+				oQMenuDisplayContext = oMenuSet.DContexts[RuleIndex]
+				oContext.storeCurrentObj(oQMenuDisplayContext)
 				DisplayMenu = False
-				DisplayMenu = ExecuteDisplayContext (oContext,selection, Types, ClassNames, ComponentClassNames, ComponentParents, ComponentParentTypes, ComponentParentClassNames, silent)
+				DisplayMenu = ExecuteDisplayContext ( oQMenuDisplayContext, oContext, silent )
 				if DisplayMenu == True:
 					oDMenu = oMenuSet.DMenus[RuleIndex]
 					break
@@ -4257,6 +4293,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			oMenus.append(oDMenu) #Add the found menu to the Menus list
 						
 			t1 = time.clock() #Record time after getting first 4 menu and start searching for submenus
+			
 			#Find Submenus
 			NewMenuFound = True
 
@@ -4270,7 +4307,8 @@ def DisplayMenuSet( MenuSetIndex ):
 							#ArgList = list(); ArgList.append(oMenu) #QMenu_Menu_Execute function takes it's own menu as an argument 
 							#Print(oMenu.name)
 							#Print(oMenu.code)
-							Application.ExecuteScriptCode(Code, oMenu.language, "QMenu_Menu_Execute", [oMenu, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
+							oContext.storeCurrentObj(oMenu)
+							Application.ExecuteScriptCode(Code, oMenu.language, "QMenu_Menu_Execute", [oContext]) #Execute the menu's script code (maybe it creates more menu items or even more submenus)
 							#except:
 								#raise
 								#Print("An Error occured executing QMenu Menu's '" + oMenu.name + "' script code, please see script editor for details!", c.siError)
@@ -4702,8 +4740,8 @@ def QMenuCreateObject_Execute( QMenuType ):
 		QMenuElement = QMenuCommandPlaceholder()
 	if QMenuType == "Globals":
 		QMenuElement = QMenuGlobals()
-	if QMenuType == "SceneSelectionDetails":
-		QMenuElement = QMenuSceneSelectionDetails()
+	if QMenuType == "Context":
+		QMenuElement = QMenuContext()
 	# Class MUST be wrapped before being returned:
 	if QMenuElement != None:
 		return win32com.server.util.wrap(QMenuElement)
@@ -4766,7 +4804,7 @@ def QMenuGetSelectionDetails_OnEvent(in_ctxt):
 
 def QMenuGetSelectionDetails():
 	Print("QMenu: QMenuGetSelectionDetails called",c.siVerbose)
-	oSelDetails = GetGlobalObject("globalQMenuSceneSelectionDetails")
+	oSelDetails = GetGlobalObject("globalQMenuContext")
 	if oSelDetails != None:
 		
 		oSelection = Application.Selection
@@ -4844,41 +4882,42 @@ def QMenuGetSelectionDetails():
 		if (SelCount < 1) and (Application.Selection.Filter.Name != "object"):
 			pass
 			"""
-			oSelDetails.recordTypes (lsSelectionTypes_old)
+			oSelDetails.storeSelectionTypes (lsSelectionTypes_old)
 			Print("Recorded Types: " + str(lsSelectionTypes_old))
-			oSelDetails.recordClassNames (lsSelectionClassNames_old)
+			oSelDetails.storeSelectionClassNames (lsSelectionClassNames_old)
 			Print("Recorded ClassNames: " + str(lsSelectionClassNames_old))
 			
-			oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames_old)
+			oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames_old)
 			Print("Recorded ComponentClassNames: " + str(lsSelectionComponentClassNames_old))
-			oSelDetails.recordComponentParents (lsSelectionComponentParents_old)
+			oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents_old)
 			Print("Recorded ComponentParents: " + str(lsSelectionComponentParents_old))
 			
-			oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes_old)
+			oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes_old)
 			Print("Recorded ComponentParentTypes: " + str(lsSelectionComponentParentTypes_old))
-			oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames_old)
+			oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames_old)
 			Print("Recorded ComponentParents: " + str(lsSelectionComponentParentClassNames_old))
 			"""
  
 		else: #Something is selected
 		
+
 			#Print("Recording Selection Types: " + str(lsSelectionTypes))
-			oSelDetails.recordTypes (lsSelectionTypes)
+			oSelDetails.storeSelectionTypes (lsSelectionTypes)
+			
 			#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
-			oSelDetails.recordClassNames (lsSelectionClassNames)
+			oSelDetails.storeSelectionClassNames (lsSelectionClassNames)
 			
 			#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
-			oSelDetails.recordComponentClassNames (lsSelectionComponentClassNames)
+			oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames)
 			
 			#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
-			oSelDetails.recordComponentParents (lsSelectionComponentParents)
+			oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents)
 			
 			#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
-			oSelDetails.recordComponentParentTypes (lsSelectionComponentParentTypes)
+			oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
 			
 			#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-			oSelDetails.recordComponentParentClassNames (lsSelectionComponentParentClassNames)	
-
+			oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)	
 
 	"""
 	#Experimental stuff - to be cleaned up
@@ -5149,8 +5188,8 @@ def QMenuInitializeGlobals(force = False):
 	if (GetGlobalObject ("globalQMenuConfigStatus") == None) or force == True:
 		SetGlobalObject ("globalQMenuConfigStatus", App.QMenuCreateObject("ConfigStatus"))
 	
-	if (GetGlobalObject ("globalQMenuSceneSelectionDetails") == None) or force == True:
-		SetGlobalObject ("globalQMenuSceneSelectionDetails", App.QMenuCreateObject("SceneSelectionDetails"))
+	if (GetGlobalObject ("globalQMenuContext") == None) or force == True:
+		SetGlobalObject ("globalQMenuContext", App.QMenuCreateObject("Context"))
 			
 	QMenuGetSelectionDetails()
 	
@@ -5168,7 +5207,7 @@ def QMenuInitializeGlobals(force = False):
 		SetGlobalObject ("globalQMenuViewSignatures", App.QMenuCreateObject("ViewSignatures"))
 		SetGlobalObject ("globalQMenuDisplayEvents", App.QMenuCreateObject("DisplayEvents"))
 		SetGlobalObject ("globalQMenuConfigStatus", App.QMenuCreateObject("ConfigStatus"))
-		SetGlobalObject ("globalQMenuSceneSelectionDetails", App.QMenuCreateObject("SceneSelectionDetails"))
+		SetGlobalObject ("globalQMenuContext", App.QMenuCreateObject("Context"))
 	"""
 
 def deleteQMenu_Menu(MenuName):
@@ -5398,7 +5437,7 @@ def getCommandByUID(UID):
 def GetGlobalObject ( in_VariableName ):
 
 	if len(in_VariableName) == 0:
-		Print("Invalid argument to GetGlobal", c.siError)
+		Print("Invalid argument to GetGlobalObject", c.siError)
 
 	dic = GetDictionary()
 	
@@ -5410,7 +5449,7 @@ def GetGlobalObject ( in_VariableName ):
 def SetGlobalObject( in_VariableName, in_Value ):
 
 	if len(in_VariableName) == 0:
-		Print("Invalid argument to SetGlobal", c.siError)
+		Print("Invalid argument to SetGlobalObject", c.siError)
 
 	dic = GetDictionary()		
 	dic[in_VariableName] = in_Value		
@@ -5429,14 +5468,12 @@ def GetDictionary():
 	g_dictionary = thisPlugin.UserData
 	return g_dictionary
 	
-def QueryScriptLanguage():
+def UserQuery(strCaption, lsItems):
 	oDial = win32com.client.Dispatch( "XSIDial.XSIDialog" )
-	Language = oDial.Combo( "Please choose Scripting Language for the new Item", ["Python","JScript","VBScript"] );
+	Language = oDial.Combo( strCaption, lsItems );
 	return Language
 
-	
-	
-	
+
 #=========================================================================================================================	
 #========================================== Old and experimental Stuff ===================================================
 #=========================================================================================================================	
