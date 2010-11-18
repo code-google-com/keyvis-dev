@@ -684,9 +684,9 @@ class QMenuContext:
 		self.ComponentParentTypes = list()
 		self.ComponentParentClassNames = list()
 		self.MenuItems = None
-		self.Menus = None
 		self.MenuSets = None
 		self.MenuContexts = None
+		self.Menus = None
 		self.DispalyContexts = None
 
 	def storeCurrentObj ( self, oObj ):
@@ -760,16 +760,15 @@ def XSILoadPlugin( in_reg ):
 	
 	#Register Custom QMenu Commands
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
-	in_reg.RegisterCommand( "QMenuExecuteMenuItem" , "QMenuExecuteMenuItem" )
 	in_reg.RegisterCommand( "QMenuGetMenuItemByName" , "QMenuGetMenuItemByName" )
 	in_reg.RegisterCommand( "QMenuCreateConfiguratorCustomProperty", "QMenuCreateConfiguratorCustomProperty" )
-	
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_0", "QMenuDisplayMenuSet_0" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_1", "QMenuDisplayMenuSet_1" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_2", "QMenuDisplayMenuSet_2" )
-	#in_reg.RegisterCommand( "QMenuDisplayMenuSet_3", "QMenuDisplayMenuSet_3" )
+	in_reg.RegisterCommand( "QMenuDisplayMenuSet_3", "QMenuDisplayMenuSet_3" )
 	in_reg.RegisterCommand( "QMenuRepeatLastCommand", "QMenuRepeatLastCommand" )
-
+	in_reg.RegisterCommand( "QMenuExecuteMenuItem" , "QMenuExecuteMenuItem" )
+	
 	#Register Menus
 	in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
 	
@@ -1440,16 +1439,16 @@ def QMenuConfigurator_CreateNewSwitchItem_OnClicked():
 
 		#Set default code
 		if Language == "Python": 
-			newMenuItem.code = ("def Switch_Init (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function\n\t#Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\treturn False\n\n")
-			newMenuItem.code += ("def Switch_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Don't rename this function\n\t#Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n\tpass\n\n")
+			newMenuItem.code = ("def Switch_Init ( oContext ): #Don't rename this function\n\t#Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\treturn False\n\n")
+			newMenuItem.code += ("def Switch_Execute ( oContext ): #Don't rename this function\n\t#Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n\tpass\n\n")
 		
 		if Language == "JScript": 
-			newMenuItem.code = ("function Switch_Init (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) //Don't rename this function\n{\n\t//Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\treturn false\n}\n\n")
-			newMenuItem.code += ("function Switch_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) //Don't rename this function\n{\n\t//Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n}")
+			newMenuItem.code = ("function Switch_Init ( oContext ) //Don't rename this function\n{\n\t//Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\treturn false\n}\n\n")
+			newMenuItem.code += ("function Switch_Execute ( oContext ) //Don't rename this function\n{\n\t//Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n}")
 		
 		if Language == "VBScript": 
-			newMenuItem.code = ("Function Switch_Init (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) ' Don't rename this function\n\t' Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\tSwitch_Init = false\nend Function\n\n")
-			newMenuItem.code += ("Function Switch_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) ' Don't rename this function\n\t' Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n\tdoNothing = True\nend Function")
+			newMenuItem.code = ("Function Switch_Init ( oContext ) ' Don't rename this function\n\t' Add your code here, return value must be boolean and represent the current state of the switch (on or off)\n\tSwitch_Init = false\nend Function\n\n")
+			newMenuItem.code += ("Function Switch_Execute ( oContext ) ' Don't rename this function\n\t' Add your code here, it gets executed when the switch item is clicked in a QMenu menu \n\tdoNothing = True\nend Function")
 				
 		globalQMenu_MenuItems.addMenuItem(newMenuItem)
 
@@ -2585,9 +2584,20 @@ def QMenuConfigurator_ShowScriptingNameInBrackets_OnChanged():
 	RefreshCommandList()
 	PPG.Refresh()
 
+
+# PrepareContextObject fills the global context object, which already stores all selection-relevant information, with the remaining
+# information that could be interesting, like the current object into which the context object is passe (CurrentObject), menus, items, commands,...
+def PrepareContextObject(oItem):
+	QMenuGlobals = GetDictionary()
+	oContext = GetGlobalObject("globalQMenuContext")
+	oContext.storeCurrentObj(oItem)
+	oContext.storeMenuItems ( QMenuGlobals("globalQMenu_MenuItems"))
+	oContext.storeMenus (QMenuGlobals("globalQMenu_Menus"))
+	oContext.storeMenuSets (QMenuGlobals("globalQMenu_MenuSets"))
+	oContext.storeDisplayContexts (QMenuGlobals("globalQMenu_DisplayEvents"))
+	oContext.storeMenuContexts (QMenuGlobals("globalQMenu_MenuDisplayContexts"))
+	return oContext
 	
-#TODO: Turn menu code execution into it's own generic function which takes the menu item and the ArgList as arguments. 
-# Do the same for menu items ->Easier maintenance
 def QMenuConfigurator_ExecuteCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteCode_OnClicked called", c.siVerbose)
 
@@ -2595,18 +2605,15 @@ def QMenuConfigurator_ExecuteCode_OnClicked():
 	if PPG.Menus.Value != "":
 		oSelectedItem = getQMenu_MenuByName(PPG.Menus.Value)
 		if oSelectedItem != None:
-			globalQMenu_MenuItems = GetGlobalObject("globalQMenu_MenuItems")
-			globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
-			globalQMenu_MenuSets = GetGlobalObject("globalQMenu_MenuSets")
+			oContext = PrepareContextObject(oSelectedItem)
 			
 			Language = oSelectedItem.language
 			Code = oSelectedItem.code
 			if Code != "":
-				ArgList = [oSelectedItem, globalQMenu_MenuItems, globalQMenu_Menus, globalQMenu_MenuSets]
 				try:
-					App.ExecuteScriptCode(Code, Language,"QMenu_Menu_Execute", ArgList)
+					App.ExecuteScriptCode(Code, Language,"QMenu_Menu_Execute", [oContext])
 				except:
-					Print("An Error occured executing the script code of QMenu Menu '" + oSelectedItem.name + "', please see script editor for details!", c.siError)
+					#Print("An Error occured executing the script code of QMenu Menu '" + oSelectedItem.name + "', please see script editor for details!", c.siError)
 					raise
 				return
 	
@@ -2614,7 +2621,9 @@ def QMenuConfigurator_ExecuteCode_OnClicked():
 	if PPG.MenuItemList.Value != "":
 		oSelectedItem = getQMenu_MenuItemByName(PPG.MenuItemList.Value)
 		if oSelectedItem != None:
-			App.QMenuExecuteMenuItem(oSelectedItem )
+			bVerboseErrorReporting = True
+			App.QMenuExecuteMenuItem( oSelectedItem , bVerboseErrorReporting )
+	#gc.collect()
 
 def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteDisplayContextCode_OnClicked called", c.siVerbose)
@@ -2623,23 +2632,7 @@ def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
 		oQMenuDisplayContext = getQMenu_MenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
 		if oQMenuDisplayContext != None:
 			#Collect some data before we execute the Display context code
-			QMenuGlobals = GetDictionary()
-			oContext = GetGlobalObject("globalQMenuContext")
-			oContext.storeCurrentObj(oQMenuDisplayContext)
-			oContext.storeMenuItems ( QMenuGlobals("globalQMenu_MenuItems"))
-			oContext.storeMenus (QMenuGlobals("globalQMenu_Menus"))
-			oContext.storeMenuSets (QMenuGlobals("globalQMenu_MenuSets"))
-			oContext.storeDisplayContexts (QMenuGlobals("globalQMenu_DisplayEvents"))
-			oContext.storeMenuContexts (QMenuGlobals("globalQMenu_MenuDisplayContexts"))
-
-			#selection = Application.Selection #SelInfo.selection
-			#Types = SelInfo.Types
-			#ClassNames = SelInfo.ClassNames
-			#ComponentClassNames = SelInfo.ComponentClassNames
-			#ComponentParents = SelInfo.ComponentParents
-			#ComponentParentTypes = SelInfo.ComponentParentTypes
-			#ComponentParentClassNames = SelInfo.ComponentParentClassNames
-			
+			PrepareContextObject(oQMenuDisplayContext)
 			notSilent = False
 			ExecuteDisplayContext (oQMenuDisplayContext, oContext, notSilent)
 
@@ -2655,7 +2648,7 @@ def ExecuteDisplayContext (oQMenuDisplayContext, oContext, silent):
 			try:
 				exec (PyCode) #Execute Python code natively within the context of this function, all passed function variables are known
 			except Exception as ContextError:
-				Print("An Error occurred executing the QMenu_MenuDiplayContext '" + oContext.name +"', use QMenu Configurator for manual execution and debugging.", c.siError)
+				Print("An Error occurred executing the QMenu_MenuDiplayContext '" + oQMenuDisplayContext.name +"', use QMenu Configurator for manual execution and debugging.", c.siError)
 				DisplayMenu = False
 				ErrorOccured = True
 
@@ -4212,16 +4205,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Print("There is currently no QMenu Menu Set " + str(MenuSetIndex) + " defined for view '" + oCurrentView.name + "!", c.siVerbose)
 		
 		if oMenuSet != None:
-			oContext = GetGlobalObject("globalQMenuContext")
-			QMenuGlobals = GetDictionary()
-			
-			#oContext.storeSelection (App.Selection)
-			#ArgList.append(QMenuGlobals("globalQMenuLastUsedItem").item)
-			oContext.storeMenuItems ( QMenuGlobals("globalQMenu_MenuItems"))
-			oContext.storeMenus (QMenuGlobals("globalQMenu_Menus"))
-			oContext.storeMenuSets (QMenuGlobals("globalQMenu_MenuSets"))
-			oContext.storeDisplayContexts (QMenuGlobals("globalQMenu_DisplayEvents"))
-			oContext.storeMenuContexts (QMenuGlobals("globalQMenu_MenuDisplayContexts"))
+			oContext = PrepareContextObject(None)
 			
 			oAMenu = None; #AMenuItemList = list()
 			oBMenu = None; #BMenuItemList = list()
@@ -4229,17 +4213,6 @@ def DisplayMenuSet( MenuSetIndex ):
 			oDMenu = None; #DMenuItemList = list()
 			oMenus = list()
 				
-			#Quadrants = ((oMenuSet.AContexts,oMenuSet.AMenus),(oMenuSet.BContexts,oMenuSet.BMenus),(oMenuSet.CContexts,oMenuSet.CMenus),(oMenuSet.DContexts,oMenuSet.DMenus))
-			
-			#Find menu A by evaluating all of the D-quadrant menu's context functions and taking the first one that returns True
-			SelInfo = GetGlobalObject("globalQMenuSceneSelectionDetails")
-			#SelInfo.storeSelection(App.Selection)		
-			#Types = SelInfo.Types
-			#ClassNames = SelInfo.ClassNames
-			#ComponentClassNames = SelInfo.ComponentClassNames
-			#ComponentParents = SelInfo.ComponentParents
-			#ComponentParentTypes = SelInfo.ComponentParentTypes
-			#ComponentParentClassNames = SelInfo.ComponentParentClassNames
 			silent = True
 			
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
@@ -4356,13 +4329,12 @@ def DisplayMenuSet( MenuSetIndex ):
 									#Print(oItem.name + " is a switch: " + str(oItem.switch))
 									if oItem.switch == True:
 										Language = oItem.language
-										#result = False
-										self = oItem
+										oContext.storeCurrentObj(oItem)
 										if Language == "Python": #Execute Python code natively, it's faster this way
-											Code = (oItem.code + ("\nresult = Switch_Init(self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets)"))
+											Code = (oItem.code + ("\nresult = Switch_Init( oContext )"))
 											exec (Code)
 										else:
-											results = App.ExecuteScriptCode(oItem.code, Language, "Switch_Init",[self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets])
+											results = App.ExecuteScriptCode(oItem.code, Language, "Switch_Init",[oContext])
 											result = results[0]
 										if result == True:
 											MenuString = MenuString + "[[" + oItem.name + "]"  + "[-1]" + "[5]" + "]"
@@ -4497,7 +4469,8 @@ def QMenuRepeatLastCommand_Execute():
 	globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
 	oQMenu_MenuItem = globalQMenuLastUsedItem.item
 	if oQMenu_MenuItem != None:
-		App.QMenuExecuteMenuItem ( oQMenu_MenuItem )
+		bNonVerboseErrorReporting = False
+		QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , bNonVerboseErrorReporting )
 
 def QMenuGetMenuItemByName_Init(in_Ctxt):
 	oCmd = in_Ctxt.Source
@@ -4529,8 +4502,9 @@ def QMenuDisplayMenuSet_0_Execute():
 		#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity")
 		if oQMenu_MenuItem != None:
 			globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
-			globalQMenuLastUsedItem.set(oQMenu_MenuItem)			
-			App.QMenuExecuteMenuItem(oQMenu_MenuItem)
+			globalQMenuLastUsedItem.set(oQMenu_MenuItem)
+			bNonVerboseErrorReporting = False
+			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
 			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
@@ -4551,8 +4525,9 @@ def QMenuDisplayMenuSet_1_Execute():
 		oQMenu_MenuItem = DisplayMenuSet(1)
 		if oQMenu_MenuItem != None:
 			globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
-			globalQMenuLastUsedItem.set(oQMenu_MenuItem)			
-			App.QMenuExecuteMenuItem(oQMenu_MenuItem)
+			globalQMenuLastUsedItem.set(oQMenu_MenuItem)
+			bNonVerboseErrorReporting = False
+			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
 			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
@@ -4573,8 +4548,9 @@ def QMenuDisplayMenuSet_2_Execute():
 		oQMenu_MenuItem = DisplayMenuSet(2)
 		if oQMenu_MenuItem != None:
 			globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
-			globalQMenuLastUsedItem.set(oQMenu_MenuItem)			
-			App.QMenuExecuteMenuItem(oQMenu_MenuItem)
+			globalQMenuLastUsedItem.set(oQMenu_MenuItem)
+			bNonVerboseErrorReporting = False				
+			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
 			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
@@ -4595,8 +4571,9 @@ def QMenuDisplayMenuSet_3_Execute():
 		oQMenu_MenuItem = DisplayMenuSet(3)
 		if oQMenu_MenuItem != None:
 			globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
-			globalQMenuLastUsedItem.set(oQMenu_MenuItem)			
-			App.QMenuExecuteMenuItem(oQMenu_MenuItem)
+			globalQMenuLastUsedItem.set(oQMenu_MenuItem)
+			bNonVerboseErrorReporting = False
+			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
 			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
 									#It will execute the chosen MenuItem with no noticeable delay.
@@ -4604,7 +4581,7 @@ def QMenuDisplayMenuSet_3_Execute():
 									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
 									
-							
+						
 def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
 	oCmd.ReturnValue = False
@@ -4613,21 +4590,17 @@ def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
 	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
 	oCmd.SetFlag(c.siNoLogging, True)
-	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
 	return True
 	
-def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem ):
+def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , verbosity ):
 	Print("QMenuExecuteMenuItem_Execute called", c.siVerbose)
-	QMenuGlobals = GetDictionary()
 
 	if oQMenu_MenuItem != None:
+		#Instead of the actual command only a dummy command object carrying the original command name is given because Softimage has the tendency 
+		#to "forget" commands (not always the same command that was referenced) after undoing it when the command is referenced by a python object (e.g. a list or custom ActiveX class). 
+		#Therefore we only work with command names instead and look up the command for execution again, which imposes only a minimal speed penalty.
 
-		#Instead of the actual command only it's name is given because Softimage has the tendency to forget commands (not always the
-		#same command that was referenced) after undoing it when the command is referenced by a python object (e.g. a list or custom ActiveX class). 
-		#Therefore we only work with command names instead and look up the command for execution again,
-		#which imposes only a minimal speed penalty.
-
-		success = True
 		if oQMenu_MenuItem.type == "CommandPlaceholder": #We use the commandplaceholder class to store the name of the command to execute because storing the command directly causes problems in XSI
 			try:
 				#Print("Executing command with UID of: " + str(oQMenu_MenuItem.UID)) 
@@ -4636,60 +4609,41 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem ):
 				oCmd.Execute()
 				return True
 			except:
-				success = False
-				raise
-			finally:
-				if success == False:
+				if verbosity == True:
+					raise
+				else:
 					Print("An Error occured while QMenu executed the command '" + oQMenu_MenuItem.name + "', please see script editor for details!", c.siError)
-					return False
-				
-			#SucessfullyExecuted = True
-					
-		if oQMenu_MenuItem.type == "QMenu_MenuItem":
-			ArgList = list()
-			#ArgList.append(QMenuGlobals("globalQMenuLastUsedItem").item)
-			ArgList.append(oQMenu_MenuItem)
-			ArgList.append(QMenuGlobals("globalQMenu_MenuItems").items)
-			ArgList.append(QMenuGlobals("globalQMenu_Menus").items)
-			ArgList.append(QMenuGlobals("globalQMenu_MenuSets").items)
-			#ArgList.append(QMenuGlobals("globalQMenu_MenuDisplayContexts").items)
-			#ArgList.append(QMenuGlobals("globalQMenuViewSignatures").items)
-			#ArgList.append(QMenuGlobals("globalQMenuDisplayEvents").items)
+
 			
+		if oQMenu_MenuItem.type == "QMenu_MenuItem":
+			oContext = PrepareContextObject( oQMenu_MenuItem )
+				
 			Code = (oQMenu_MenuItem.code)
 			if Code != "":
 				Language = (oQMenu_MenuItem.language)
 				if oQMenu_MenuItem.switch == True:
-					#try:
-					App.ExecuteScriptCode(Code, Language, "Switch_Execute", ArgList )
-					return True
-					#except:
-						#success = False
-						#raise	
-					#finally:
-						#if success == False:
-							#Print("An Error occured while QMenu executed the switch item '" + oQMenu_MenuItem.name + "', please see script editor for details!", c.siError)
-							#return False
+					try:
+						App.ExecuteScriptCode(Code, Language, "Switch_Execute", [oContext] )		
+					except:
+						if verbosity == True:
+							raise
+						else:
+							Print("An Error occured while QMenu executed the switch item '" + oQMenu_MenuItem.name + "', please see script editor for details!", c.siError)
+
 						
 				else:
-					#try:
-					#exec(Code + '\nScript_Execute ("", "", "", "")')
-					#print("\n")
-					#print("Code is: ")
-					#print(Code)
-					App.ExecuteScriptCode( Code, Language , "Script_Execute", ArgList )
-					return True
-					#except:
-						#success = False
-					#finally:
-						#if success == False:
-							#Print("An Error occured while QMenu executed the script item '" + oQMenu_MenuItem.name + "', please see script editor for details!", c.siError)
-							#return False
-						
+					try:
+						App.ExecuteScriptCode( Code, Language , "Script_Execute", [oContext] )
+					except:
+						if verbosity == True:
+							raise
+						else:
+							Print("An Error occured while QMenu executed the script item '" + oQMenu_MenuItem.name + "', please see script editor for details!", c.siError)
 			else:
 				Print("QMenu Menu item '" + oQMenu_MenuItem.name + "' has no code to execute!",c.siWarning)
-				#return False
-	
+
+
+
 def QMenuCreateObject_Init( io_Context ):
 	oCmd = io_Context.Source
 	oCmd.ReturnValue = true
@@ -4999,9 +4953,10 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 					if oChosenMenuItem != None:
 						globalQMenuLastUsedItem = GetGlobalObject("globalQMenuLastUsedItem")
 						globalQMenuLastUsedItem.set(oChosenMenuItem)
-						#QMenuExecuteMenuItem_Execute(oChosenMenuItem)
-						
-						App.QMenuExecuteMenuItem(oChosenMenuItem)
+						bNonVerboseErrorReporting = False
+						#gc.collect()
+						QMenuExecuteMenuItem_Execute (oChosenMenuItem, bNonVerboseErrorReporting)
+						#App.QMenuExecuteMenuItem(oChosenMenuItem, bNonVerboseErrorReporting)
 						#gc.collect()
 						#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
 						#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
@@ -5013,6 +4968,7 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 				
 		# Finally tell Softimage that the event has been consumed (which prevents commands bound to the same hotkey to be executed)
 		in_ctxt.SetAttribute("Consumed",Consumed)
+		#gc.collect()
 
 def QMenuExecution_OnEvent (in_ctxt):
 	Print("QMenu: QMenuExecution_OnEvent called",c.siVerbose)
@@ -5021,7 +4977,8 @@ def QMenuExecution_OnEvent (in_ctxt):
 	if globalQMenuLastUsedItem != None:	
 		if globalQMenuLastUsedItem.item != None:
 			oItem = globalQMenuLastUsedItem.item
-			App.QMenuExecuteMenuItem (oItem)
+			bNonVerboseErrorReporting = False
+			QMenuExecuteMenuItem_Execute (oItem, bNonVerboseErrorReporting)
 			
 def QMenuInitialize_OnEvent (in_ctxt):
 	Print ("QMenu Startup event called",c.siVerbose)
