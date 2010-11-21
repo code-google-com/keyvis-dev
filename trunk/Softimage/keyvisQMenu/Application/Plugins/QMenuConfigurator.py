@@ -1305,13 +1305,21 @@ def QMenuConfigurator_AutoSelectMenu_OnChanged():
 	if PPG.AutoSelectMenu.Value == True:
 		PPG.MenuContexts.SetCapabilityFlag (c.siReadOnly,False)
 		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
+		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , False)
+		PPG.MenuSelector.SetCapabilityFlag ( c.siReadOnly , False)
+		PPG.View.SetCapabilityFlag ( c.siReadOnly , False)
 		RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
 		RefreshMenuItems()
 		PPG.Refresh()
 	else:
-		PPG.MenuContexts.SetCapabilityFlag (c.siReadOnly,True)
-		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,False)
+		RefreshMenuSetDetailsWidgets()
+		PPG.MenuContexts.SetCapabilityFlag ( c.siReadOnly , True)
+		PPG.MenuChooser.SetCapabilityFlag ( c.siReadOnly , False)
+		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , True)
+		PPG.MenuSelector.SetCapabilityFlag ( c.siReadOnly , True)
+		PPG.View.SetCapabilityFlag ( c.siReadOnly , True)
+		PPG.Refresh()
 
 def QMenuConfigurator_MenuChooser_OnChanged():
 	Print ("QMenuConfigurator_MenuChooser_OnChanged called",c.siVerbose)
@@ -2978,19 +2986,23 @@ def RefreshMenuSetDetailsWidgets():
 				except:
 					pass
 					#Print("QMenu function 'RefreshMenuSetDetailsWidgets' says: Could not determine current menu!", c.siError)
-				if oMenu != None: #Is a menu assigned to the selected context?
-					PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
-					if PPG.AutoSelectMenu.Value == True:
-						PPG.MenuChooser.Value = oMenu.name
+				
+				if PPG.AutoSelectMenu.Value == True:
+					if oMenu != None: #Is a menu assigned to the selected context?
+						PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
+						if PPG.AutoSelectMenu.Value == True:
+							PPG.MenuChooser.Value = oMenu.name
 
-				if PPG.MenuContexts.Value > -1:
-					if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
-						PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+					if PPG.MenuContexts.Value > -1:
+						PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+						PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+						if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
+							PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 
-				if PPG.MenuContexts.Value > 0:
-					PPG.PPGLayout.Item("CtxUp").SetAttribute (c.siUIButtonDisable, False)
-				if PPG.MenuContexts.Value < (len(PPG.PPGLayout.Item("MenuContexts").UIItems )/2)-1:
-					PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
+					if PPG.MenuContexts.Value > 0:
+						PPG.PPGLayout.Item("CtxUp").SetAttribute (c.siUIButtonDisable, False)
+					if PPG.MenuContexts.Value < (len(PPG.PPGLayout.Item("MenuContexts").UIItems )/2)-1:
+						PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
 				
 				
 		#A Menu's items are currently displayed?
@@ -4166,7 +4178,7 @@ def DisplayMenuSet( MenuSetIndex ):
 	#In which case the wrong view would be affected.
 	
 	#Test code to find floating window the user is currently working in.
-	#This would be useful to get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
+	#This would be useful to e.g. get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
 	#However, defining popup menus for Rendertree is a bit futile because it's native menues are pretty complete already,
 	#and for Tex Editor there would first need to be proper commands for all the UV operations available(atm most of the logic seems 
 	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
@@ -4210,7 +4222,8 @@ def DisplayMenuSet( MenuSetIndex ):
 				Print("There is currently no QMenu Menu Set " + str(MenuSetIndex) + " defined for view '" + oCurrentView.name + "!", c.siVerbose)
 		
 		if oMenuSet != None:
-			oContext = PrepareContextObject(None)
+			oContext = PrepareContextObject(None) #Lets fill our generic context object with all the data we have at hand for this session.
+				#so that only the litle remaining data needs to be filled in on every menu or menu item object we iterate over.
 			
 			oAMenu = None; #AMenuItemList = list()
 			oBMenu = None; #BMenuItemList = list()
@@ -4218,7 +4231,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			oDMenu = None; #DMenuItemList = list()
 			oMenus = list()
 				
-			silent = True
+			silent = True #Don't report verbose errors when working with QMenu. Only give hints something went wrong.
 			
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
 				oQMenuDisplayContext = oMenuSet.AContexts[RuleIndex]
