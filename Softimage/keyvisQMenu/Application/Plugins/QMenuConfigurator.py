@@ -765,9 +765,9 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_0", "QMenuDisplayMenuSet_0" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_1", "QMenuDisplayMenuSet_1" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_2", "QMenuDisplayMenuSet_2" )
-	in_reg.RegisterCommand( "QMenuDisplayMenuSet_3", "QMenuDisplayMenuSet_3" )
 	in_reg.RegisterCommand( "QMenuRepeatLastCommand", "QMenuRepeatLastCommand" )
 	in_reg.RegisterCommand( "QMenuExecuteMenuItem" , "QMenuExecuteMenuItem" )
+	in_reg.RegisterCommand( "QMenuDisplayMenuSet_3", "QMenuDisplayMenuSet_3" )
 	
 	#Register Menus
 	in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
@@ -778,7 +778,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
-	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
+	#in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
 		
 
 	return True
@@ -1382,9 +1382,9 @@ def QMenuConfigurator_CreateNewScriptItem_OnClicked():
 		newMenuItem.category = MenuItem_Category
 		
 	
-		if Language == 0: newMenuItem.code = ("def Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets): #Dont rename this function \n\t#Put your script code here\n\tpass"); newMenuItem.language = "Python"
-		if Language == 1: newMenuItem.code = ("function Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) {\n\t//Put your script code here\n\tdoNothing = true\n}"); newMenuItem.language = "JScript"
-		if Language == 2: newMenuItem.code = ("Function Script_Execute (self, QMenu_MenuItems, QMenu_Menus, QMenu_MenuSets) \n\t' Put your script code here\n\tdoNothing = true\nend Function"); newMenuItem.language = "VBScript"
+		if Language == 0: newMenuItem.code = ("def Script_Execute (oContext): #Dont rename this function \n\t#Put your script code here\n\tpass"); newMenuItem.language = "Python"
+		if Language == 1: newMenuItem.code = ("function Script_Execute (oContext) {\n\t//Put your script code here\n\tdoNothing = true\n}"); newMenuItem.language = "JScript"
+		if Language == 2: newMenuItem.code = ("Function Script_Execute (oContext) \n\t' Put your script code here\n\tdoNothing = true\nend Function"); newMenuItem.language = "VBScript"
 		
 		globalQMenu_MenuItems.addMenuItem(newMenuItem)
 
@@ -1623,6 +1623,7 @@ def QMenuConfigurator_AssignMenu_OnClicked():
 
 				oCurrentMenuSet.setMenutAtIndex (CurrentMenuNumber, oChosenMenu, CurrentMenus)
 				RefreshMenuContexts()
+				PPG.MenuContexts.Value = CurrentMenuNumber
 				
 	if PPG.AutoSelectMenu.Value == True:
 		RefreshMenuChooser()
@@ -2645,6 +2646,7 @@ def QMenuConfigurator_ExecuteCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteCode_OnClicked called", c.siVerbose)
 
 	#Is a menu selected?
+	#gc.collect()
 	if PPG.Menus.Value != "":
 		oSelectedItem = getQMenu_MenuByName(PPG.Menus.Value)
 		if oSelectedItem != None:
@@ -2657,6 +2659,7 @@ def QMenuConfigurator_ExecuteCode_OnClicked():
 					App.ExecuteScriptCode(Code, Language,"QMenu_Menu_Execute", [oContext])
 				except:
 					#Print("An Error occured executing the script code of QMenu Menu '" + oSelectedItem.name + "', please see script editor for details!", c.siError)
+					#pass
 					raise
 				return
 	
@@ -2665,7 +2668,7 @@ def QMenuConfigurator_ExecuteCode_OnClicked():
 		oSelectedItem = getQMenu_MenuItemByName(PPG.MenuItemList.Value)
 		if oSelectedItem != None:
 			bVerboseErrorReporting = True
-			App.QMenuExecuteMenuItem( oSelectedItem , bVerboseErrorReporting )
+			Application.QMenuExecuteMenuItem( oSelectedItem , bVerboseErrorReporting )
 	#gc.collect()
 
 def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
@@ -3114,7 +3117,7 @@ def ResetToDefaultValues():
 	PPG.MenuSelector.Value = 0
 	PPG.MenuContexts.Value = -1
 	PPG.MenuChooser.Value = ""
-	PPG.AutoSelectMenu.Value = True
+	#PPG.AutoSelectMenu.Value = True
 	PPG.MenuItems.Value = -1
 	PPG.MenuItem_Name = ""
 	PPG.MenuItem_Category = ""
@@ -3193,11 +3196,10 @@ def RefreshMenuChooser():
 	
 	#Find and select the appropriate menu name in the chooser..
 	if PPG.AutoSelectMenu.Value == True:
-		#PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
+		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
 		oCurrentMenuSet = getQMenu_MenuSetByName(PPG.MenuSetChooser.Value)
 		if oCurrentMenuSet != None:
-			CurrentMenus = None
-			
+			CurrentMenus = None	
 			if PPG.MenuSelector.Value == 0: CurrentMenus = oCurrentMenuSet.AMenus
 			if PPG.MenuSelector.Value == 1: CurrentMenus = oCurrentMenuSet.BMenus
 			if PPG.MenuSelector.Value == 2: CurrentMenus = oCurrentMenuSet.CMenus
@@ -3215,6 +3217,8 @@ def RefreshMenuChooser():
 					PPG.MenuChooser.Value = -1
 		else:
 			PPG.MenuChooser.Value = -1
+	else:
+		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly, False)
 
 def RefreshMenuContexts():
 	Print("QMenu: RefreshMenuContexts called", c.siVerbose)
@@ -3526,7 +3530,7 @@ def RefreshMenuItem_CategoryChooserList(): #This refreshes the widget that lets 
 def RefreshMenuItems():
 	Print ("QMenu: RefreshMenuItems called",c.siVerbose)
 	globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
-	CurrentMenuItemNumber= str(PPG.MenuItems.Value)
+	CurrentMenuItemNumber = str(PPG.MenuItems.Value)
 	CurrentMenuName = str(PPG.MenuChooser.Value)
 	listMenuItemsEnum = list()
 	oCurrentMenu = None
@@ -4588,6 +4592,7 @@ def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd.ReturnValue = False
 	oArgs = oCmd.Arguments
 	oArgs.Add("oQMenu_MenuItem")
+	oArgs.Add("verbosity")
 	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
 	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
 	oCmd.SetFlag(c.siNoLogging, True)
