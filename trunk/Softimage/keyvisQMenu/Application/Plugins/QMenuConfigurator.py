@@ -779,6 +779,9 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
+	in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded)
+	
+
 		
 
 	return True
@@ -5051,7 +5054,12 @@ def QMenuDestroy_OnEvent (in_ctxt):
 				Caption = ("Saving failed, save a QMenu Configuration backup file?")
 				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
 
-				
+def AutoCenterNewObjects_OnEvent(in_ctxt):
+	addedObjects = in_ctxt.GetAttribute("Objects")
+	Print("Objcts added: " + str(addedObjects))
+	#for obj in addedObjects:
+	Application.Rotate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", 0, "")
+	Application.Translate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", "", "", 0, "")
 
 
 #=========================================================================================================================					
