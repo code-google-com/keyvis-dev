@@ -364,7 +364,7 @@ class QMenu_Menus:
 			
 class QMenu_MenuSet:
  # Declare list of exported functions:
-	_public_methods_ = ['insertMenuAtIndex', 'removeMenuAtIndex','insertContextAtIndex', 'removeContextAtIndex', 'setMenutAtIndex']
+	_public_methods_ = ['insertMenuAtIndex', 'removeMenuAtIndex','insertContextAtIndex', 'removeContextAtIndex', 'setMenutAtIndex','setContextAtIndex']
 	 # Declare list of exported attributes
 	_public_attrs_ = ['type','UID', 'name', 'AMenus', 'AContexts', 'BMenus', 'BContexts', 'CMenus', 'CContexts', 'DMenus', 'DContexts']
 	 # Declare list of exported read-only attributes:
@@ -393,6 +393,17 @@ class QMenu_MenuSet:
 			self.CMenus[index] = menu
 		if quadrant == "D":
 			self.DMenus[index] = menu
+	
+	def setContextAtIndex (self, index, context, quadrant):
+		if quadrant == "A":
+			self.AContexts[index] = context
+		if quadrant == "B":
+			self.BContexts[index] = context
+		if quadrant == "C":
+			self.CContexts[index] = context
+		if quadrant == "D":
+			self.DContexts[index] = context
+			
 	
 	def insertMenuAtIndex (self, index, menu, quadrant):
 		if quadrant == "A":
@@ -750,8 +761,8 @@ class QMenuContext:
 def XSILoadPlugin( in_reg ):
 	in_reg.Author = "Stefan Kubicek"
 	in_reg.Name = "QMenuConfigurator"
-	in_reg.Email = "stefan@tidbit-images.com"
-	in_reg.URL = "mailto:stefan@tidbit-images.com"
+	in_reg.Email = "stefan@keyvis.at"
+	in_reg.URL = "mailto:stefan@keyvis.at"
 	in_reg.Major = 0
 	in_reg.Minor = 9
 
@@ -779,10 +790,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
-	in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded)
-	
-
-		
+	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded)
 
 	return True
 
@@ -905,8 +913,11 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndGroup()
 	
 	oSC = oLayout.AddGroup("Configure Menu Sets") #Second column for  menu sets editing start#=======================================
+	oLayout.AddRow()
 	oViews = oLayout.AddEnumControl ("View", None, "Configure QMenu for",c.siControlCombo)
 	oViews.SetAttribute(c.siUILabelMinPixels,100 )
+	oAuto = oLayout.AddItem ("AutoSelectMenu", "Auto-select menu of selected context for editing")
+	oLayout.EndRow()
 	
 	oLayout.AddRow()
 	oGr = oLayout.AddGroup("Select Menu Set and Quadrant")
@@ -926,17 +937,23 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndGroup() #End of Menu Set Configuration Group
 
 	oLayout.AddGroup("Assign QMenu Menus to Contexts")
-	oLayout.AddSpacer()
+	#oLayout.AddSpacer()
+	
+	#oGR1 = oLayout.AddGroup()
+	#oGR1.SetAttribute(c.siUIShowFrame, False)
+	oLayout.AddRow()
+	oLayout.AddButton ("InsertMenuContext", "Insert Ctxt..")
+	oLayout.AddButton ("RemoveMenuContext", "Remove Ctxt")
+	oLayout.AddButton ("ReplaceMenuContext", "Replace Ctxt...")
+	oLayout.EndRow()
+	#oLayout.EndGroup()
+	
 	oMenuContexts = oLayout.AddEnumControl ("MenuContexts", None, "",c.siControlListBox)
 	oMenuContexts.SetAttribute(c.siUINoLabel, True)
 	oMenuContexts.SetAttribute(c.siUICY, 135)
 	oLayout.AddRow()
 	
-	oGR1 = oLayout.AddGroup()
-	oGR1.SetAttribute(c.siUIShowFrame, False)
-	oLayout.AddButton ("InsertMenuContext", "Insert Ctxt..")
-	oLayout.AddButton ("RemoveMenuContext", "Remove Ctxt")
-	oLayout.EndGroup()
+
 	
 	oGR2 = oLayout.AddGroup()
 	oGR2.SetAttribute(c.siUIShowFrame, False)
@@ -955,7 +972,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 
 	oLayout.AddGroup("Menu Items in QMenu Menu")
 	#oLayout.AddRow()
-	oAuto = oLayout.AddItem ("AutoSelectMenu", "Auto-select menu of selected context for editing")
+	
 	oItems = oLayout.AddEnumControl ("MenuChooser", None, "Menu to edit",c.siControlCombo)
 	#oItems.SetAttribute(c.siUIWidthPercentage, 70)
 	#oItems.SetAttribute(c.siUICX, 200)
@@ -965,7 +982,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddRow()
 	oMenuItems = oLayout.AddEnumControl ("MenuItems", None, "Menu Items",c.siControlListBox)
 	oMenuItems.SetAttribute(c.siUINoLabel, True)
-	oMenuItems.SetAttribute(c.siUICY, 113)
+	oMenuItems.SetAttribute(c.siUICY, 135) #113
 	oMenuItems.SetAttribute(c.siUIWidthPercentage, 20)
 	oLayout.EndRow()
 	oLayout.AddRow()
@@ -2357,6 +2374,48 @@ def QMenuConfigurator_InsertMenuContext_OnClicked():
 		RefreshMenuSetDetailsWidgets()
 		RefreshMenuItemDetailsWidgets()
 		PPG.Refresh()
+
+def QMenuConfigurator_ReplaceMenuContext_OnClicked():
+	Print("QMenuConfigurator_InsertMenuContext_OnClicked called", c.siVerbose)
+	
+	#Query user for a display context to insert
+	globalQmenu_DisplayContexts = GetGlobalObject("globalQMenu_DisplayContexts")
+	strCaption = ("Choose a Menu Context that shall replace the currently selected one...")
+	lsItems = list()
+	for ctxt in globalQmenu_DisplayContexts.items:
+		lsItems.append (ctxt.Name)
+		
+	ContextNumberToReplace = UserQuery(strCaption, lsItems)
+	
+	if ContextNumberToReplace > -1:
+		oContextToInsert = globalQmenu_DisplayContexts.items[ContextNumberToReplace]
+	
+		CurrentContextNumber = PPG.MenuContexts.Value
+		if CurrentContextNumber < 0: CurrentContextNumber = 0
+			
+		CurrentMenuSetName = PPG.MenuSetChooser.Value
+		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		
+		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
+
+		if CurrentQuadrantNumber == 0: Quadrant = "A" 
+		if CurrentQuadrantNumber == 1: Quadrant = "B" 
+		if CurrentQuadrantNumber == 2: Quadrant = "C" 
+		if CurrentQuadrantNumber == 3: Quadrant = "D" 
+		
+		oCurrentMenuSet.setContextAtIndex (CurrentContextNumber, oContextToInsert, Quadrant )
+		#oCurrentMenuSet.setMenuAtIndex(CurrentContextNumber, None, Quadrant)
+		
+		RefreshMenuContexts()
+		PPG.MenuContexts.Value = CurrentContextNumber
+		RefreshMenuSetDetailsWidgets()
+		RefreshMenuChooser()
+		RefreshMenuItems()
+		RefreshMenuSetDetailsWidgets()
+		RefreshMenuItemDetailsWidgets()
+		PPG.Refresh()
+		
+
 			
 def QMenuConfigurator_RemoveMenuContext_OnClicked():
 	Print("QMenuConfigurator_RemoveMenuContext_OnClicked called", c.siVerbose)
@@ -2961,6 +3020,7 @@ def RefreshMenuSetDetailsWidgets():
 	PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, True)
+	PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, True)
 	
 	PPG.PPGLayout.Item("ItemInsert").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("InsertSeparator").SetAttribute (c.siUIButtonDisable, True)
@@ -2999,6 +3059,7 @@ def RefreshMenuSetDetailsWidgets():
 					if PPG.MenuContexts.Value > -1:
 						PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 						PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+						PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, True)
 						if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
 							PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 
@@ -5054,13 +5115,6 @@ def QMenuDestroy_OnEvent (in_ctxt):
 				Caption = ("Saving failed, save a QMenu Configuration backup file?")
 				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
 
-def AutoCenterNewObjects_OnEvent(in_ctxt):
-	addedObjects = in_ctxt.GetAttribute("Objects")
-	Print("Objcts added: " + str(addedObjects))
-	#for obj in addedObjects:
-	Application.Rotate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", 0, "")
-	Application.Translate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", "", "", 0, "")
-
 
 #=========================================================================================================================					
 #===================================== Custom Property Menu Callback Functions ===========================================
@@ -5475,3 +5529,11 @@ def fGetSelection():
         sel.Add(o)
     return sel
 """
+
+#AutoCenter for new objects feature - useless because also duplicate objects are affected - not ood :-(
+def AutoCenterNewObjects_OnEvent(in_ctxt):
+	addedObjects = in_ctxt.GetAttribute("Objects")
+	Print("Objcts added: " + str(addedObjects))
+	#for obj in addedObjects:
+	Application.Rotate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", 0, "")
+	Application.Translate(addedObjects, 0, 0, 0, "siAbsolute", "siObjCtr", "siObj", "siXYZ", "", "", "", "", "", "", "", "", "", 0, "")
