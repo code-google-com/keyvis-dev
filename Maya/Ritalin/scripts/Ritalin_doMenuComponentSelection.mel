@@ -6,17 +6,18 @@ global proc doMenuComponentSelection(string $item, string $mask)
 	string $selectCmd;
 	if (`selectMode -q -object`) {
 		hilite $item;
-		//selectMode -component;
-		selectType -ocm -alc false;
-		$selectCmd = "selectType -ocm -" + $mask + " true;";
+		selectMode -component;
+		selectType -alc false;
+		$selectCmd = "selectType -" + $mask + " true;";
 	} else {
-		//selectMode -component;
-		selectType -ocm -alc false;
+	
+		selectType -alc false;
 		$selectCmd = "selectType -" + $mask + " true;";
 		if (!`selectMode -q -preset`) {
 			$selectCmd = $selectCmd + "hilite " + $item + ";";
 		}
 	}
 	eval $selectCmd;
+	python("restoreSelectionData()");
 }
-print ("Default Component Selection Enabled\n");
+print ("Ritalin component selection mode\n");

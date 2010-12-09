@@ -212,7 +212,7 @@ global proc artSkinSelectInfluence(
 	//Begin of Ritalin edit
 	if (python("RitalinHonorInfluenceJoints") == 1) {
 		if ($influence != "") {
-			string $centercommand = ("python (\"RitalinDoComputeBB = True; setCamRotatePivots([\\\"" + $influence + ".rotatePivot" + "\\\"])\")");
+			string $centercommand = ("python (\"setCamRotatePivots([\\\"" + $influence + ".rotatePivot" + "\\\"])\")");
 			evalDeferred ($centercommand);
 		}
 	}

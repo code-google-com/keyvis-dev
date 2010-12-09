@@ -4,13 +4,13 @@ global proc doMenuComponentSelection(string $item, string $mask)
 // selection of the specified selection mask type.
 {
 	string $selectCmd;
-
 	if (`selectMode -q -object`) {
 		hilite $item;
-		selectType -ocm -alc false;
 		
+		selectType -ocm -alc false;
 		$selectCmd = "selectType -ocm -" + $mask + " true;";
 	} else {
+	
 		selectType -ocm -alc false;
 		$selectCmd = "selectType -" + $mask + " true;";
 		if (!`selectMode -q -preset`) {
@@ -18,6 +18,6 @@ global proc doMenuComponentSelection(string $item, string $mask)
 		}
 	}
 	eval $selectCmd;
+	
 }
-
 print ("Default component selection Enabled\n");
