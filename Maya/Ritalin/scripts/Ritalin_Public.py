@@ -1,7 +1,7 @@
 # Ritalin for Maya version 2011
 # Author: Stefan Kubicek 
-# Last changed: 2010-09-19, 17:00
-# File Version 1.6
+# Last changed: 2010-12-09, 23:54
+# File Version 1.7
 
 # ====================================================================================================
 # Description: Creates a Ritalin menu with options to change the camera navigation behaviour. 
