@@ -21,7 +21,6 @@ try:
 except:
 	pass
 
-
 try:
 	cleanRCSScriptJobs()
 except:
@@ -33,10 +32,11 @@ global RitalinEnabled; RitalinEnabled = cmds.optionVar (q='RitalinEnabled')
 if RitalinEnabled == None: 
 	RitalinEnabled = True
 
-	
 global RitalinRememberSelections; RitalinRememberSelections = cmds.optionVar (q = "RitalinRememberSelections")
-if RitalinRememberSelections == None: 
+if (RitalinRememberSelections == None) or (RitalinRememberSelections == 0): 
 	RitalinRememberSelections = False
+else:
+	RitalinRememberSelections = True
 	
 global RitalinScriptJobs; RitalinScriptJobs = list()
 
@@ -74,9 +74,6 @@ def sourceMel (melScript, deferred = False):
 # ===========================================================================================================================
 
 def setCamRotatePivots(oObjects = []):
-	#global RitalinDoComputeBB
-	
-	#if RitalinDoComputeBB == True:
 	global RitalinEnabled
 	global RitalinHonorInfluenceJoints
 	Units = cmds.currentUnit(query = True, linear = True)
@@ -112,21 +109,28 @@ def setCamRotatePivots(oObjects = []):
 		if len(Selec) > 0: #We have objects to work with?
 			X = 0.0; Y = 0.0; Z = 0.0
 			if CheckPaintTool:
+				#print ("Checking paint tool...")
 				#Let's find out if we are in skin weights paint mode
 				currCtx = cmds.currentCtx(); 
+				#print ("Current Context is: " + str(currCtx))
 				currTool = ""
 				try: #contextInfo operations are buggy in Maya 2011, we need to try.. :-(
 					currTool = cmds.contextInfo (currCtx, t = True);
-				except: pass
+					#print ("Current Tool is: " + str(currTool))
+				except: 
+					#print ("Fail")
+					pass
 				
 				if RitalinHonorInfluenceJoints == True: #In case we are painting skin weights we can ignore everything and just concentrate on the currently active skin joint
-					if currTool == "artAttrSkin":
+					if currTool == "artAttrSkin" or currTool == "Paint Skin Weights Tool":
 						whichTool = cmds.artAttrSkinPaintCtx (currCtx, query = True, whichTool = True)
+						#print ("Tool name is: " + str(whichTool))
 						if whichTool == "skinWeights": #Yes, we are in skin paint weights mode
-							
+							#print ("We are in paint skin weights mode...")
 							influenceJoint = ""
 							#Find the currently active joint for which weights are being painted
 							influenceJoint = cmds.artAttrSkinPaintCtx  (currCtx, query = true, influence = true) 
+							#print("Currently painting joint: " + str(influenceJoint))
 							if influenceJoint != "":
 								influenceJoint += (".rotatePivot")
 								BB = cmds.exactWorldBoundingBox (influenceJoint)
@@ -135,6 +139,7 @@ def setCamRotatePivots(oObjects = []):
 								Z = ((BB[2] + BB[5])/2)
 								ComputeCenterAlreadyDone = True
 								Continue = True			
+			
 			if ComputeCenterAlreadyDone == False:  #Standard computation in case we are not in paintSkinWeights mode or don't care if we are
 				Joints = []
 				stdObjects = []
@@ -240,7 +245,7 @@ def storeSelectionData ():
 		if cmds.undoInfo(q = true, redoName = True) == "":
 			ComponentSelectMode = cmds.selectMode (query = True, component = True)
 			if ComponentSelectMode == True:
-				#print("Storing current component selection...")   
+				print("Storing current component selection...")   
 				Sel = cmds.ls(sl = True)   
 				hiliteObjs = cmds.ls (hilite = True)
 				if (cmds.selectType (query = True, polymeshVertex = True) == True):
@@ -296,7 +301,7 @@ def storeSelectionData ():
 def restoreSelectionData():
 	if RitalinRememberSelections == True:
 		Sel = cmds.ls(sl = True)    
-		#print("Restoring selection..")
+		print("Restoring selection..")
 		allHiliteObjsVerts = getAllHiliteObjsVertices()
 		if len(allHiliteObjsVerts) > 0: 
 			if (cmds.selectType (query = True, polymeshVertex = True) == True):
@@ -423,7 +428,6 @@ def toggleRCS ():
 	global RitalinRememberSelections
 	RitalinRememberSelections = not RitalinRememberSelections
 	enableRCS(RitalinRememberSelections)
-	cmds.optionVar (iv=('RitalinRememberSelections', RitalinRememberSelections))
 	print ("toggleRCS()")
 	
 def cleanRitalinScriptJobs():
@@ -453,24 +457,6 @@ def cleanRCSScriptJobs():
 # =============================================================================================================
 
 def cleanStoredComponentSelectionData():
-	"""
-	shapes = cmds.ls(sl = True, shapes = true, dag = True, objectsOnly = True )
-	if len(shapes) < 1:
-		print("Ritalin: Nothing selected, cleaning Stored Component Selection Data from whole scene.")
-		shapes = cmds.ls(dag =True, shapes = True, geometry = True, type = "mesh")
-	
-	if (len(shapes) > 0):
-		print ("Ritalin: Cleaning up on: " + str(shapes))
-		for shape in shapes:
-			BDnodes = cmds.listConnections(shape, type = "polyBlindData")
-			#print("Found Blind Data Nodes connected: " + str(BDnodes))
-			if BDnodes != None:
-				for node in BDnodes:
-					if (cmds.getAttr (node +".typeId")) == 99410 or 99411 or 99412:
-						#print ("Deleting " + str(node))
-						cmds.delete (node)
-	"""
-	
 	BDnodes = cmds.ls(type = "polyBlindData")
 	if BDnodes != None:
 		for node in BDnodes:
@@ -479,7 +465,6 @@ def cleanStoredComponentSelectionData():
 def enableRitalin(enable = True): 
 	global RitalinEnabled
 	global resetTumbleToolToCOI
-	global RitalinRememberSelections
 	
 	if enable == True:
 		if RitalinEnabled == False:
@@ -514,26 +499,25 @@ def enableRitalin(enable = True):
 		cleanRitalinScriptJobs()
 		
 def enableRCS(enable = True):
-	global RitalinRememberSelections
+	#global RitalinRememberSelections
 	global RCSScriptJobs
 	
-	if enable == True or 1:
-
+	if enable == True or enable == 1:
 		cleanRCSScriptJobs()
-
+		#print ("Enabling Ritalin - Creating script Jobs")
 		#To prevent the undo/redo queue from getting overwritten we only do store selected components when there are no commands to redo, 
 		#which is only the case if the selction change was due to user-action rather than undo/redo...
-		Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, compressUndo = True, event =('SelectionChanged',  "if cmds.undoInfo(q = true, redoName = True) == '': storeSelectionData();")) 
+		Job1 = cmds.scriptJob(runOnce = False, killWithScene = False, compressUndo = True, event =('SelectionChanged',  "if cmds.undoInfo(q = True, redoName = True) == '': storeSelectionData();")) 
 		RCSScriptJobs.append(Job1)
+		storeSelectionData()
+		cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection.mel")')
 	
-		if RitalinRememberSelections == True or 1:
-			storeSelectionData()
-			cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection.mel")')
-	
-	if enable == False or 0:
-		#print ("Attempting to disable Ritalin - Deleting script Jobs")
+	if enable == False or enable == 0:
+		#print ("Disabling Ritalin - Deleting script Jobs")
 		cleanRCSScriptJobs()
 		cmds.evalDeferred('sourceMel ("Ritalin_doMenuComponentSelection_default.mel")')
+	
+	cmds.optionVar (iv=('RitalinRememberSelections', enable))
 		
 def createRitalinToolsMenu():
 	global RitalinEnabled
@@ -567,9 +551,7 @@ def createRitalinToolsMenu():
 		RitalinHonorJointsMenuItem = cmds.menuItem (label='Ritalin Camera  - Honor Joints when in PaintSkinWeights mode', checkBox = RitalinHonorInfluenceJoints, command = ('toggleRitalinHonorSkinJoints()'), parent = RitalinToolsMenu)
 		RitalinRememberSelectionsMenuItem = cmds.menuItem (label='Ritalin Selections - Remember Polymesh Component Selections', checkBox = RitalinRememberSelections, command = ('toggleRCS ()'), parent = RitalinToolsMenu)
 		RitalinCleanRCSDataMenuItem = cmds.menuItem (label='Remove Stored Component Selections', command = ('cleanStoredComponentSelectionData()'), echoCommand = True, parent = RitalinToolsMenu)
-		#P4CheckoutMenuItem = cmds.menuItem (label='Checkout current Scene from P4', command = ("P4CheckoutCurrentSceneFile()"), echoCommand = True, enable = False, image = "P4Checkout.bmp", parent = PerforceToolsMenu)
-
-				
+		#P4CheckoutMenuItem = cmds.menuItem (label='Checkout current Scene from P4', command = ("P4CheckoutCurrentSceneFile()"), echoCommand = True, enable = False, image = "P4Checkout.bmp", parent = PerforceToolsMenu)		
 		print ("Ritalin Menu successsfully created in Main Window")
 		Continue = True
 	except: #SproingToolsMenu could not be created? Maybe because Sproing_Functions.py is missing or not yet loaded 
