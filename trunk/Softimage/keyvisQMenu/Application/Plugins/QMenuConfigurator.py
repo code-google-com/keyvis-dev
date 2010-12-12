@@ -2748,7 +2748,7 @@ def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
 		oQMenuDisplayContext = getQMenu_MenuDisplayContextByName(PPG.MenuDisplayContexts.Value)
 		if oQMenuDisplayContext != None:
 			#Collect some data before we execute the Display context code
-			PrepareContextObject(oQMenuDisplayContext)
+			oContext = PrepareContextObject(oQMenuDisplayContext)
 			notSilent = False
 			ExecuteDisplayContext (oQMenuDisplayContext, oContext, notSilent)
 
@@ -4398,7 +4398,7 @@ def DisplayMenuSet( MenuSetIndex ):
 					MenuString = MenuString + "[" #Start the menu string
 					if oMenu != None:
 						if (len(oMenu.items) == 0) and (len(oMenu.tempItems) == 0):
-							MenuString = MenuString + "[[Empty]" +  "[-1]" + "[3]" + "]"
+							MenuString = MenuString + "[[" + oMenu.Name + "]" +  "[-1]" + "[3]" + "]"
 						else:
 							if MenuCounter == 2 or MenuCounter == 3: #Add the title at the beginning of the menu in case it's menu 2 or 3
 								MenuString = MenuString + "[[" + oMenu.name + "]"  + "[-1]" + "[3]" + "]" 
@@ -4911,10 +4911,11 @@ def QMenuGetSelectionDetails():
 	
 	
 		#Fill the SelectionInfo Object with the Data we have aquired
+		
 		#If currently nothing is selected we assume we are dealing with the previously selected object(s)
+		"""
 		if (SelCount < 1) and (Application.Selection.Filter.Name != "object"):
 			pass
-			"""
 			oSelDetails.storeSelectionTypes (lsSelectionTypes_old)
 			Print("Recorded Types: " + str(lsSelectionTypes_old))
 			oSelDetails.storeSelectionClassNames (lsSelectionClassNames_old)
@@ -4929,31 +4930,31 @@ def QMenuGetSelectionDetails():
 			Print("Recorded ComponentParentTypes: " + str(lsSelectionComponentParentTypes_old))
 			oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames_old)
 			Print("Recorded ComponentParents: " + str(lsSelectionComponentParentClassNames_old))
-			"""
  
 		else: #Something is selected
+		"""
 		
 
-			#Print("Recording Selection Types: " + str(lsSelectionTypes))
-			oSelDetails.storeSelectionTypes (lsSelectionTypes)
-			
-			#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
-			oSelDetails.storeSelectionClassNames (lsSelectionClassNames)
-			
-			#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
-			oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames)
-			
-			#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
-			oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents)
-			
-			#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
-			oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
-			
-			#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-			oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)	
+		#Print("Recording Selection Types: " + str(lsSelectionTypes))
+		oSelDetails.storeSelectionTypes (lsSelectionTypes)
+		
+		#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
+		oSelDetails.storeSelectionClassNames (lsSelectionClassNames)
+		
+		#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
+		oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames)
+		
+		#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
+		oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents)
+		
+		#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
+		oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
+		
+		#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
+		oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)	
 
-	"""
 	#Experimental stuff - to be cleaned up
+	"""
 	from win32com.client import constants as c
 
 	Sel = Application.Selection.GetAsText()
