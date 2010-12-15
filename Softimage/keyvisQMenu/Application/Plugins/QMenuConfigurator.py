@@ -20,6 +20,7 @@ for view in Views:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
+#TODO: Write Remove from all or selected Groups command 
 #TODO: Write Toggle Backface Culling command
 #TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
 #TODO: Finish replacing switches and script item functions with oCOntext object as sole argument
@@ -42,7 +43,8 @@ for view in Views:
 #TODO: Finish Menu Items: Extract Edges as Curve
 
 #Report: Open/Close Surface freezes XSI when closing both u and v
-#Report: Snip crahses XSI when selecting two Iso curves on a surface, call SNip, then adjust the Position parameter (which will set both positions to the same value, freezing XSI
+#Report: Snip crahses XSI when selecting two Iso curves on a surface, call Snip, then adjust the Position parameter (which will set both positions to the same value, freezing XSI
+#Report: Snip crashes XSI when selecting an opened cone surface and calling Snip, then adjusting the snip parameter
 #Report: Timer event execution will not wait for Pick session.
 #Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
 # "Extract Edges As Curve", "Merges Curves",
@@ -859,9 +861,9 @@ def QMenuConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("MenuSets",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuSetName",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuSetChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	oCustomProperty.AddParameter2("ViewMenuSets",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	oCustomProperty.AddParameter2("ViewMenuSets",c.siInt4,-1,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	
-	oCustomProperty.AddParameter2("MenuSelector",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
+	oCustomProperty.AddParameter2("QuadSelector",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)	
 	oCustomProperty.AddParameter2("MenuFilter",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("Menus",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("MenuChooser",c.siString,"",null,null,null,null,c.siClassifUnknown,c.siPersistable)
@@ -936,7 +938,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	aUIitems = (CustomGFXFilesPath + "QMenu_MenuA.bmp", 0, CustomGFXFilesPath + "QMenu_MenuB.bmp", 1, CustomGFXFilesPath + "QMenu_MenuD.bmp", 3, CustomGFXFilesPath + "QMenu_MenuC.bmp",2)
 	oLayout.AddSpacer()
 	oLayout.AddStaticText("Select a Quad to Edit")
-	oMenuSelector = oLayout.AddEnumControl ("MenuSelector", aUIitems, "Quadrant", c.siControlIconList)
+	oMenuSelector = oLayout.AddEnumControl ("QuadSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
 	oMenuSelector.SetAttribute(c.siUILineCnt,2)
@@ -1334,7 +1336,7 @@ def QMenuConfigurator_AutoSelectMenu_OnChanged():
 		PPG.MenuContexts.SetCapabilityFlag (c.siReadOnly,False)
 		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
 		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , False)
-		PPG.MenuSelector.SetCapabilityFlag ( c.siReadOnly , False)
+		PPG.QuadSelector.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.View.SetCapabilityFlag ( c.siReadOnly , False)
 		RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
@@ -1345,7 +1347,7 @@ def QMenuConfigurator_AutoSelectMenu_OnChanged():
 		PPG.MenuContexts.SetCapabilityFlag ( c.siReadOnly , True)
 		PPG.MenuChooser.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , True)
-		PPG.MenuSelector.SetCapabilityFlag ( c.siReadOnly , True)
+		PPG.QuadSelector.SetCapabilityFlag ( c.siReadOnly , True)
 		PPG.View.SetCapabilityFlag ( c.siReadOnly , True)
 		PPG.Refresh()
 
@@ -1620,10 +1622,10 @@ def QMenuConfigurator_RemoveMenu_OnClicked():
 		if oCurrentMenuSet != None: #The menu set was found?
 			globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 			
-			if PPG.MenuSelector.Value == 0: CurrentMenus = "A"
-			if PPG.MenuSelector.Value == 1: CurrentMenus = "B"
-			if PPG.MenuSelector.Value == 2: CurrentMenus = "C"
-			if PPG.MenuSelector.Value == 3: CurrentMenus = "D"
+			if PPG.QuadSelector.Value == 0: CurrentMenus = "A"
+			if PPG.QuadSelector.Value == 1: CurrentMenus = "B"
+			if PPG.QuadSelector.Value == 2: CurrentMenus = "C"
+			if PPG.QuadSelector.Value == 3: CurrentMenus = "D"
 			
 			CurrentMenuNumber = (PPG.MenuContexts.Value)
 			oCurrentMenuSet.setMenutAtIndex (CurrentMenuNumber, None, CurrentMenus)
@@ -1646,10 +1648,10 @@ def QMenuConfigurator_AssignMenu_OnClicked():
 		if oCurrentMenuSet != None:
 			globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 			
-			if PPG.MenuSelector.Value == 0: CurrentMenus = "A"
-			if PPG.MenuSelector.Value == 1: CurrentMenus = "B"
-			if PPG.MenuSelector.Value == 2: CurrentMenus = "C"
-			if PPG.MenuSelector.Value == 3: CurrentMenus = "D"
+			if PPG.QuadSelector.Value == 0: CurrentMenus = "A"
+			if PPG.QuadSelector.Value == 1: CurrentMenus = "B"
+			if PPG.QuadSelector.Value == 2: CurrentMenus = "C"
+			if PPG.QuadSelector.Value == 3: CurrentMenus = "D"
 			
 			CurrentMenuNumber = (PPG.MenuContexts.Value)
 			ChosenMenuName = str(PPG.Menus.Value)
@@ -1762,7 +1764,9 @@ def QMenuConfigurator_MenuItem_Name_OnChanged():
 			RefreshMenuChooser()
 			RefreshMenuItems()
 			RefreshMenus()
+			#SelectedMenuContext = PPG.MenuContexts.Value
 			RefreshMenuContexts()
+			#PPG.MenuContexts.Value = SelectedMenuContext
 			RefreshMenuItemDetailsWidgets()
 			PPG.Refresh()
 		
@@ -1907,8 +1911,8 @@ def QMenuConfigurator_MenuItem_IsActive_OnChanged():
 			#Print("Attempting to set Menu's executeCode flag to " + str(PPG.MenuItem_IsActive.Value))
 			oItem.executeCode = PPG.MenuItem_IsActive.Value
 
-def QMenuConfigurator_MenuSelector_OnChanged():
-	Print("QMenuConfigurator_MenuSelector_OnChanged called", c.siVerbose)
+def QMenuConfigurator_QuadSelector_OnChanged():
+	Print("QMenuConfigurator_QuadSelector_OnChanged called", c.siVerbose)
 	#RefreshContextConfigurator()
 	PPG.MenuContexts.Value = -1
 	RefreshMenuContexts()
@@ -1960,6 +1964,7 @@ def QMenuConfigurator_MenuSets_OnChanged():
 		PPG.PPGLayout.Item("DeleteMenuSet").SetAttribute (c.siUIButtonDisable, False)
 		PPG.MenuSetName.Value
 	#RefreshContextConfigurator()
+	RefreshViewMenuSetsWidgets()
 	PPG.Refresh()
 
 def QMenuConfigurator_MenuSetName_OnChanged():
@@ -2063,6 +2068,7 @@ def QMenuConfigurator_ViewSignature_OnChanged():
 
 def QMenuConfigurator_ViewSignatures_OnChanged():
 	Print("QMenuConfigurator_ViewSignatures_OnChanged called", c.siVerbose)
+	PPG.ViewMenuSets.Value = -1
 	RefreshViewDetailsWidgets()
 	RefreshViewMenuSets()
 	RefreshViewMenuSetsWidgets()
@@ -2332,7 +2338,6 @@ def QMenuConfigurator_MenuDisplayContext_Code_OnChanged():
 	CurrentMenuDisplayContextName = PPG.MenuDisplayContexts.Value
 	Code = PPG.MenuDisplayContext_Code.Value
 
-	
 	Code = Code.rstrip() #Lets get rid of trailling whitespaces
 	Code = Code.replace("\r","") #Lets get rid of carriage returns as these result in extra lines when read back from the config file
 
@@ -2363,7 +2368,7 @@ def QMenuConfigurator_InsertMenuContext_OnClicked():
 		if CurrentContextNumber < 0: CurrentContextNumber = 0
 			
 		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		CurrentQuadrantNumber = PPG.QuadSelector.Value
 		
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
@@ -2403,7 +2408,7 @@ def QMenuConfigurator_ReplaceMenuContext_OnClicked():
 		if CurrentContextNumber < 0: CurrentContextNumber = 0
 			
 		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		CurrentQuadrantNumber = PPG.QuadSelector.Value
 		
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
@@ -2432,7 +2437,7 @@ def QMenuConfigurator_RemoveMenuContext_OnClicked():
 	CurrentContextNumber = PPG.MenuContexts.Value
 	if CurrentContextNumber > -1:
 		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		CurrentQuadrantNumber = PPG.QuadSelector.Value
 		
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
@@ -2459,7 +2464,7 @@ def QMenuConfigurator_CtxUp_OnClicked():
 	CurrentContextNumber = PPG.MenuContexts.Value
 	if CurrentContextNumber > -1:
 		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		CurrentQuadrantNumber = PPG.QuadSelector.Value
 		
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
@@ -2488,11 +2493,11 @@ def QMenuConfigurator_CtxUp_OnClicked():
 			PPG.Refresh()
 	
 def QMenuConfigurator_CtxDown_OnClicked():
-	Print("QMenuConfigurator_CtxUp_OnClicked called", c.siVerbose)
+	Print("QMenuConfigurator_CtxDown_OnClicked called", c.siVerbose)
 	CurrentContextNumber = PPG.MenuContexts.Value
 	if CurrentContextNumber > -1:
 		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.MenuSelector.Value
+		CurrentQuadrantNumber = PPG.QuadSelector.Value
 		
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
@@ -2569,7 +2574,7 @@ def QMenuConfigurator_InsertSetInView_OnClicked():
 		PPG.Refresh()
 			
 def QMenuConfigurator_RemoveSetInView_OnClicked():
-	Print("QMenuConfigurator_RemoveSetInView_OnClicked called", c.siVerbose)
+	Print("QMenu: QMenuConfigurator_RemoveSetInView_OnClicked called", c.siVerbose)
 	globalQMenu_MenuSets = GetGlobalObject("globalQMenu_MenuSets")
 	globalQMenu_ViewSignatures = GetGlobalObject("globalQMenu_ViewSignatures")
 	
@@ -2616,8 +2621,13 @@ def QMenuConfigurator_RemoveSetInView_OnClicked():
 		RefreshMenuSetDetailsWidgets()
 		PPG.Refresh()		
 
+def QMenuConfigurator_ViewMenuSets_OnChanged():
+	Print("QMenu: QMenuConfigurator_ViewMenuSets_OnChanged called", c.siVerbose)
+	RefreshViewMenuSetsWidgets()
+	PPG.Refresh()
+		
 def QMenuConfigurator_MenuSetChooser_OnChanged():
-	Print("QMenuConfigurator_MenuSetChooser_OnChanged called", c.siVerbose)
+	Print("QMenu: QMenuConfigurator_MenuSetChooser_OnChanged called", c.siVerbose)
 	PPG.MenuContexts.Value = -1
 	RefreshMenuContexts()
 	RefreshMenuChooser()
@@ -3044,6 +3054,7 @@ def RefreshMenuSetDetailsWidgets():
 
 	#Start re-enabling buttons
 	#Check if a view was selected:
+	oCurrentMenu = None
 	if PPG.View.Value != "":
 		PPG.MenuSetChooser.SetCapabilityFlag(c.siReadOnly, False)
 	
@@ -3052,57 +3063,59 @@ def RefreshMenuSetDetailsWidgets():
 			oCurrentMenuSet = getQMenu_MenuSetByName(PPG.MenuSetChooser.Value)
 			if oCurrentMenuSet != None:
 
-				oMenu = None
+				
 				try:
-					if PPG.MenuSelector.Value == 0: oMenu = oCurrentMenuSet.AMenus[PPG.MenuContexts.Value]
-					if PPG.MenuSelector.Value == 1: oMenu = oCurrentMenuSet.BMenus[PPG.MenuContexts.Value]
-					if PPG.MenuSelector.Value == 2: oMenu = oCurrentMenuSet.CMenus[PPG.MenuContexts.Value]
-					if PPG.MenuSelector.Value == 3: oMenu = oCurrentMenuSet.DMenus[PPG.MenuContexts.Value]
-					#Print("name of the menu is: " + str(oMenu.name))
+					if PPG.QuadSelector.Value == 0: oCurrentMenu = oCurrentMenuSet.AMenus[PPG.MenuContexts.Value]
+					if PPG.QuadSelector.Value == 1: oCurrentMenu = oCurrentMenuSet.BMenus[PPG.MenuContexts.Value]
+					if PPG.QuadSelector.Value == 2: oCurrentMenu = oCurrentMenuSet.CMenus[PPG.MenuContexts.Value]
+					if PPG.QuadSelector.Value == 3: oCurrentMenu = oCurrentMenuSet.DMenus[PPG.MenuContexts.Value]
+					#Print("name of the menu is: " + str(oCurrentMenu.name))
 				except:
 					pass
 					#Print("QMenu function 'RefreshMenuSetDetailsWidgets' says: Could not determine current menu!", c.siError)
 				
-				if PPG.AutoSelectMenu.Value == True:
-					if oMenu != None: #Is a menu assigned to the selected context?
-						PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
-						if PPG.AutoSelectMenu.Value == True:
-							PPG.MenuChooser.Value = oMenu.name
+			#Refresh Context manipulation widgets...
+			if PPG.AutoSelectMenu.Value == True:
+				if oCurrentMenu != None: #Is a menu assigned to the selected context?
+					PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
+					if PPG.AutoSelectMenu.Value == True:
+						PPG.MenuChooser.Value = oCurrentMenu.name
 
-					PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
-					if PPG.MenuContexts.Value > -1:
-						PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
-						PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, False)
-						if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
-							PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+				PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+				if PPG.MenuContexts.Value > -1:
+					PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+					PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, False)
+					if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
+						PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 
-					if PPG.MenuContexts.Value > 0:
-						PPG.PPGLayout.Item("CtxUp").SetAttribute (c.siUIButtonDisable, False)
-					if PPG.MenuContexts.Value < (len(PPG.PPGLayout.Item("MenuContexts").UIItems )/2)-1:
-						PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
+				if PPG.MenuContexts.Value > 0:
+					PPG.PPGLayout.Item("CtxUp").SetAttribute (c.siUIButtonDisable, False)
+				if PPG.MenuContexts.Value < ((len(PPG.PPGLayout.Item("MenuContexts").UIItems )/2)-1):
+					PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
 				
 				
-		#A Menu's items are currently displayed?
-		if PPG.MenuChooser.Value != "":
-			oCurrentMenu = getQMenu_MenuByName(PPG.MenuChooser.Value)
-			if oCurrentMenu != None:
-				PPG.PPGLayout.Item("InsertSeparator").SetAttribute (c.siUIButtonDisable, False)
-				if (PPG.Menus.Value != "") or (PPG.MenuItemList.Value != "") or (PPG.CommandList.Value != ""): #Is some assignable item selected in one of the combo boxes?
-					PPG.PPGLayout.Item("ItemInsert").SetAttribute (c.siUIButtonDisable, False) #Enable the Insert Item button again
-			
-			if PPG.MenuItems.Value > -1: #A menu item is currently selected?
+			#Refresh Menu manipulation widgets...
+			#A Menu's items are currently displayed?
+			if PPG.MenuChooser.Value != "":
+				#oCurrentMenu = getQMenu_MenuByName(PPG.MenuChooser.Value)
 				if oCurrentMenu != None:
-					oCurrentMenuItem = None
-					try:
-						oCurrentMenuItem = oCurrentMenu.items[PPG.MenuItems.Value]
-					except:
-						pass
-					if oCurrentMenuItem != None:
-						PPG.PPGLayout.Item("ItemUp").SetAttribute (c.siUIButtonDisable, False)
-						PPG.PPGLayout.Item("ItemDown").SetAttribute (c.siUIButtonDisable, False)
-						PPG.PPGLayout.Item("RemoveMenuItem").SetAttribute (c.siUIButtonDisable, False)
-						if oCurrentMenuItem.type != "Separator":
-							PPG.PPGLayout.Item("FindItem").SetAttribute (c.siUIButtonDisable, False)
+					PPG.PPGLayout.Item("InsertSeparator").SetAttribute (c.siUIButtonDisable, False)
+					if (PPG.Menus.Value != "") or (PPG.MenuItemList.Value != "") or (PPG.CommandList.Value != ""): #Is some assignable item selected in one of the combo boxes?
+						PPG.PPGLayout.Item("ItemInsert").SetAttribute (c.siUIButtonDisable, False) #Enable the Insert Item button again
+				
+				if PPG.MenuItems.Value > -1: #A menu item is currently selected?
+					if oCurrentMenu != None:
+						oCurrentMenuItem = None
+						try:
+							oCurrentMenuItem = oCurrentMenu.items[PPG.MenuItems.Value]
+						except:
+							pass
+						if oCurrentMenuItem != None:
+							PPG.PPGLayout.Item("ItemUp").SetAttribute (c.siUIButtonDisable, False)
+							PPG.PPGLayout.Item("ItemDown").SetAttribute (c.siUIButtonDisable, False)
+							PPG.PPGLayout.Item("RemoveMenuItem").SetAttribute (c.siUIButtonDisable, False)
+							if oCurrentMenuItem.type != "Separator":
+								PPG.PPGLayout.Item("FindItem").SetAttribute (c.siUIButtonDisable, False)
 													
 def RefreshMenuItemDetailsWidgets():
 	Print("QMenu: RefreshMenuItemDetailsWidgets called", c.siVerbose)
@@ -3203,7 +3216,7 @@ def ResetToDefaultValues():
 	PPG.MenuItemList.Value = "_ALL_"
 	PPG.MenuItem_Code = ""
 	PPG.MenuSetChooser.Value = ""
-	PPG.MenuSelector.Value = 0
+	PPG.QuadSelector.Value = 0
 	PPG.MenuContexts.Value = -1
 	PPG.MenuChooser.Value = ""
 	#PPG.AutoSelectMenu.Value = True
@@ -3289,10 +3302,10 @@ def RefreshMenuChooser():
 		oCurrentMenuSet = getQMenu_MenuSetByName(PPG.MenuSetChooser.Value)
 		if oCurrentMenuSet != None:
 			CurrentMenus = None	
-			if PPG.MenuSelector.Value == 0: CurrentMenus = oCurrentMenuSet.AMenus
-			if PPG.MenuSelector.Value == 1: CurrentMenus = oCurrentMenuSet.BMenus
-			if PPG.MenuSelector.Value == 2: CurrentMenus = oCurrentMenuSet.CMenus
-			if PPG.MenuSelector.Value == 3: CurrentMenus = oCurrentMenuSet.DMenus
+			if PPG.QuadSelector.Value == 0: CurrentMenus = oCurrentMenuSet.AMenus
+			if PPG.QuadSelector.Value == 1: CurrentMenus = oCurrentMenuSet.BMenus
+			if PPG.QuadSelector.Value == 2: CurrentMenus = oCurrentMenuSet.CMenus
+			if PPG.QuadSelector.Value == 3: CurrentMenus = oCurrentMenuSet.DMenus
 			if CurrentMenus != None:
 				oCurrentMenu = None
 				try:
@@ -3316,14 +3329,15 @@ def RefreshMenuContexts():
 	CurrentContexts = None
 	CurrentMenus = None
 	CurrentContextsEnum = list()
+	CurrentContext = PPG.MenuContexts.Value
 	
 	if CurrentMenuSetName != "":
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 		if oCurrentMenuSet != None:
-			if PPG.MenuSelector.Value == 0: CurrentContexts = oCurrentMenuSet.AContexts; CurrentMenus = oCurrentMenuSet.AMenus
-			if PPG.MenuSelector.Value == 1: CurrentContexts = oCurrentMenuSet.BContexts; CurrentMenus = oCurrentMenuSet.BMenus
-			if PPG.MenuSelector.Value == 2: CurrentContexts = oCurrentMenuSet.CContexts; CurrentMenus = oCurrentMenuSet.CMenus
-			if PPG.MenuSelector.Value == 3: CurrentContexts = oCurrentMenuSet.DContexts; CurrentMenus = oCurrentMenuSet.DMenus
+			if PPG.QuadSelector.Value == 0: CurrentContexts = oCurrentMenuSet.AContexts; CurrentMenus = oCurrentMenuSet.AMenus
+			if PPG.QuadSelector.Value == 1: CurrentContexts = oCurrentMenuSet.BContexts; CurrentMenus = oCurrentMenuSet.BMenus
+			if PPG.QuadSelector.Value == 2: CurrentContexts = oCurrentMenuSet.CContexts; CurrentMenus = oCurrentMenuSet.CMenus
+			if PPG.QuadSelector.Value == 3: CurrentContexts = oCurrentMenuSet.DContexts; CurrentMenus = oCurrentMenuSet.DMenus
 		
 			startrange = 0
 			endrange = (len(CurrentContexts))
@@ -3344,9 +3358,10 @@ def RefreshMenuContexts():
 	PPG.PPGLayout.Item ("MenuContexts").UIItems = CurrentContextsEnum
 
 	try:
-		PPG.MenuContexts.Value = -1
+		if endrange >= CurrentContext: 
+			PPG.MenuContexts.Value = CurrentContext
 	except:
-		pass
+		PPG.MenuContexts.Value = -1
 		
 def RefreshMenuSetChooser():
 	Print("QMenu: RefreshMenuSetChooser called", c.siVerbose)
@@ -3379,7 +3394,7 @@ def RefreshMenuSetChooser():
 					
 def RefreshViewMenuSets():
 	Print("QMenu: RefreshViewMenuSets called", c.siVerbose)
-	globalQMenu_ViewSignatures = GetGlobalObject("globalQMenu_ViewSignatures")
+	#globalQMenu_ViewSignatures = GetGlobalObject("globalQMenu_ViewSignatures")
 	
 	CurrentViewSignatureName = PPG.ViewSignatures.Value
 	oCurrentViewSignature = None
@@ -3387,48 +3402,52 @@ def RefreshViewMenuSets():
 	CurrentViewMenuSetsEnum = list()
 	
 	if CurrentViewSignatureName == "":  #When no signature is selected empty the combo box
-		PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
-		PPG.ViewMenuSets.Value = ""
+		PPG.PPGLayout.Item("ViewMenuSets").UIItems = list()
+		PPG.ViewMenuSets.Value = -1
 	
 	if CurrentViewSignatureName != "":
-		for oSignature in globalQMenu_ViewSignatures.items:
-			if oSignature.name == CurrentViewSignatureName:
-				oCurrentViewSignature = oSignature
-				break
+		oCurrentViewSignature = getQMenu_ViewSignatureByName(CurrentViewSignatureName)
+
 		if oCurrentViewSignature != None:
 			CurrentViewMenuSets = oCurrentViewSignature.menuSets
 		if (len(CurrentViewMenuSets) > 0):
 			#Print(oCurrentViewSignature.name + " contains " + str(len(CurrentViewMenuSets)) +" menusets")
 			for oMenuSet in CurrentViewMenuSets:
 				CurrentViewMenuSetsEnum.append("(ms-" + str(oCurrentViewSignature.menuSets.index(oMenuSet)) + ") " + oMenuSet.name)
-				CurrentViewMenuSetsEnum.append(oMenuSet.name)
+				#CurrentViewMenuSetsEnum.append(oMenuSet.name)
+				CurrentViewMenuSetsEnum.append(CurrentViewMenuSets.index(oMenuSet))
 			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
 		else:
-			PPG.PPGLayout.Item("ViewMenuSets").UIItems = CurrentViewMenuSetsEnum
+			PPG.PPGLayout.Item("ViewMenuSets").UIItems = list()
 	
-	#Lets disable all buttons first...
+	
 def RefreshViewMenuSetsWidgets():
+	Print("QMenu: RefreshViewMenuSetsWidgets called", c.siVerbose)
 	PPG.PPGLayout.Item("InsertSetInView").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("RemoveSetInView").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("MoveSetUpInView").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("MoveSetDownInView").SetAttribute (c.siUIButtonDisable, True)
 
-	if PPG.MenuSets.Value != "" and PPG.ViewSignatures.Value != "":
-		PPG.PPGLayout.Item("InsertSetInView").SetAttribute (c.siUIButtonDisable, False)
-	if PPG.ViewMenuSets.Value != "":
-		PPG.PPGLayout.Item("RemoveSetInView").SetAttribute (c.siUIButtonDisable, False)
+	SelectedViewSignatureName = PPG.ViewSignatures.Value
+	if SelectedViewSignatureName != "":
+		oSelectedView = getQMenu_ViewSignatureByName(SelectedViewSignatureName)
+		if oSelectedView != None:
+			ViewMenuSets = oSelectedView.menuSets
+			#print PPG.ViewMenuSets.Value
+			#print len(ViewMenuSets)
+			
+			if PPG.ViewSignatures.Value != "" and PPG.MenuSets.Value != "":
+				PPG.PPGLayout.Item("InsertSetInView").SetAttribute (c.siUIButtonDisable, False)
+				
+			if PPG.ViewMenuSets.Value > -1:
+				PPG.PPGLayout.Item("RemoveSetInView").SetAttribute (c.siUIButtonDisable, False)
+				
+			if PPG.ViewMenuSets.Value > 0:
+				PPG.PPGLayout.Item("MoveSetUpInView").SetAttribute (c.siUIButtonDisable, False)
+					
+			if PPG.ViewMenuSets.Value <> (len (ViewMenuSets)-1):
+				PPG.PPGLayout.Item("MoveSetDownInView").SetAttribute (c.siUIButtonDisable, False)
 		
-		ViewMenuSetsEnum = PPG.PPGLayout.Item("ViewMenuSets").UIItems
-		print ViewMenuSetsEnum
-		if (ViewMenuSetsEnum.index (PPG.ViewMenuSets.Value)) > 1:
-			PPG.PPGLayout.Item("MoveSetUpInView").SetAttribute (c.siUIButtonDisable, False)
-		
-		if (ViewMenuSetsEnum.index (PPG.ViewMenuSets.Value) ) < (len (ViewMenuSetsEnum)-1):
-			PPG.PPGLayout.Item("MoveSetDownInView").SetAttribute (c.siUIButtonDisable, False)
-		
-		
-
-	
 				
 def RefreshMenuDisplayContextsList():
 	Print("QMenu: RefreshMenuDisplayContextsList called", c.siVerbose)
@@ -3472,10 +3491,10 @@ def RefreshContextConfigurator():
 			oCurrentMenuSet = oMenuSet
 	
 	if oCurrentMenuSet != None:
-		if PPG.MenuSelector.Value == 0: CurrentContexts = oCurrentMenuSet.AContexts
-		if PPG.MenuSelector.Value == 1: CurrentContexts = oCurrentMenuSet.BContexts
-		if PPG.MenuSelector.Value == 2: CurrentContexts = oCurrentMenuSet.CContexts
-		if PPG.MenuSelector.Value == 3: CurrentContexts = oCurrentMenuSet.DContexts
+		if PPG.QuadSelector.Value == 0: CurrentContexts = oCurrentMenuSet.AContexts
+		if PPG.QuadSelector.Value == 1: CurrentContexts = oCurrentMenuSet.BContexts
+		if PPG.QuadSelector.Value == 2: CurrentContexts = oCurrentMenuSet.CContexts
+		if PPG.QuadSelector.Value == 3: CurrentContexts = oCurrentMenuSet.DContexts
 	
 	if CurrentContexts != None:
 		for oContext in CurrentContexts:
@@ -4676,7 +4695,6 @@ def QMenuDisplayMenuSet_3_Execute():
 									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
 									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
 
-									
 						
 def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd = in_ctxt.Source
