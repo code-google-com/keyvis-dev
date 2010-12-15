@@ -1910,6 +1910,7 @@ def QMenuConfigurator_MenuItem_IsActive_OnChanged():
 def QMenuConfigurator_MenuSelector_OnChanged():
 	Print("QMenuConfigurator_MenuSelector_OnChanged called", c.siVerbose)
 	#RefreshContextConfigurator()
+	PPG.MenuContexts.Value = -1
 	RefreshMenuContexts()
 	RefreshMenuChooser()
 	RefreshMenuItems()
@@ -2444,6 +2445,9 @@ def QMenuConfigurator_RemoveMenuContext_OnClicked():
 		oCurrentMenuSet.removeMenuAtIndex( CurrentContextNumber , Quadrant)
 
 		RefreshMenuContexts()
+		if len(PPG.PPGLayout.Item("MenuSetChooser").UIItems) > CurrentContextNumber:
+			PPG.MenuContexts.Value = CurrentContextNumber
+			
 		RefreshMenuChooser()
 		RefreshMenuItems()
 		RefreshMenuSetDetailsWidgets()
@@ -2614,10 +2618,11 @@ def QMenuConfigurator_RemoveSetInView_OnClicked():
 
 def QMenuConfigurator_MenuSetChooser_OnChanged():
 	Print("QMenuConfigurator_MenuSetChooser_OnChanged called", c.siVerbose)
-	RefreshMenuContexts()
 	PPG.MenuContexts.Value = -1
+	RefreshMenuContexts()
 	RefreshMenuChooser()
 	RefreshMenuItems()
+	RefreshMenuSetDetailsWidgets()
 	PPG.Refresh()
 	
 def QMenuConfigurator_InspectCommand_OnClicked():
@@ -3064,10 +3069,10 @@ def RefreshMenuSetDetailsWidgets():
 						if PPG.AutoSelectMenu.Value == True:
 							PPG.MenuChooser.Value = oMenu.name
 
+					PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 					if PPG.MenuContexts.Value > -1:
 						PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
-						PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
-						PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, True)
+						PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, False)
 						if PPG.Menus.Value != "": #Is a menu selected that could be assigned to the context?
 							PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 
@@ -3339,9 +3344,9 @@ def RefreshMenuContexts():
 	PPG.PPGLayout.Item ("MenuContexts").UIItems = CurrentContextsEnum
 
 	try:
-		PPG.MenuContexts.Value = 0
+		PPG.MenuContexts.Value = -1
 	except:
-		DoNothing = True
+		pass
 		
 def RefreshMenuSetChooser():
 	Print("QMenu: RefreshMenuSetChooser called", c.siVerbose)
