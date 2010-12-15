@@ -20,13 +20,14 @@ for view in Views:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
-# TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
-# TODO: Finish replacing switches and script item functions with oCOntext object as sole argument
-# TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
+#TODO: Write Toggle Backface Culling command
+#TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
+#TODO: Finish replacing switches and script item functions with oCOntext object as sole argument
+#TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
 
-# TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode)
-#		-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
-#      -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
+#TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode)
+#	-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
+#   -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
 
 #Report: Remove Transform Group also deletes non-Transform-Group objects, even when they are not in a Transform group
 #Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
@@ -40,6 +41,8 @@ for view in Views:
 #Report:  ApplyGenOp does not care about ImmedMode, ApplyTopoOp/ApplyOp do, but they ignore siOperationMode parameter (always honor ImmedMode, even when setting siPersistentOperation)
 #TODO: Finish Menu Items: Extract Edges as Curve
 
+#Report: Open/Close Surface freezes XSI when closing both u and v
+#Report: Snip crahses XSI when selecting two Iso curves on a surface, call SNip, then adjust the Position parameter (which will set both positions to the same value, freezing XSI
 #Report: Timer event execution will not wait for Pick session.
 #Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
 # "Extract Edges As Curve", "Merges Curves",
@@ -677,9 +680,9 @@ class QMenuCommandPlaceholder:
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QMenuContext:
  # Declare list of exported functions:
-	_public_methods_ = ['storeCurrentObj','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts'] #'getSelectionClassNames'
+	_public_methods_ = ['storeCurrentObj','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['type','CurrentObject','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts' ]
+	_public_attrs_ = ['type','CurrentObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['type']
 	
@@ -688,6 +691,7 @@ class QMenuContext:
 		#self.data = XSIFactory.CreateGridData();
 		self.type = "Context"
 		self.CurrentObject = None
+		self.X3DObjects = list()
 		self.Types = list()
 		self.ClassNames = list()
 		self.ComponentClassNames = list()
@@ -702,7 +706,12 @@ class QMenuContext:
 
 	def storeCurrentObj ( self, oObj ):
 		self.CurrentObject = oObj
-	
+
+	def storeX3DObjects (self, Objects ):
+		self.X3DObjects = list()
+		for oObj in Objects:
+			self.X3DObjects.append(oObj)
+			
 	def storeSelectionTypes (self, TypeList ):
 		self.Types = list()
 		for Type in TypeList:
@@ -710,7 +719,6 @@ class QMenuContext:
 	
 	def storeSelectionClassNames ( self, ClassNameList ):
 		for ClassName in ClassNameList:
-			#print ("Adding " + str(ClassName))
 			self.ClassNames.append(ClassName)
 		#self.data.SetRowValues(1,ClassNameList)
 		#print ("Could not add " + str(ClassNameList) + " to Grid Data")
@@ -4490,8 +4498,9 @@ def DisplayMenuSet( MenuSetIndex ):
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
+				#print MenuItemToExecute
 				oClickedMenuItem = None
-				if ((MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1)): #Was something clicked in any of the menus?
+				if (MenuItemToExecute != None) and (MenuItemToExecute[0] != -1) and (MenuItemToExecute[1] != -1): #Was something clicked in any of the menus?
 					#Print("MenuItemToExecute is: " + str(MenuItemToExecute))
 					oClickedMenu = oMenus[MenuItemToExecute[0]] #get the clicked QMenu_Menu object
 					if oClickedMenu != None:
@@ -4852,7 +4861,7 @@ def QMenuGetSelectionDetails():
 		lsSelectionComponentParentClassNames_old = list(oSelDetails.ComponentParentClassNames)
 		"""
 		
-		
+		lsX3DObjects = list()
 		lsSelectionTypes = list() #
 		lsSelectionClassNames = list() #
 		lsSelectionComponentClassNames = list() #
@@ -4871,6 +4880,16 @@ def QMenuGetSelectionDetails():
 			
 		else:
 			for oSel in oSelection:
+				
+				#Lets also collect all X3DObjects (those directly selected _and_ those of selected components
+				siX3DObjectID = c.siX3DObjectID 
+				 
+				try:
+					if oSel.IsClassOf(siX3DObjectID):
+						if oSel not in lsX3DObjects:
+							lsX3DObjects.append(oSel) #Collect directly selected X3DObjects
+				except:
+					pass
 				
 				SelectionType = oSel.Type
 				SelectionClassName = getClassName(oSel)
@@ -4892,6 +4911,12 @@ def QMenuGetSelectionDetails():
 						SelectionComponentClassName = ""
 					try:
 						SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
+						try:
+							if SelectionComponentParent.IsClassOf(siX3DObjectID) : #Collect X3DObjects of selected components
+								if SelectionComponentParent not in lsX3DObjects: 
+									lsX3DObjects.append(SelectionComponentParent)
+						except:
+							pass
 					except:
 						SelectionComponentParent = ""
 					try:
@@ -4935,6 +4960,10 @@ def QMenuGetSelectionDetails():
 		"""
 		
 
+		
+		#Print("Recording X3DObjects: " + str(lsX3DObjects))
+		oSelDetails.storeX3DObjects(lsX3DObjects)
+		
 		#Print("Recording Selection Types: " + str(lsSelectionTypes))
 		oSelDetails.storeSelectionTypes (lsSelectionTypes)
 		
