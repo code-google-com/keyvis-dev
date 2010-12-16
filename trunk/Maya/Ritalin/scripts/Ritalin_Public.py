@@ -245,7 +245,7 @@ def storeSelectionData ():
 		if cmds.undoInfo(q = true, redoName = True) == "":
 			ComponentSelectMode = cmds.selectMode (query = True, component = True)
 			if ComponentSelectMode == True:
-				print("Storing current component selection...")   
+				#print("Storing current component selection...")   
 				Sel = cmds.ls(sl = True)   
 				hiliteObjs = cmds.ls (hilite = True)
 				if (cmds.selectType (query = True, polymeshVertex = True) == True):
@@ -301,7 +301,7 @@ def storeSelectionData ():
 def restoreSelectionData():
 	if RitalinRememberSelections == True:
 		Sel = cmds.ls(sl = True)    
-		print("Restoring selection..")
+		#print("Restoring selection..")
 		allHiliteObjsVerts = getAllHiliteObjsVertices()
 		if len(allHiliteObjsVerts) > 0: 
 			if (cmds.selectType (query = True, polymeshVertex = True) == True):
