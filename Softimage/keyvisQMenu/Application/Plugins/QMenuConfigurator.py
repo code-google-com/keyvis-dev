@@ -933,8 +933,8 @@ def QMenuConfigurator_Define( in_ctxt ):
 	oCustomProperty.AddParameter2("DisplayEventKey",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("DisplayEventKeyMask",c.siInt4,0,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	oCustomProperty.AddParameter2("DisplayEventKeys_Record",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	oCustomProperty.AddParameter2("ShowQMenu_MenuString",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
-	oCustomProperty.AddParameter2("ShowQMenuTimes",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	#oCustomProperty.AddParameter2("ShowQMenu_MenuString",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
+	#oCustomProperty.AddParameter2("ShowQMenuTimes",c.siBool,False,null,null,null,null,c.siClassifUnknown,c.siPersistable)
 	
 def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout = in_ctxt.Source	
@@ -4978,6 +4978,7 @@ def QMenuGetSelectionDetails():
 				
 				SelectionType = oSel.Type
 				SelectionClassName = getClassName(oSel)
+				#print("Got the following Class Name: " + str(SelectionClassName))
 				#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
 				SelectionComponentClassName = ""
 				SelectionComponentParent = ""
@@ -5157,13 +5158,17 @@ def QMenuInitialize_OnEvent (in_ctxt):
 		#Print("Could not retrieve state of FirstStartup QMenu preference value, assuming it is the first startup...", c.siVerbose)
 		FirstStartup = True
 	
-	if (FirstStartup == "False") or (FirstStartup == "0") or (FirstStartup == False) or (FirstStartup == 0):
+	if (FirstStartup == "False") or (FirstStartup == "0") or (FirstStartup == False) or (FirstStartup == 0) or FirstStartup == None:
 		QMenuConfigFile = App.Preferences.GetPreferenceValue("QMenu.QMenuConfigurationFile")
 	
 	if (FirstStartup == "True") or (FirstStartup == "1") or (FirstStartup == True) or (FirstStartup == 1):
 		#Print("FirstStartup is actually: " + str(FirstStartup) + ". -> getting default config file path")
 		QMenuConfigFile = GetDefaultConfigFilePath("QMenuConfiguration_Default.xml") #Get the file path as string of the QMenu default configuration file.
-	
+		App.Preferences.SetPreferenceValue("QMenu.ShowQMenu_MenuString", False)
+		#App.SetValue("Preferences.QMenu.ShowQMenu_MenuString", False)
+		App.Preferences.SetPreferenceValue("QMenu.ShowQMenuTimes", False)
+		#App.SetValue("Preferences.QMenu.ShowQMenuTimes", False)
+		
 	if (str(QMenuConfigFile) != ""):
 		Print("Attempting to load QMenu Configuration from: " + str(QMenuConfigFile), c.siVerbose)
 		result = QMenuLoadConfiguration(QMenuConfigFile)
