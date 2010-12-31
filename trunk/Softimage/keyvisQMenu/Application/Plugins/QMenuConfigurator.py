@@ -20,13 +20,12 @@ for view in Views:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
-#TODO: Write Remove from all or selected Groups command 
+#TODO: Write "Remove from all Groups or from selected Groups" command 
 #TODO: Write Toggle Backface Culling command
 #TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
-#TODO: Finish replacing switches and script item functions with oCOntext object as sole argument
 #TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
 
-#TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode)
+#TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode, CreateModelAndCOnvertToRef)
 #	-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
 #   -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
 
@@ -34,6 +33,7 @@ for view in Views:
 #Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
 #Report: Curve Fillet command does not work in Immed mode
 
+#Report: Verbose warning is printed each time cmdlog preference is disabled via scripting - annoying. Parameter should be allowed to be changed via script or warning should be removed
 #Report: it is not possible to categorize ones own commands
 #Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere -> Does not look like it
 #TODO: Article about delayed events 
@@ -88,7 +88,6 @@ for view in Views:
 #TODO: Implement Cleanup functionality to delete empty script items and menus
 
 #Cleanup: Rename QMenu_MenuItem class and related functions (e.g. getQMenu_MenuItemByName) to "ScriptItem"
-#Cleanup: Make all class attributes start with upper-case characters to  
 
 #Japanese font is untested
 
@@ -720,6 +719,7 @@ class QMenuContext:
 			self.Types.append(Type)
 	
 	def storeSelectionClassNames ( self, ClassNameList ):
+		self.ClassNames = list()
 		for ClassName in ClassNameList:
 			self.ClassNames.append(ClassName)
 		#self.data.SetRowValues(1,ClassNameList)
@@ -782,7 +782,7 @@ def XSILoadPlugin( in_reg ):
 	
 	#Register Custom QMenu Commands
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
-	in_reg.RegisterCommand( "QMenuGetMenuItemByName" , "QMenuGetMenuItemByName" )
+	in_reg.RegisterCommand( "QMenuGetByName" , "QMenuGetByName" )
 	in_reg.RegisterCommand( "QMenuCreateConfiguratorCustomProperty", "QMenuCreateConfiguratorCustomProperty" )
 	in_reg.RegisterCommand( "QMenuCreatePreferencesCustomProperty", "QMenuCreatePreferencesCustomProperty" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_0", "QMenuDisplayMenuSet_0" )
@@ -802,6 +802,9 @@ def XSILoadPlugin( in_reg ):
 	
 	#Register events
 	in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
+	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
+		 																 #wrong menus are displayed based on selection that does not ecist anymore in new scene)
+
 	in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup )
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
@@ -981,8 +984,8 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 
 	oLayout.EndGroup() #End of Menu Set Configuration Group
 
-	oLayout.AddGroup("Assign QMenu Menus to Contexts")
-	#oLayout.AddSpacer()
+	oCtxGrp = oLayout.AddGroup("Assign QMenu Menus to Contexts")
+	oCtxGrp.SetAttribute(c.siUIWidthPercentage, 45)#oLayout.AddSpacer()
 	
 	#oGR1 = oLayout.AddGroup()
 	#oGR1.SetAttribute(c.siUIShowFrame, False)
@@ -1098,7 +1101,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.AddRow()
 	oLayout.AddButton("CreateNewScriptItem","Create new Script Item")
 	oLayout.AddButton("CreateNewSwitchItem","Create new Switch Item")
-	oLayout.AddButton("DeleteScriptItem","Delete selected Script Item")
+	oLayout.AddButton("DeleteScriptItem","Delete selected Item")
 	oLayout.EndRow()
 	oLayout.EndGroup()
 	
@@ -1287,7 +1290,6 @@ def QMenuConfigurator_CodeEditorHeight_OnChanged():
 	oCodeEditor.SetAttribute(c.siUIHeight, intHeight)
 	PPG.Refresh()
 
-
 def QMenuPreferences_ShowQMenu_MenuString_OnChanged():
 	val = PPG.ShowQMenu_MenuString.Value
 	Application.Preferences.SetPreferenceValue("QMenu.ShowQMenu_MenuString",val)
@@ -1341,8 +1343,7 @@ def QMenuConfigurator_MoveSetUpInView_OnClicked():
 			RefreshViewMenuSetsWidgets()
 			RefreshMenuSetChooser()
 			PPG.Refresh()
-
-			
+		
 def QMenuConfigurator_MoveSetDownInView_OnClicked():
 	Print("QMenuConfigurator_MoveSetUpInView_OnClicked", c.siVerbose)
 	CurrentViewName = PPG.ViewSignatures.Value
@@ -1362,6 +1363,7 @@ def QMenuConfigurator_MoveSetDownInView_OnClicked():
 			PPG.Refresh()
 
 def QMenuConfigurator_ViewMenuSet_OnChanged():
+	Print ("QMenuConfigurator_ViewMenuSet_OnChanged called",c.siVerbose)
 	RefreshViewMenuSetsWidgets()
 	PPG.Refresh()
 
@@ -1374,21 +1376,22 @@ def QMenuConfigurator_AutoSelectMenu_OnChanged():
 	Print("QMenuConfigurator_AutoSelectMenu_Onchanged called", c.siVerbose)
 	if PPG.AutoSelectMenu.Value == True:
 		PPG.MenuContexts.SetCapabilityFlag (c.siReadOnly,False)
-		PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
-		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , False)
+		Print("Enabling MenuChooser...")
+		#PPG.MenuChooser.SetCapabilityFlag (c.siReadOnly,True)
+		#PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.QuadSelector.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.View.SetCapabilityFlag ( c.siReadOnly , False)
-		RefreshMenuChooser()
+		#RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
 		RefreshMenuItems()
 		PPG.Refresh()
 	else:
-		RefreshMenuSetDetailsWidgets()
 		PPG.MenuContexts.SetCapabilityFlag ( c.siReadOnly , True)
-		PPG.MenuChooser.SetCapabilityFlag ( c.siReadOnly , False)
-		PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , True)
+		#PPG.MenuChooser.SetCapabilityFlag ( c.siReadOnly , False)
+		#PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , True)
 		PPG.QuadSelector.SetCapabilityFlag ( c.siReadOnly , True)
 		PPG.View.SetCapabilityFlag ( c.siReadOnly , True)
+		RefreshMenuSetDetailsWidgets()
 		PPG.Refresh()
 
 def QMenuConfigurator_MenuChooser_OnChanged():
@@ -1436,9 +1439,6 @@ def QMenuPreferences_LoadConfig_OnClicked():
 		result = QMenuLoadConfiguration(fileName)
 		if result == True:
 			Print("Successfully loaded QMenu Configuration.")
-		#if result == True:
-			#RefreshQMenuConfigurator()
-			#PPG.Refresh()
 			
 def QMenuConfigurator_QMenuConfigurationFile_OnChanged():
 	Print("QMenuConfigurator_QMenuConfigurationFile_OnChanged called",c.siVerbose)
@@ -1465,6 +1465,7 @@ def QMenuConfigurator_CommandCategory_OnChanged():
 def QMenuConfigurator_CommandFilter_OnChanged():
 	Print("CommandFilter_OnChanged called", c.siVerbose)
 	RefreshCommandList()
+	RefreshMenuItemDetailsWidgets()
 	RefreshMenuSetDetailsWidgets()
 	PPG.Refresh()
 
@@ -1571,12 +1572,13 @@ def QMenuConfigurator_CreateNewSwitchItem_OnClicked():
 		PPG.Refresh()
 
 def QMenuConfigurator_MenuFilter_OnChanged():
-	Print ("QMenuConfigurator_CreateNewSwitchItem_OnClicked called",c.siVerbose)
+	Print ("QMenuConfigurator_MenuFilter_OnChanged called",c.siVerbose)
 	CurrentSelectedMenuName = PPG.Menus.Value
-	RefreshMenus()
+	RefreshMenuList()
 	ListedMenuNames = PPG.PPGlayout.Item("Menus").UIItems
 	if CurrentSelectedMenuName not in ListedMenuNames:
 		PPG.Menus.Value = ""
+	RefreshMenuItemDetailsWidgets()
 	RefreshMenuSetDetailsWidgets()
 	PPG.Refresh()
 		
@@ -1612,8 +1614,10 @@ def QMenuConfigurator_CreateNewMenu_OnClicked():
 		
 		globalQMenu_Menus.addMenu(oNewMenu)
 
-		RefreshMenus()
+		PPG.MenuFilter.Value = ""
+		RefreshMenuList()
 		RefreshMenuChooser()
+		
 		PPG.Menus.Value = UniqueMenuName
 		PPG.MenuItemList.Value = ""
 		PPG.CommandList.Value = ""
@@ -1670,7 +1674,7 @@ def QMenuConfigurator_DeleteMenu_OnClicked():
 				CurrentMenuIndex = MenusEnum.index(CurrentMenuName)
 		
 		deleteQMenu_Menu(CurrentMenuName)	
-		RefreshMenus()
+		RefreshMenuList()
 			
 		if CurrentMenuIndex != None:
 			#Print("CurrentContextIndex is: " + str(CurrentContextIndex))
@@ -1683,9 +1687,10 @@ def QMenuConfigurator_DeleteMenu_OnClicked():
 						
 			PPG.Menus.Value = PreviousMenuName
 		RefreshMenuContexts()
+		RefreshMenuChooser()
+		RefreshMenuSetDetailsWidgets()
 		RefreshMenuItems()
 		RefreshMenuItemDetailsWidgets()
-		RefreshMenuSetDetailsWidgets()
 		PPG.Refresh()
 					
 def QMenuConfigurator_RemoveMenu_OnClicked():
@@ -1783,12 +1788,13 @@ def QMenuConfigurator_ItemInsert_OnClicked():
 			
 
 		if oItemToInsert != None:
-			oCurrentMenu.insertMenuItem (CurrentMenuItemIndex+1, oItemToInsert)
+			oCurrentMenu.insertMenuItem (CurrentMenuItemIndex, oItemToInsert)
 			
 			RefreshMenuItems()
-			PPG.MenuItems.Value = CurrentMenuItemIndex+1
+			PPG.MenuItems.Value = CurrentMenuItemIndex
 			RefreshMenuSetDetailsWidgets()
-			PPG.Refresh()		
+			PPG.Refresh()
+	gc.collect()
 
 def QMenuConfigurator_MenuItem_Name_OnChanged():
 	Print("QMenuConfigurator_MenuItem_Name_OnChanged called", c.siVerbose)
@@ -1816,7 +1822,7 @@ def QMenuConfigurator_MenuItem_Name_OnChanged():
 			KnownMenuItemNames = list()
 			if PPG.Menus.Value != "":
 				for oMenu in globalQMenu_Menus.Items:
-					KnownMenuItemNames.append(oMenu.Name) #Get all known Menu names so we can later find a new uinique name
+					KnownMenuItemNames.append(oMenu.Name) #Get all known Menu names so we can later find a new unique name
 				
 				oItem = getQMenu_MenuByName(PPG.Menus.Value)
 			
@@ -1828,22 +1834,28 @@ def QMenuConfigurator_MenuItem_Name_OnChanged():
 		#Select the renamed object in the respective list view
 		if PPG.MenuItemList.Value != "":
 			PPG.MenuItemList.Value = NewMenuItem_Name
-			PPG.Menus.Value = ""
-			
+			#PPG.Menus.Value = ""
+			SelectedMenuItem = PPG.MenuItems.Value
 			RefreshMenuItemList()
 			RefreshMenuItems()
+			PPG.MenuItems.Value = SelectedMenuItem
 			RefreshMenuItemDetailsWidgets()
 			PPG.Refresh()
 			
 		if PPG.Menus.Value != "":
+			PPG.MenuFilter.Value = ""
 			PPG.Menus.Value = NewMenuItem_Name
 			PPG.MenuItemList.Value = ""
 			
-			RefreshMenuChooser()
-			RefreshMenuItems()
-			RefreshMenus()
-			#SelectedMenuContext = PPG.MenuContexts.Value
+			SelectedMenuItem = PPG.MenuItems.Value
 			RefreshMenuContexts()
+			RefreshMenuChooser()
+			RefreshMenuSetDetailsWidgets()
+			
+			RefreshMenuItems()
+			PPG.MenuItems.Value = SelectedMenuItem
+			RefreshMenuList()
+			#SelectedMenuContext = PPG.MenuContexts.Value
 			#PPG.MenuContexts.Value = SelectedMenuContext
 			RefreshMenuItemDetailsWidgets()
 			PPG.Refresh()
@@ -1992,8 +2004,8 @@ def QMenuConfigurator_MenuItem_IsActive_OnChanged():
 def QMenuConfigurator_QuadSelector_OnChanged():
 	Print("QMenuConfigurator_QuadSelector_OnChanged called", c.siVerbose)
 	#RefreshContextConfigurator()
-	PPG.MenuContexts.Value = -1
 	RefreshMenuContexts()
+	PPG.MenuContexts.Value = -1
 	#RefreshMenuChooser()
 	RefreshMenuSetDetailsWidgets()
 	RefreshMenuItems()
@@ -2002,11 +2014,20 @@ def QMenuConfigurator_QuadSelector_OnChanged():
 def QMenuConfigurator_View_OnChanged():
 	Print("QMenuConfigurator_View_OnChanged()", c.siVerbose)
 	RefreshMenuSetChooser()
+	#RefreshMenuChooser()
 	RefreshMenuContexts()
-	PPG.MenuContexts.Value = 0
-	RefreshMenuChooser()
-	RefreshMenuItems()
+	PPG.MenuContexts.Value = -1
 	RefreshMenuSetDetailsWidgets()
+	RefreshMenuItems()
+	PPG.Refresh()
+
+def QMenuConfigurator_MenuSetChooser_OnChanged():
+	Print("QMenu: QMenuConfigurator_MenuSetChooser_OnChanged called", c.siVerbose)
+	RefreshMenuContexts()
+	PPG.MenuContexts.Value = -1
+	RefreshMenuChooser()
+	RefreshMenuSetDetailsWidgets()
+	RefreshMenuItems()
 	PPG.Refresh()
 	
 def QMenuConfigurator_CreateMenuSet_OnClicked():
@@ -2174,7 +2195,7 @@ def QMenuConfigurator_ViewSignatureName_OnChanged():
 					oCurrentSignature.Name = newSignatureName
 
 					RefreshViewSignaturesList()
-					#RefreshViewSelector()
+					RefreshViewChooser()
 					PPG.View.Value = newSignatureName
 					PPG.ViewSignatures.Value = oCurrentSignature.Name
 					PPG.ViewSignatureName.Value = oCurrentSignature.Name
@@ -2202,7 +2223,7 @@ def QMenuConfigurator_AddQMenuViewSignature_OnClicked():
 	PPG.ViewSignatures.Value = newSignatureName
 	PPG.ViewSignature.Value = newSignatureString
 	PPG.ViewSignatureName.Value = newSignatureName
-	RefreshViewSelector()
+	RefreshViewChooser()
 	RefreshViewMenuSets()
 	RefreshViewMenuSetsWidgets()
 	PPG.Refresh()
@@ -2238,7 +2259,7 @@ def QMenuConfigurator_DelQMenuViewSignature_OnClicked():
 		RefreshViewDetailsWidgets()
 		RefreshViewMenuSets()
 		RefreshViewMenuSetsWidgets()
-		RefreshViewSelector()
+		RefreshViewChooser()
 		RefreshMenuSetChooser()
 		PPG.Refresh()
 	
@@ -2436,36 +2457,46 @@ def QMenuConfigurator_InsertMenuContext_OnClicked():
 	lsItems = list()
 	for ctxt in globalQmenu_DisplayContexts.Items:
 		lsItems.append (ctxt.Name)
-		
+	
+	#print (str(lsItems))
+	#print "=========="
+	lsItems.sort()
+	#print (str(lsItems))
+	
 	ContextNumberToInsert = UserQuery(strCaption, lsItems)
-	
 	if ContextNumberToInsert > -1:
-		oContextToInsert = globalQmenu_DisplayContexts.Items[ContextNumberToInsert]
-	
-		CurrentContextNumber = PPG.MenuContexts.Value
-		if CurrentContextNumber < 0: CurrentContextNumber = 0
+		chosenContextName = lsItems[ContextNumberToInsert]
+		#Print ("Context numer chosen: " + str(ContextNumberToInsert))
+		oChosenContext = getQMenu_MenuDisplayContextByName(chosenContextName)
+		#Print("Chosen Context's Name is: " + str(oChosenContext.Name))
+		
+		if oChosenContext != None:
+			#oContextToInsert = globalQmenu_DisplayContexts.Items[ContextNumberToInsert]
+		
+			CurrentContextNumber = PPG.MenuContexts.Value
+			if CurrentContextNumber < 0: CurrentContextNumber = 0
+				
+			CurrentMenuSetName = PPG.MenuSetChooser.Value
+			CurrentQuadrantNumber = PPG.QuadSelector.Value
 			
-		CurrentMenuSetName = PPG.MenuSetChooser.Value
-		CurrentQuadrantNumber = PPG.QuadSelector.Value
-		
-		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
+			oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
 
-		if CurrentQuadrantNumber == 0: Quadrant = "A" 
-		if CurrentQuadrantNumber == 1: Quadrant = "B" 
-		if CurrentQuadrantNumber == 2: Quadrant = "C" 
-		if CurrentQuadrantNumber == 3: Quadrant = "D" 
-		
-		oCurrentMenuSet.insertContextAtIndex(CurrentContextNumber, oContextToInsert, Quadrant )
-		oCurrentMenuSet.insertMenuAtIndex(CurrentContextNumber, None, Quadrant)
-		
-		RefreshMenuContexts()
-		PPG.MenuContexts.Value = CurrentContextNumber
-		RefreshMenuSetDetailsWidgets()
-		RefreshMenuChooser()
-		RefreshMenuItems()
-		RefreshMenuSetDetailsWidgets()
-		RefreshMenuItemDetailsWidgets()
-		PPG.Refresh()
+			if CurrentQuadrantNumber == 0: Quadrant = "A" 
+			if CurrentQuadrantNumber == 1: Quadrant = "B" 
+			if CurrentQuadrantNumber == 2: Quadrant = "C" 
+			if CurrentQuadrantNumber == 3: Quadrant = "D" 
+			
+			oCurrentMenuSet.insertContextAtIndex(CurrentContextNumber, oChosenContext, Quadrant )
+			oCurrentMenuSet.insertMenuAtIndex(CurrentContextNumber, None, Quadrant)
+			
+			RefreshMenuContexts()
+			PPG.MenuContexts.Value = CurrentContextNumber
+			RefreshMenuSetDetailsWidgets()
+			RefreshMenuChooser()
+			RefreshMenuItems()
+			RefreshMenuSetDetailsWidgets()
+			RefreshMenuItemDetailsWidgets()
+			PPG.Refresh()
 
 def QMenuConfigurator_ReplaceMenuContext_OnClicked():
 	Print("QMenuConfigurator_InsertMenuContext_OnClicked called", c.siVerbose)
@@ -2476,11 +2507,13 @@ def QMenuConfigurator_ReplaceMenuContext_OnClicked():
 	lsItems = list()
 	for ctxt in globalQmenu_DisplayContexts.Items:
 		lsItems.append (ctxt.Name)
-		
-	ContextNumberToReplace = UserQuery(strCaption, lsItems)
 	
-	if ContextNumberToReplace > -1:
-		oContextToInsert = globalQmenu_DisplayContexts.Items[ContextNumberToReplace]
+	lsItems.sort()
+	ChosenContextNumber = UserQuery(strCaption, lsItems)
+	
+	if ChosenContextNumber > -1:
+		ChosenContextsName = lsItems[ChosenContextNumber]
+		oContextToInsert = getQMenu_MenuDisplayContextByName(ChosenContextsName)
 	
 		CurrentContextNumber = PPG.MenuContexts.Value
 		if CurrentContextNumber < 0: CurrentContextNumber = 0
@@ -2500,7 +2533,7 @@ def QMenuConfigurator_ReplaceMenuContext_OnClicked():
 		
 		RefreshMenuContexts()
 		PPG.MenuContexts.Value = CurrentContextNumber
-		RefreshMenuSetDetailsWidgets()
+		#RefreshMenuSetDetailsWidgets()
 		RefreshMenuChooser()
 		RefreshMenuItems()
 		RefreshMenuSetDetailsWidgets()
@@ -2629,7 +2662,7 @@ def QMenuConfigurator_InsertSetInView_OnClicked():
 		RefreshViewMenuSets()
 		RefreshViewMenuSetsWidgets()
 		
-		RefreshViewSelector()
+		RefreshViewChooser()
 		RefreshMenuSetChooser()
 		RefreshMenuContexts()
 		RefreshMenuSetDetailsWidgets()
@@ -2664,17 +2697,6 @@ def QMenuConfigurator_ViewMenuSets_OnChanged():
 	RefreshViewMenuSetsWidgets()
 	PPG.Refresh()
 		
-def QMenuConfigurator_MenuSetChooser_OnChanged():
-	Print("QMenu: QMenuConfigurator_MenuSetChooser_OnChanged called", c.siVerbose)
-	PPG.MenuContexts.Value = -1
-	RefreshMenuContexts()
-	Print("Menu Context Value is: " + str(PPG.MenuContexts.Value))
-	RefreshMenuChooser()
-	Print("Menu Chooser Value is: " + str(PPG.MenuChooser.Value))
-	RefreshMenuItems()
-	RefreshMenuSetDetailsWidgets()
-	PPG.Refresh()
-	
 def QMenuConfigurator_InspectCommand_OnClicked():
 	Print("QMenuConfigurator_InspectCommand_OnClicked called", c.siVerbose)
 	CurrentCommandUID = PPG.CommandList.Value
@@ -2684,6 +2706,7 @@ def QMenuConfigurator_InspectCommand_OnClicked():
 	if CurrentCommand != None:
 		if CurrentCommand.Name != "":
 			App.EditCommand(CurrentCommand.Name)
+	gc.collect()
 
 def QMenuConfigurator_ExecuteCommand_OnClicked():
 	Print("QMenuConfigurator_InspectCommand_OnClicked called", c.siVerbose)
@@ -2694,6 +2717,7 @@ def QMenuConfigurator_ExecuteCommand_OnClicked():
 	if CurrentCommand != None:
 		if CurrentCommand.Name != "":
 			CurrentCommand.Execute()
+	gc.collect()
 										
 def QMenuConfigurator_ShowHotkeyableOnly_OnChanged():
 	Print("QMenuConfigurator_ShowHotkeyableOnly_OnChanged called", c.siVerbose)
@@ -2707,6 +2731,7 @@ def QMenuConfigurator_ShowHotkeyableOnly_OnChanged():
 	RefreshMenuItemDetailsWidgets()
 	RefreshMenuSetDetailsWidgets()
 	PPG.Refresh()
+	gc.collect()
 	
 def QMenuConfigurator_ShowScriptingNameInBrackets_OnChanged():
 	Print("QMenuConfigurator_ShowScriptingNameInBrackets_OnChanged called", c.siVerbose)
@@ -2895,6 +2920,7 @@ def QMenuConfigurator_FindItem_OnClicked():
 				RefreshMenuItemDetailsWidgets()
 
 			PPG.Refresh()
+	gc.collect()
 
 def QMenuConfigurator_InsertSeparator_OnClicked():
 	Print("QMenuConfigurator_InsertSeparator_OnClicked called", c.siVerbose)
@@ -3023,10 +3049,12 @@ def QMenuConfigurator_MainSettings_OnTab():
 #======================================== Misc. QMenu Configurator Functions ==============================================
 #=========================================================================================================================
 
+
 def RefreshMenuSetDetailsWidgets():
 	Print ("QMenu: RefreshMenuSetDetailsWidgets called",c.siVerbose)
 	#Disable all buttons first
 	PPG.MenuSetChooser.SetCapabilityFlag(c.siReadOnly, True)
+	PPG.MenuChooser.SetCapabilityFlag(c.siReadOnly, True)
 	
 	PPG.PPGLayout.Item("AssignMenu").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, True)
@@ -3052,6 +3080,7 @@ def RefreshMenuSetDetailsWidgets():
 		#PPG.MenuChooser.Value = "None"
 	
 		if PPG.View.Value != "": #Is a view selected? Enable Menu Set Selector...
+			#Print("View.Value is not empty, enabling MenuSetChooser...")
 			PPG.MenuSetChooser.SetCapabilityFlag(c.siReadOnly, False)
 		
 			#Check if a Context was selected
@@ -3073,7 +3102,8 @@ def RefreshMenuSetDetailsWidgets():
 						PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
 						PPG.MenuChooser.Value = oCurrentMenu.Name
 						#Print ("RefreshMenuSetDetailsWidgets: Menu Chooser Value is now :" + str(PPG.MenuChooser.Value))
-					
+					else:
+						PPG.MenuChooser.Value = "None"
 
 					PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 					if PPG.MenuContexts.Value > -1:
@@ -3088,7 +3118,9 @@ def RefreshMenuSetDetailsWidgets():
 						PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
 				else:
 					PPG.MenuChooser.Value = "None"
-				
+	
+	else:
+		PPG.MenuChooser.SetCapabilityFlag(c.siReadOnly, False)
 	#Refresh Menu manipulation widgets...
 	#A Menu's items are currently displayed?
 	if PPG.MenuChooser.Value != "None":
@@ -3118,6 +3150,7 @@ def RefreshMenuItemDetailsWidgets():
 #Disable all widgets first
 	#PPG.MenuName.SetCapabilityFlag (c.siReadOnly,False)
 	PPG.PPGLayout.Item("InspectCommand").SetAttribute (c.siUIButtonDisable, True)
+	PPG.PPGLayout.Item("ExecuteCommand").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("ExecuteCode").SetAttribute (c.siUIButtonDisable, True)
 	#PPG.PPGLayout.Item("ConvertCommandToMenuItem").SetAttribute (c.siUIButtonDisable, True)
 	PPG.PPGLayout.Item("DeleteScriptItem").SetAttribute (c.siUIButtonDisable, True)		
@@ -3147,6 +3180,7 @@ def RefreshMenuItemDetailsWidgets():
 			ItemName = oItem.Name
 			PPG.PPGLayout.Item("InspectCommand").SetAttribute (c.siUIButtonDisable, False)
 			#PPG.PPGLayout.Item("ConvertCommandToMenuItem").SetAttribute (c.siUIButtonDisable, False)
+			PPG.PPGLayout.Item("ExecuteCommand").SetAttribute (c.siUIButtonDisable, False)
 			PPG.PPGLayout.Item("ExecuteCode").SetAttribute (c.siUIButtonDisable, False)
 			
 			PPG.NewMenuItem_Category.Value = ""
@@ -3176,7 +3210,8 @@ def RefreshMenuItemDetailsWidgets():
 			PPG.MenuItem_Switch.SetCapabilityFlag (c.siReadOnly,False)
 			
 			#PPG.PPGLayout.Item("CreateNewScriptItem").SetAttribute (c.siUIButtonDisable, False)
-			PPG.PPGLayout.Item("DeleteScriptItem").SetAttribute (c.siUIButtonDisable, False)			
+			PPG.PPGLayout.Item("DeleteScriptItem").SetAttribute (c.siUIButtonDisable, False)
+	gc.collect()
 
 #Check if a menu was selected			
 	if PPG.Menus.Value != "":
@@ -3229,11 +3264,16 @@ def ResetToDefaultValues():
 def RefreshQMenuConfigurator():
 	Print("QMenu: RefreshQMenuConfigurator called", c.siVerbose)
 	ResetToDefaultValues()
+	RefreshDisplayEvents()
+	RefreshDisplayEventsKeys()
 	RefreshMenuDisplayContextsList()
 	RefreshMenuDisplayContextDetailsWidgets()
 	RefreshMenuItem_CategoryList()
+	RefreshCommandCategoryList()
+	RefreshCommandList()
 	RefreshMenuItemList()
-	RefreshViewSelector()
+	RefreshMenuList()
+	RefreshViewChooser()
 	RefreshViewSignaturesList()
 	RefreshViewDetailsWidgets()
 	RefreshMenuSets()
@@ -3243,17 +3283,12 @@ def RefreshQMenuConfigurator():
 	RefreshMenuSetChooser()
 	RefreshMenuContexts()
 	RefreshMenuChooser()
-	RefreshMenus()
 	
-	RefreshCommandCategoryList()
-	RefreshCommandList()
-	RefreshMenuSetDetailsWidgets()
 	RefreshMenuItems()
 	RefreshMenuItemDetailsWidgets()
-	RefreshDisplayEvents()
-	RefreshDisplayEventsKeys()	
+	RefreshMenuSetDetailsWidgets()
 	
-def RefreshMenus():
+def RefreshMenuList():
 	Print("QMenu: RefreshMenus called", c.siVerbose)
 	globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 	MenuNameFilter = PPG.MenuFilter.Value
@@ -3267,14 +3302,13 @@ def RefreshMenus():
 
 	for MenuName in MenuNames:
 		if MenuNameFilter != "":
-			if MenuName.find (MenuNameFilter) > -1:
+			if MenuName.lower().find (MenuNameFilter.lower()) > -1:
 				MenusEnum.append("(m) " + MenuName)
 				MenusEnum.append(MenuName)
 		else:
 			MenusEnum.append("(m) " + MenuName)
 			MenusEnum.append(MenuName)
-			
-	
+
 	PPG.PPGLayout.Item("Menus").UIItems = MenusEnum
 	PPG.Refresh()
 
@@ -3284,7 +3318,6 @@ def RefreshMenuChooser():
 	MenusTempEnum = list()
 	MenusEnum = list()
 	
-
 	for oMenu in globalQMenu_Menus.Items:
 		MenusTempEnum.append(oMenu.Name)
 	
@@ -3296,9 +3329,7 @@ def RefreshMenuChooser():
 		MenusEnum.append(MenuName)
 		MenusEnum.append(MenuName)
 	
-
 	PPG.PPGLayout.Item("MenuChooser").UIItems = MenusEnum
-	
 	
 def RefreshMenuContexts():
 	Print("QMenu: RefreshMenuContexts called", c.siVerbose)
@@ -3539,10 +3570,11 @@ def RefreshCommandCategoryList():
 		CommandCategoriesEnum.append(Category)
 
 	PPG.PPGLayout.Item ("CommandCategory").UIItems = CommandCategoriesEnum #Populate the ListControl with the known Command Categories 
-
-def RefreshViewSelector():
+	gc.collect()
+	
+def RefreshViewChooser():
 	Print("QMenu: RefreshViewSelector called", c.siVerbose)
-
+	PPG.View.SetCapabilityFlag(c.siReadOnly, True)
 	CurrentViewName = PPG.View.Value
 	CurrentViewSignature = ""
 	oCurrentView = None
@@ -3557,6 +3589,7 @@ def RefreshViewSelector():
 		viewSelectorEnumList.append(view.Name)
 	
 	if len(KnownViews) > 0:
+		PPG.View.SetCapabilityFlag(c.siReadOnly, False)
 		FirstKnownViewName = str(KnownViews[0].Name)
 
 		PPG.PPGLayout.Item("View").UIItems = viewSelectorEnumList
@@ -3615,7 +3648,7 @@ def RefreshMenuItems():
 	Print ("QMenu: RefreshMenuItems called",c.siVerbose)
 	globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 	CurrentMenuItemNumber = str(PPG.MenuItems.Value)
-	CurrentMenuName = str(PPG.MenuChooser.Value)
+	CurrentMenuName = PPG.MenuChooser.Value
 	listMenuItemsEnum = list()
 	oCurrentMenu = None
 	oCurrentMenu = getQMenu_MenuByName(CurrentMenuName)
@@ -3801,7 +3834,11 @@ def RefreshCommandList():
 		while NameInList in CommandListEnum: #Some softimage commands appear more than once with the same name, we need to make sure that the name is unique in the list, so we add spaces
 				NameInList = NameInList + " "
 		if strCommandFilter != "": #Filter for commands containing the search string
-			if NameInList.find(strCommandFilter) > -1:
+			#Search lower-case only
+			SearchName = NameInList.lower()
+			SearchString = strCommandFilter.lower()
+			
+			if SearchName.find(SearchString) > -1:
 				CommandListEnum.append("(c) " + NameInList) #Mark item as command by prefixing it with (c) and add the uique name to it
 				CommandListEnum.append(GUID) #Append with the GUID
 		else: #We are not filtering command names, just append the item to the list
@@ -3810,6 +3847,7 @@ def RefreshCommandList():
 	
 	PPG.PPGLayout.Item ("CommandList").UIItems = CommandListEnum
 	PPG.CommandList.Value = ""
+	gc.collect()
 	
 def RefreshDisplayEventsKeys():
 	Print("QMenu: RefreshDisplayEventsKeys called", c.siVerbose)
@@ -4228,9 +4266,11 @@ def QMenuLoadConfiguration(fileName):
 							oNewDisplayEvent.Key = int(Event.getAttribute("key"))
 							oNewDisplayEvent.KeyMask = int(Event.getAttribute("keyMask"))
 							result = globalQMenu_DisplayEvents.addEvent(oNewDisplayEvent)
+			gc.collect()
 			return True
 		else:
 			Print("Could not load QMenu Configuration from '" + str(fileName) + "' because the file could not be found!", c.siError)
+			gc.collect()
 			return False
 
 
@@ -4241,10 +4281,9 @@ def QMenuLoadConfiguration(fileName):
 
 #This is the main function that creates the string describing the Menu to render
 def DisplayMenuSet( MenuSetIndex ):
-	
 	#Print("DisplayQMenu_MenuSet_Execute called", c.siVerbose)
 	ViewSignature = (GetView(True))[0] #get the short/nice view signature
-	WindowPos = ViewSignature[2]
+	#WindowPos = ViewSignature[2]
 	
 	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
 	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
@@ -4295,6 +4334,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				Print("There is currently no QMenu Menu Set " + str(MenuSetIndex) + " defined for view '" + oCurrentView.Name + "!", c.siVerbose)
 		
 		if oMenuSet != None:
+
 			oContext = PrepareContextObject(None) #Lets fill our generic context object with all the data we have at hand for this session.
 				#so that only the litle remaining data needs to be filled in on every menu or menu item object we iterate over.
 			
@@ -4311,7 +4351,6 @@ def DisplayMenuSet( MenuSetIndex ):
 				oContext.storeQMenuObject(oQMenuDisplayContext)
 				DisplayMenu = False
 				DisplayMenu = ExecuteDisplayContext ( oQMenuDisplayContext, oContext , silent)
-				
 				if DisplayMenu == True: #We have found a matching context rule, we will display the associated menu
 					oAMenu = oMenuSet.AMenus[RuleIndex]
 					break
@@ -4402,7 +4441,7 @@ def DisplayMenuSet( MenuSetIndex ):
 			MenuString = "" #Start the MenuSet string
 			ArgList = list()
 					
-			if oMenus != [None,None,None,None]:				
+			if oMenus != [None,None,None,None]:
 				for oMenu in oMenus: 
 					MenuString = MenuString + "[" #Start the menu string
 					if oMenu != None:
@@ -4489,7 +4528,6 @@ def DisplayMenuSet( MenuSetIndex ):
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
 				
-				#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity"); return oQMenu_MenuItem #TODO: Debug QMenuRender command and find out why Operator Inspection fails after it has been called in some cases
 				CursorPos = win32gui.GetCursorPos()
 				WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
@@ -4553,7 +4591,7 @@ def QMenuRepeatLastCommand_Init(in_Ctxt):
 	oCmd.SetFlag(c.siSupportsKeyAssignment,  True)
 	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
 	oCmd.SetFlag(c.siNoLogging, False)
-	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is false otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is false otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
 	return True	
 
 def QMenuRepeatLastCommand_Execute():
@@ -4564,20 +4602,35 @@ def QMenuRepeatLastCommand_Execute():
 		bNonVerboseErrorReporting = False
 		QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , bNonVerboseErrorReporting )
 
-def QMenuGetMenuItemByName_Init(in_Ctxt):
+def QMenuGetByName_Init(in_Ctxt):
 	oCmd = in_Ctxt.Source
 	oCmd.ReturnValue = True
 	oArgs = oCmd.Arguments
-	oArgs.Add("strMenuItemName")
+	oArgs.Add("strQMenuObjectType")
+	oArgs.Add("strQMenuObjectName")
 	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
-	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
+	oCmd.SetFlag(c.siCannotBeUsedInBatch, False)
 	oCmd.SetFlag(c.siNoLogging, True)
-	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
 	return True
 	
-def QMenuGetMenuItemByName_Execute( strMenuItemName ):
-	oMenuItem = getQMenu_MenuItemByName(strMenuItemName)
-	return oMenuItem
+def QMenuGetByName_Execute( strQMenuObjectType ,  strQMenuObjectName):
+	SupportedObjects = ["MenuItem", "Menu", "Context", "MenuSet", "View" ]
+	oObject = None
+	if strQMenuObjectType in SupportedObjects:
+		if strQMenuObjectType == "MenuItem":
+			oObject = getQMenu_MenuItemByName(strQMenuObjectName)
+		if strQMenuObjectType == "Menu":
+			oObject = getQMenu_MenuByName(strQMenuObjectName)
+		if strQMenuObjectType == "MenuSet":
+			oObject = getQMenu_MenuSetByName(strQMenuObjectName)
+		if strQMenuObjectType == "Context":
+			oObject = getQMenu_MenuDisplayContextByName(strQMenuObjectName)
+		if strQMenuObjectType == "View":
+			oObject = getQMenu_ViewSignatureByName(strQMenuObjectName)
+		return oObject
+	else:
+		Print("QMenu: " + str(strQMenuObjectType) + " is an unknown Object Type", c.siError)
 	
 def QMenuDisplayMenuSet_0_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4591,7 +4644,6 @@ def QMenuDisplayMenuSet_0_Execute():
 	Print("QMenuDisplayMenuSet_0_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(0)
-		#oQMenu_MenuItem = App.QMenuGetMenuItemByName("Set Curve Knot Multiplicity")
 		if oQMenu_MenuItem != None:
 			globalQMenu_LastUsedItem = GetGlobalObject("globalQMenu_LastUsedItem")
 			globalQMenu_LastUsedItem.set(oQMenu_MenuItem)
@@ -4682,7 +4734,7 @@ def QMenuExecuteMenuItem_Init( in_ctxt ):
 	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
 	oCmd.SetFlag(c.siCannotBeUsedInBatch, True)
 	oCmd.SetFlag(c.siNoLogging, True)
-	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	oCmd.SetFlag(c.siAllowNotifications, True) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
 	return True
 	
 def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , verbosity ):
@@ -4699,13 +4751,14 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , verbosity ):
 				#oCmd =  App.GetCommandByUID(oQMenu_MenuItem.UID) #We used a compiled command now fast enough to look up commands by their UID, we avoid executing the false one with the same name (there are duplicates of commands in softimage sharing the same name)
 				oCmd= App.Commands(oQMenu_MenuItem.Name) #We use the name to identify the command because finding by UID would be too slow 
 				oCmd.Execute()
+				gc.collect()
 				return True
 			except:
 				if verbosity == True:
 					raise
 				else:
 					Print("An Error occured while QMenu executed the command '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
-
+					gc.collect()
 			
 		if oQMenu_MenuItem.Type == "QMenu_MenuItem":
 			oContext = PrepareContextObject( oQMenu_MenuItem )
@@ -4865,8 +4918,7 @@ def QMenuCreatePreferencesCustomProperty_Execute(bCheckSingle = true):
         Print("QMenuPreferences custom property is already defined - Inspecting existing property instead of creating a new one")
         App.InspectObj (colQMenuPreferences(0))
         return false
-
-		
+	
 def QMenuGetConfiguratorCustomProperty_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
 	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
@@ -4877,7 +4929,7 @@ def QMenuGetConfiguratorCustomProperty_Init( in_Ctxt ):
 	return True				
 
 def QMenuGetConfiguratorCustomProperty_Execute():
-	Print(" QMenuGetConfiguratorCustomProperty_Execute called", c.siVerbose)
+	#Print(" QMenuGetConfiguratorCustomProperty_Execute called", c.siVerbose)
 	return getQMenuConfiguratorCustomProperty() 
 
 def QMenuGetPreferencesCustomProperty_Init( in_Ctxt ):
@@ -4890,24 +4942,14 @@ def QMenuGetPreferencesCustomProperty_Init( in_Ctxt ):
 	return True				
 
 def QMenuGetPreferencesCustomProperty_Execute():
-	Print(" QMenuGetConfiguratorCustomProperty_Execute called", c.siVerbose)
-	return getQMenuConfiguratorCustomProperty() 
+	#Print(" QMenuGetConfiguratorCustomProperty_Execute called", c.siVerbose)
+	return getQMenuPreferencesCustomProperty() 
 	
 def getQMenuConfiguratorCustomProperty():
-	colQMenuConfigurator = XSIFactory.CreateActiveXObject( "XSI.Collection" )
-	
-	CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
-	Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
-
-	A = App.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" ) #Find all Custom Properties
-	for o in A:
-		if o.Type == ("QMenuConfigurator"): #Find all Custom Properties of Type "QMenuConfigurator"
-			return o
-			
-	if CommandLoggingState == True: #Re-enable command logging
-		Application.SetValue("preferences.scripting.cmdlog", True , "")
-	
-
+	for prop in Application.ActiveSceneRoot.Properties:
+		if prop.Type == "QMenuConfigurator":
+			return prop
+	return None
 
 def getQMenuPreferencesCustomProperty():
 	colQMenuConfigurator = XSIFactory.CreateActiveXObject( "XSI.Collection" )
@@ -4915,19 +4957,24 @@ def getQMenuPreferencesCustomProperty():
 	CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
 	Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
 	
-	A = App.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" ) #Find all Custom Properties
-	for o in A:
-		if o.Type == ("QMenuPreferences"): #Find all Custom Properties of Type "QMenuConfigurator"
-			return o
-	
+	CustomProperties = App.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" ) #Find all Custom Properties
+	for oProp in CustomProperties:
+		if oProp.Type == ("QMenuPreferences"): #Find all Custom Properties of Type "QMenuConfigurator"
+			break
+
 	if CommandLoggingState == True: #Re-enable command logging
 		Application.SetValue("preferences.scripting.cmdlog", True , "")
-			
+	
+	return o	
 			
 #=========================================================================================================================		
 # ========================================= Event Callback Functions =====================================================
 #=========================================================================================================================
 #"On selection changed" event to collect information about currently selected Objects
+
+def QMenu_NewSceneHandler_OnEvent(in_ctxt):
+	QMenuGetSelectionDetails()
+	
 def QMenuGetSelectionDetails_OnEvent(in_ctxt):
 	#Print("QMenu: QMenuGetSelectionDetails_OnEvent called",c.siVerbose)
 	
@@ -5047,7 +5094,6 @@ def QMenuGetSelectionDetails():
 		oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)	
 
 
-
 #Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
@@ -5057,39 +5103,39 @@ def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
- 	#Application.DelayedRefresh()
-	KeyPressed = in_ctxt.GetAttribute("KeyCode")
-	KeyMask = in_ctxt.GetAttribute("ShiftMask")
+	globalQMenuDisplayEventContainer = GetGlobalObject("globalQMenu_DisplayEvents")
+	if globalQMenuDisplayEventContainer != None:
+		globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
 
-	#Print ("Pressed Key is: " + str(KeyPressed))
-	#Print ("Mask Key is: " + str(KeyMask))
-	
-	Consumed = False #Event hasn't been consumed yet
-	
-	IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
-	if KeyPressed not in IlligalKeyPressedValues:
+		KeyPressed = in_ctxt.GetAttribute("KeyCode")
+		KeyMask = in_ctxt.GetAttribute("ShiftMask")
 
+		#Print ("Pressed Key is: " + str(KeyPressed))
+		#Print ("Mask Key is: " + str(KeyMask))
 		
-		#CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
-		#Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
+		Consumed = False #Event hasn't been consumed yet
 		
-		QMenuConfigurator = App.QMenuGetConfiguratorCustomProperty()
-		#if CommandLoggingState == True: #Re-enable command logging
-			#Application.SetValue("preferences.scripting.cmdlog", True , "")
-		
+		IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
+		#Print("Key Pressed: " + str(KeyPressed))
+		if KeyPressed not in IlligalKeyPressedValues:
+			
+			#CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
+			#Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
+			
+			QMenuConfigurator = App.QMenuGetConfiguratorCustomProperty()
+			#if CommandLoggingState == True: #Re-enable command logging
+				#Application.SetValue("preferences.scripting.cmdlog", True , "")
+			
 
-		#QMenuConfigurator = getQMenuConfiguratorCustomProperty()
-		globalQMenuDisplayEventContainer = GetGlobalObject("globalQMenu_DisplayEvents")
-		
-		if globalQMenuDisplayEventContainer != None:
-			globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
+			#QMenuConfigurator = getQMenuConfiguratorCustomProperty()
+
 
 			if QMenuConfigurator != None:
 				if QMenuConfigurator.RecordViewSignature.Value == True:
 					ViewSignature = (GetView(True))[0]
 					QMenuConfigurator.ViewSignature.Value = ViewSignature
 					QMenuConfigurator.RecordViewSignature.Value = False
-					Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
+					#Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
 					Consumed = True
 				
 				if QMenuConfigurator.DisplayEventKeys_Record.Value == True:
@@ -5113,7 +5159,6 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 						
 						#Finally display the corresponding menu set associated with the display event and get the users input
 						oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
-						
 						if oChosenMenuItem != None:
 							globalQMenu_LastUsedItem = GetGlobalObject("globalQMenu_LastUsedItem")
 							globalQMenu_LastUsedItem.set(oChosenMenuItem)
@@ -5132,9 +5177,10 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 					
 			# Finally tell Softimage that the event has been consumed (which prevents commands bound to the same hotkey to be executed)
 			in_ctxt.SetAttribute("Consumed", Consumed)
-	else:
-		in_ctxt.SetAttribute("Consumed", Consumed)
-			#gc.collect()
+		else:
+			#Print("Only Modifier Key was pressed!")
+			in_ctxt.SetAttribute("Consumed", Consumed)
+				#gc.collect()
 
 def QMenuExecution_OnEvent (in_ctxt):
 	Print("QMenu: QMenuExecution_OnEvent called",c.siVerbose)
@@ -5333,6 +5379,7 @@ def QMenuInitializeGlobals(force = False):
 	QMenuGetSelectionDetails()
 	
 def deleteQMenu_Menu(MenuName):
+	Print("Deleting Menu named: " + MenuName)
 	if MenuName != "":
 		globalQMenu_Menus = GetGlobalObject("globalQMenu_Menus")
 		oMenuToDelete = getQMenu_MenuByName(MenuName)
@@ -5552,6 +5599,7 @@ def getQMenu_ViewSignatureByName(signatureName):
 def getCommandByUID(UID):
 	for Cmd in App.Commands:
 		if Cmd.UID == UID:
+			
 			return Cmd
 	return None
 
@@ -5589,8 +5637,8 @@ def GetDictionary():
 	
 def UserQuery(strCaption, lsItems):
 	oDial = win32com.client.Dispatch( "XSIDial.XSIDialog" )
-	Language = oDial.Combo( strCaption, lsItems );
-	return Language
+	result = oDial.Combo( strCaption, lsItems );
+	return result
 
 
 #=========================================================================================================================	
