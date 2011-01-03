@@ -1,17 +1,26 @@
+//______________________________________________________________________________
 // ExtractAllSubcurvesPlugin
+// 11/2009 by Eugen Sares
+// last revision: 08.11.2010
+//
+//______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
 {
-	in_reg.Author = "Gene";
+	in_reg.Author = "Eugen";
 	in_reg.Name = "ExtractAllSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
 
 	in_reg.RegisterCommand("ExtractAllSubcurves","ExtractAllSubcurves");
+	in_reg.RegisterMenu(siMenuTbModelCreateCurveID,"ExtractAllSubcurves_Menu",false,false);
 	//RegistrationInsertionPoint - do not remove this line
 
 	return true;
 }
+
+
+//______________________________________________________________________________
 
 function XSIUnloadPlugin( in_reg )
 {
@@ -20,6 +29,9 @@ function XSIUnloadPlugin( in_reg )
 	Application.LogMessage(strPluginName + " has been unloaded.",siVerbose);
 	return true;
 }
+
+
+//______________________________________________________________________________
 
 function ExtractAllSubcurves_Init( in_ctxt )
 {
@@ -32,35 +44,74 @@ function ExtractAllSubcurves_Init( in_ctxt )
 	return true;
 }
 
+
+//______________________________________________________________________________
 function ExtractAllSubcurves_Execute(  )
 {
 
 	Application.LogMessage("ExtractAllSubcurves_Execute called",siVerbose);
+
+	var cSel = Application.Selection;
+
+	var immed = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
 	
-	var selection = Application.Selection; 
-	for(var i = 0; i < selection.Count; i++) 
+	if(!immed)
+	{
+		var buttonPressed = XSIUIToolkit.Msgbox( "Do you want to keep modelling relations?", 
+			siMsgYesNo | siMsgQuestion, "Extract All Subcurves" ) ;
+		if (buttonPressed == siMsgNo) immed = true;
+	}
+	
+	LogMessage("immed: " + immed);
+	
+	// Loop through all SubCurves
+	for(var i = 0; i < cSel.Count; i++) 
 	{ 
-	  oSel = selection(i); 
-	  if(oSel.Type == "crvlist") 
-	  { 
-		  //LogMessage("Extracting '" + oSel + "'."); 
-		  for(var j = 0; j < oSel.ActivePrimitive.Geometry.Curves.Count; j++) 
-		  { 
-				ExtractFromComponents("ExtractSubCrvOp", 
-					  oSel + ".subcrv[" + j + "]", 
-					  oSel + "_Subcurve" + j, 
-					  false, 
-					  siImmediateOperation);
-				FreezeObj(); 
-				//Desktop.RedrawUI(); 
-		  } 
-		  DeleteObj(oSel);
-	  } 
+		oSel = cSel(i);
+		if(oSel.Type == "crvlist")
+		{ 
+			//LogMessage("Extracting '" + oSel + "'."); 
+			for(var j = 0; j < oSel.ActivePrimitive.Geometry.Curves.Count; j++) 
+			{
+				if(immed)
+				{
+					var rtn = ExtractFromComponents("ExtractSubCrvOp", oSel + ".subcrv[" + j + "]", oSel + "_Subcurve" + j, false, siImmediateOperation);
+					var oCrv = rtn(0);	// ExtractFromComponents uses output arguments
+					MoveCtr2Vertices(oCrv, null);
+					FreezeObj(oCrv);
+					
+				} else
+				{
+					var rtn = ExtractFromComponents("ExtractSubCrvOp", oSel + ".subcrv[" + j + "]", oSel + "_Subcurve" + j, false, siPersistentOperation);
+					var oCrv = rtn(0);
+					MoveCtr2Vertices(oCrv, null);
+				}
+
+		  }
+		  
+		  if(immed) DeleteObj(oSel);
+		  
+	  }
 	  else 
 	  { 
-		  LogMessage(oSel + " is not a curve, can't extract!"); 
+		  LogMessage("Select a Nurbs CurveList first.");
 	  }
+	  
 	}
 	return true;
 }
 
+
+//______________________________________________________________________________
+
+
+function ExtractAllSubcurves_Menu_Init( in_ctxt )
+{
+	var oMenu;
+	oMenu = in_ctxt.Source;
+	oMenu.AddCommandItem("Extract All Subcurves","ExtractAllSubcurves");
+	return true;
+}
+
+
+//______________________________________________________________________________
