@@ -20,6 +20,8 @@ for view in Views:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
 """
+#ASK: How to make a menu that cannot be torn off?
+#ASK: How to make a menu item that has a checkmark or dot?
 #TODO: Application.OpenView("Cache Manager"): "Cache Manager" View Definition is not documented. External Files Manager ditto
 #TODO: Write "Remove from all Groups or from selected Groups" command 
 #TODO: Write Toggle Backface Culling command
@@ -779,11 +781,11 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Major = 0
 	in_reg.Minor = 9
 
-	#Register the QMenu configurator custom property
+	#Register the QMenu Configurator Custom Property
 	in_reg.RegisterProperty( "QMenuConfigurator" )
 	in_reg.RegisterProperty( "QMenuPreferences" )
 	
-	#Register Custom QMenu Commands
+	#Register Custom Commands
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
 	in_reg.RegisterCommand( "QMenuGetByName" , "QMenuGetByName" )
 	in_reg.RegisterCommand( "QMenuCreatePreferencesCustomProperty", "QMenuCreatePreferencesCustomProperty" )
@@ -802,7 +804,7 @@ def XSILoadPlugin( in_reg ):
 	#Register Menus
 	#in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
 	# siMenuMainApplicationID
-	in_reg.RegisterMenu( c.siMenuMainTopLevelID  , "QMenu" , true , true)
+	in_reg.RegisterMenu( c.siMenuMainTopLevelID  , "QMenu" , False , True)
 	
 	#Register events
 	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
@@ -1693,6 +1695,7 @@ def QMenuConfigurator_DeleteMenu_OnClicked():
 				PreviousMenuName = MenusEnum[CurrentMenuIndex - 2]
 						
 			PPG.Menus.Value = PreviousMenuName
+		
 		RefreshMenuContexts()
 		RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
@@ -2226,15 +2229,29 @@ def QMenuConfigurator_AddQMenuViewSignature_OnClicked():
 	newSignature.Name = newSignatureName
 	newSignature.Signature = newSignatureString	
 	globalQMenu_ViewSignatures.addSignature(newSignature)
+	
 	RefreshViewSignaturesList()
+	
 	PPG.ViewSignatures.Value = newSignatureName
 	PPG.ViewSignature.Value = newSignatureString
 	PPG.ViewSignatureName.Value = newSignatureName
+	
 	RefreshViewChooser()
 	RefreshViewMenuSets()
 	RefreshViewMenuSetsWidgets()
+	RefreshViewDetailsWidgets()
 	PPG.Refresh()
 	
+	"""
+	PPG.ViewSignatures.Value = previousViewSignatureName
+	RefreshViewDetailsWidgets()
+	RefreshViewMenuSets()
+	RefreshViewMenuSetsWidgets()
+	RefreshViewChooser()
+	RefreshMenuSetChooser()
+	PPG.Refresh()
+	"""
+		
 def QMenuConfigurator_DelQMenuViewSignature_OnClicked():
 	Print("QMenuConfigurator_DelQMenuViewSignature_OnClicked called", c.siVerbose)
 	
@@ -2582,9 +2599,9 @@ def QMenuConfigurator_RemoveMenuContext_OnClicked():
 			PPG.MenuContexts.Value = CurrentContextNumber
 			
 		RefreshMenuChooser()
-		RefreshMenuItems()
 		RefreshMenuSetDetailsWidgets()
 		RefreshMenuItemDetailsWidgets()
+		RefreshMenuItems()
 		PPG.Refresh()
 
 def QMenuConfigurator_CtxUp_OnClicked():
@@ -5464,28 +5481,28 @@ def deleteQMenu_Menu(MenuName):
 						MenuIndex = oMenuSet.AMenus.index(oMenu)
 						oMenuSet.removeMenuAtIndex (MenuIndex,"A")
 					except:
-						DoNothin = True
+						pass
 			for oMenu in oMenuSet.BMenus:
 				if oMenu == oMenuToDelete:
 					try:
 						MenuIndex = oMenuSet.BMenus.index(oMenu)
 						oMenuSet.removeMenuAtIndex (MenuIndex,"B")
 					except:
-						DoNothin = True
+						pass
 			for oMenu in oMenuSet.CMenus:
 				if oMenu == oMenuToDelete:
 					try:
-						MenuIndex = oMenuSet.AMenus.index(oMenu)
+						MenuIndex = oMenuSet.CMenus.index(oMenu)
 						oMenuSet.removeMenuAtIndex (MenuIndex, "C")
 					except:
-						DoNothin = True
+						pass
 			for oMenu in oMenuSet.DMenus:
 				if oMenu == oMenuToDelete:
 					try:
-						MenuIndex = oMenuSet.AMenus.index(oMenu)
+						MenuIndex = oMenuSet.DMenus.index(oMenu)
 						oMenuSet.removeMenuAtIndex (MenuIndex, "D")
 					except:
-						DoNothin = True
+						pass
 						
 		for oMenu in globalQMenu_Menus.Items:
 			for oItem in oMenu.Items:
