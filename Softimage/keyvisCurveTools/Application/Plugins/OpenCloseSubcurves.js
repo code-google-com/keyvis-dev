@@ -1,23 +1,23 @@
 //______________________________________________________________________________
 // OpenCloseSubcurvesPlugin
-// 04/2010 by Eugen Sares
-// last revision: 25/04/2010
+// 2010/04 by Eugen Sares
+// last update: 2010/12/05
 //
 // Usage:
-// Select a NurbsCurveList with one or more Subcurves.
-// Switch to selection filter "Subcurve" > select some Subcurves > ApplyOpenCloseSubcurves.
-// The open/closedness of the selected Subcurves will be toggled.
+// - Select Subcurves
+// - Model > Modify > Curve > Open/Close Subcurve
+// The open/closed status of the of the selected Subcurves will be toggled.
 // 
-// Other than the factory OpenClose Operator, there's a parameter "OpenWithGap".
+// Info: this Op has the parameter "OpenWithGap".
 // When checked, the last Segment (between the next to last and first Point) will be deleted when opening.
-// (what the factory OpenClose Op does)
-// When unchecked, the last Segment will remain.
+// (what the factory OpenClose Op does).
+// When unchecked, the last Segment will persist.
 //
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
 {
-	in_reg.Author = "Gene";
+	in_reg.Author = "Eugen Sares";
 	in_reg.Name = "OpenCloseSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
@@ -69,51 +69,102 @@ function ApplyOpenCloseSubcurves_Execute(args)
 {
 	Application.LogMessage("ApplyOpenCloseSubcurves_Execute called",siVerbose);
 
-	do{
-		if(args == "") break;
-		if(args(0).Type != "subcrvSubComponent") break;
-		// var oSubcurves = args(0);
-		// LogMessage(oSubcurves);														// "text.subcrv[3-LAST]"
-		// LogMessage(oSubcurves.Type);													// "subcrvSubComponent"
-// ToDo: Support for multiple Objects
-		var oSubComponent = args(0).SubComponent;
-		var oParent = oSubComponent.Parent3DObject;
-		var oComponentCollection = oSubComponent.ComponentCollection;
-		
-// create an index Array from the Subcurve collection
-		var idxArray = new Array();
-		for(i = 0; i < oComponentCollection.Count; i++)
+	try
+	{
+		var bPick, bNoCluster;
+		var oSel;
+	
+		if(args == "")
 		{
-			var subcrv = oComponentCollection.item(i);
-			// Logmessage("Subcurve [" + subcrv.Index + "] selected");
-			idxArray[i] = subcrv.Index;
+		// Nothing is selected
+			bPick = true;
+			bNoCluster = true;
+			
 		}
-		
-// create Cluster with Subcurves to delete
-		oCluster = oParent.ActivePrimitive.Geometry.AddCluster( siSubcurveCluster, "OpenCloseSubcurves", idxArray );
-		
-		DeselectAllUsingFilter("Subcurve");
+		else if(args(0).Type == "subcrv" && ClassName(args(0)) == "Cluster" )
+		{
+		// Subcurve Cluster is selected
+			var oCluster = args(0);
+			var oParent = oCluster.Parent3DObject;
+			bPick = false;
+			bNoCluster = false;
+			
+		} else if(args(0).Type == "subcrvSubComponent")
+		{
+		// Subcurves are selected
+			oSel = args(0);
+			bPick = false;
+			bNoCluster = true;
+			
+		} else
+		{
+		// Anything else is selected
+			// oSel is set after picking
+			bPick = true;
+			bNoCluster = true;
+			
+		}
+
+
+		if(bPick)
+		{
+			do
+			{
+			// Start Subcurve Pick Session
+				var subcurves, button;	// useless but needed in JScript
+				// PickElement() manages to select a CurveList first, then a Subcurve
+				var rtn = PickElement( "SubCurve", "subcurves", "", subcurves, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(!button) throw "Argument must be Subcurves.";
+				
+				oSel = rtn.Value( "PickedElement" );
+				//var modifier = rtn.Value( "ModifierPressed" );
+
+			} while (oSel.Type != "subcrvSubComponent");
+			
+		}
+
+		if(bNoCluster)
+		{
+			var oSubComponent = oSel.SubComponent;
+			var oParent = oSubComponent.Parent3DObject;
+			var oComponentCollection = oSubComponent.ComponentCollection;
+			// LogMessage("No. of Subcurves: " + oComponentCollection	// OK
+			
+			// create an index Array from the Subcurve collection
+			var idxArray = new Array();
+			for(i = 0; i < oComponentCollection.Count; i++)
+			{
+				var subcrv = oComponentCollection.item(i);
+				// Logmessage("Subcurve [" + subcrv.Index + "] selected");
+				idxArray[i] = subcrv.Index;
+			}
+			
+			// create Cluster with Subcurves to delete
+			var oCluster = oParent.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", idxArray );
+
+		}
 		
 
 		var newOp = XSIFactory.CreateObject("OpenCloseSubcurves");	// known to the system through XSILoadPlugin callback
-// OpenCloseSubcurves_Init and
-// OpenCloseSubcurves_Define are called...
 		
 		newOp.AddOutputPort(oParent.ActivePrimitive, "outputCurve");	// working
 		newOp.AddInputPort(oParent.ActivePrimitive, "inputCurve");	// working
-
-//		newOp.AddOutputPort(oParent.Name + ".crvlist", "outputCurve");	// also working
-//		newOp.AddInputPort(oParent.Name + ".crvlist", "inputCurve");	// also working
-		newOp.AddInputPort(oCluster, "deleteCluster");	// params: PortTarget, [PortName]
+		newOp.AddInputPort(oCluster, "openCloseClusterPort");	// params: PortTarget, [PortName]
 
 		newOp.Connect();
+		
+		//DeselectAllUsingFilter("SubCurve");
+		
 		InspectObj(newOp);
+		
 		return newOp;
 
-	} while(false);	// block is left in case of an error.
-
-	LogMessage("Please select some Subcurves first.");
-	return false;
+	} catch(e)
+	{
+		LogMessage(e, siWarning);
+		return false;
+	};
 	
 }
 
@@ -167,9 +218,10 @@ function OpenCloseSubcurves_Update( in_ctxt )
 	
 	Application.LogMessage("OpenCloseSubcurves_Update called",siVerboseMsg);
 	
-	var geomOut = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
+	
+	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
 
-	var inputClusterElements = in_ctxt.GetInputValue("deleteCluster").Elements;	// ClassName: ClusterElementCollection
+	var inputClusterElements = in_ctxt.GetInputValue("openCloseClusterPort").Elements;	// ClassName: ClusterElementCollection
 	var clusterCount = inputClusterElements.Count;
 
 	var inputCrvColl = in_ctxt.GetInputValue("inputCurve").Geometry.Curves;
@@ -178,8 +230,9 @@ function OpenCloseSubcurves_Update( in_ctxt )
 	// "flagArray" is a boolean array which is true at the index of each selected Subcurve.
 	// inputClusterElements.FindIndex() can be used as well, but this should be faster at higher Subcurve counts.
 	var flagArray = new Array(inputCrvColl.Count);
-	for(i = 0; i < inputCrvColl.Count; i++) flagArray[i] = false;	// initialize?
+	for(i = 0; i < inputCrvColl.Count; i++) flagArray[i] = false;	// init
 	for(i = 0; i < clusterCount; i++) flagArray[inputClusterElements(i)] = true;
+
 
 	// create empty arrays to hold the new CurveList data
 	// http://softimage.wiki.softimage.com/index.php/Creating_a_merge_curve_SCOP
@@ -198,15 +251,11 @@ function OpenCloseSubcurves_Update( in_ctxt )
 	{
 		// get input Subcurve
 		var subCrv = inputCrvColl.item(subCrvIdx);	// Type: NurbsCurve, ClassName: NurbsCurve
-		VBdata = new VBArray(subCrv.Get2(siSINurbs));	// NurbsCurve.Get2 returns a complete data description of the Nurbs Curve as VBArray.										
-		var subCrvData = VBdata.toArray();	// convert to native JScript array. Note: "toArray", NOT "ToArray"!
+		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 
 
-		// 1. get Control Points array
-		var vbArg0 = new VBArray(subCrvData[0]);
-		var aPoints = vbArg0.toArray();
-
-		// 2. get Number of Control Points
+		// Get Point data
+		var vbArg0 = new VBArray(subCrvData[0]); var aPoints = vbArg0.toArray();
 		aNumAllPoints[subCrvIdx] = aPoints.length/4;	// /4? x,y,z,weight
 
 		// check if the first and last Point coincide
@@ -217,20 +266,13 @@ function OpenCloseSubcurves_Update( in_ctxt )
 				bFirstOnLast = true;
 //LogMessage("firstOnLast: " + firstOnLast);
 
-		// 3. get aAllKnots array
-		var vbArg1 = new VBArray(subCrvData[1]);
-		var aKnots = vbArg1.toArray();
-
-		// 4. get Number of AllKnots	
+		// Get Knot data
+		var vbArg1 = new VBArray(subCrvData[1]); var aKnots = vbArg1.toArray();
 		aNumAllKnots[subCrvIdx] = aKnots.length;
 
-		// 5. get OpenClose flag
+		// Get other data
 		aIsClosed[subCrvIdx] = subCrvData[2];
-
-		// 6. get Curve Degree
 		aDegree[subCrvIdx] = subCrvData[3];
-
-		// 7. get Parameterization
 		aParameterization[subCrvIdx] = subCrvData[4];
 
 
@@ -286,35 +328,14 @@ function OpenCloseSubcurves_Update( in_ctxt )
 			} else
 			{
 			// CLOSE the Subcurve
-				if(bFirstOnLast)
-				{
-				// first and last Point were overlapping
-				// -> remove last Point
-					for(var i = 0; i < 4; i++) aPoints.pop();
-					
-					// truncate Knot Vector
-					// on closed Curves: K = P + 1
-					aKnots = aKnots.slice(0, aPoints.length + 1);
-
-				} else
-				{
-				// first and last Point were apart
-					// Point list does not change
-					// adapt Knot Vector length: on closed Curves: K = P + 1
-					// on degr. 1 Curves: one Knot more // degr. 2: same length // degr. 3: one Knot less
-					aKnots.length = aPoints.length / 4 + 1;	// /4? x,y,z,w
-
-					// first Knot(s)
-					// e.g. on a degree 3 Curve: [-2,-1,0,...]
-					for(var i = aDegree[subCrvIdx] - 2; i >= 0; i--)	aKnots[i] = aKnots[i + 1] - 1;
-
-					// last Knot
-					aKnots[aKnots.length - 1] = aKnots[aKnots.length - 2] + 1;
-					
-				}
-				aIsClosed[subCrvIdx] = true;		
+				var ret = closeNurbsCurve(aPoints, aKnots, aDegree[subCrvIdx]);
+				aPoints = ret.aPoints;
+				aKnots = ret.aKnots;
+			
+				aIsClosed[subCrvIdx] = true;
 				
 			}	// end else
+
 		aNumAllPoints[subCrvIdx] = aPoints.length/4;
 		aNumAllKnots[subCrvIdx] = aKnots.length;
 		
@@ -342,7 +363,7 @@ function OpenCloseSubcurves_Update( in_ctxt )
 */
 
 	// overwrite this CurveList using Set
-	geomOut.Set(
+	outCrvListGeom.Set(
 		subCrvIdx,			// 0. number of Subcurves in the Curvelist
 		aAllPoints, 		// 1. Array
 		aNumAllPoints, 		// 2. Array, number of Control Points per Subcurve
@@ -355,6 +376,64 @@ function OpenCloseSubcurves_Update( in_ctxt )
 		
 	return true;
 
+}
+
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+function closeNurbsCurve(aPoints, aKnots, degree)
+{
+	if(aPoints.length > 8)
+	{
+	// Curve has more than 2 Points, can be closed.
+	
+		var tol = 10e-10;
+	
+		// Check if the first and last Point coincide
+		if(	Math.abs(aPoints[0] - aPoints[aPoints.length - 4]) < tol &&
+			Math.abs(aPoints[1] - aPoints[aPoints.length - 3]) < tol &&
+			Math.abs(aPoints[2] - aPoints[aPoints.length - 2]) < tol)
+			bFirstOnLast = true;
+		else bFirstOnLast = false;
+
+
+		if(bFirstOnLast)
+		{
+		// First and last Point were overlapping
+			// Remove last Point
+			aPoints = aPoints.slice(0, aPoints.length - 4);
+			
+			// Truncate Knot Vector
+			// On closed Curves: K = P + 1 (numKnots = numPoints + 1)
+			aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
+
+		} else
+		{
+		// First and last Point were apart
+			// Point array does not change!
+			
+			// Adapt Knot Vector length: on closed Curves: K = P + 1
+			// degree 1: one Knot more
+			// degree 2: same length
+			// degree 3: one Knot less
+			aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
+			
+			// Set first Knot(s)
+			// degree 1: [0,1,...]
+			// degree 2: [-1,0,1,...]
+			// degree 3: [-2,-1,0,1,...]
+			for(var i = degree - 2; i >= 0; i--)	aKnots[i] = aKnots[i + 1] - 1;
+			
+			// Set last Knot = 2nd last + 1
+			aKnots[aKnots.length - 1] = aKnots[aKnots.length - 2] + 1;
+
+		}				
+
+	}
+	
+	return {aPoints:aPoints,
+			aKnots:aKnots};
 }
 
 
@@ -406,7 +485,7 @@ function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("OpenCloseSubcurves","ApplyOpenCloseSubcurves");
+	oMenu.AddCommandItem("Open/Close Subcurves","ApplyOpenCloseSubcurves");
 	return true;
 }
 
