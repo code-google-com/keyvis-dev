@@ -5293,7 +5293,7 @@ def QMenuDestroy_OnEvent (in_ctxt):
 
 def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
-	oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
+	oMenu.AddCallbackItem("Open QMenu Configurator","QMenuConfiguratorMenuClicked")
 	oMenu.AddCallbackItem("Edit QMenu Preferences","QMenuPreferencesMenuClicked")
 	if Application.GetValue("preferences.QMenu.QMenuEnabled") == False:
 		oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
