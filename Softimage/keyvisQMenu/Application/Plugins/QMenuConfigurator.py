@@ -4,7 +4,48 @@
 # Author: Stefan Kubicek
 # mail: stefan@keyvis.at
 
-# Code dependencies: uses GetCommandByUID from keyvisCommands.dll
+# Code dependencies: none
+
+# = Bugs and TODOs= 
+
+#QMenu Bug: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode, CreateModelAndCOnvertToRef)
+#	-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
+#   -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
+#TODO: Store Keys in preferences instead of config file
+#TODO: Write "Remove from all Groups or from selected Groups" command 
+#TODO: Write "Toggle Backface Culling in View" command
+#TODO: WIP- Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
+#SI Bug: Sometimes, when deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
+#Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere -> Does not look like it
+#TODO: Article about delayed events 
+
+#TODO: Try finding currently active view by comparing Rectangles of available views -> Difficult, because rectangles retrieved from Python differ from those rported by Softimage
+#TODO: Execute button should only execute current text selection in editor
+#TODO: Create texture Editor and Render Tree example menu items
+#TODO: Convert Merge clusters menu item into a command
+#TODO: Implement QMenu command as Python lib so it can be called as a function and not as a command (prevents QMenu from appearing as the Undo/Repeat item in the edit menu)
+#TODO: Better use dictionaries in globalQMenu_Menus, ..Items etc? 
+#TODO: Add categorisation to menus (like script items)
+#TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
+#TODO: Implement Cleanup functionality to delete empty script items and menus
+#TODO: Japanese font is untested
+
+
+#Maybe-Bugs:
+#SI bug: When calling executeScriptCode for the first time on code stored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
+#SI Bug: Strange bug in XSI7.01: When a command allows notifications and is executed and undone, it causes itself or other commands to be unfindable through App.Commands("Commandname") (-> returns none)
+
+
+
+# ============================= Helpful code snippets==========================================
+"""
+if ( !originalsetting ) { 
+   prefs.SetPreferenceValue( "scripting.cmdlog", false ); 
+"""
+
+"""
+Application.InstallCustomPreferences("QMenuConfigurator","QMenu")
+"""
 
 """
 Views = Application.Desktop.ActiveLayout.Views
@@ -19,94 +60,6 @@ for view in Views:
 	if view.Floating:
 	#if view.Visible:
 		Application.LogMessage(view.Name + ": " + str(view.Type) + str(view.Rectangle) + str(view.FullName) + str(view.Parent))
-"""
-#ASK: How to make a menu that cannot be torn off?
-#ASK: How to make a menu item that has a checkmark or dot?
-#TODO: Application.OpenView("Cache Manager"): "Cache Manager" View Definition is not documented. External Files Manager ditto
-#TODO: Write "Remove from all Groups or from selected Groups" command 
-#TODO: Write Toggle Backface Culling command
-#TODO: Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
-#TODO: Research if feasible: WIP -  QMenuGetSelectionDetails(): should query selection filter and only if filter is not Object or Group  or Center should pass on old selection types and class names (to find out if we are in component mode and what objects are hilited) - WIP
-
-#TODO: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode, CreateModelAndCOnvertToRef)
-#	-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
-#   -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
-
-#Report: Remove Transform Group also deletes non-Transform-Group objects, even when they are not in a Transform group
-#Report: When deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
-#Report: Curve Fillet command does not work in Immed mode
-
-#Report: Verbose warning is printed each time cmdlog preference is disabled via scripting - annoying. Parameter should be allowed to be changed via script or warning should be removed
-#Report: it is not possible to categorize ones own commands
-#Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere -> Does not look like it
-#TODO: Article about delayed events 
-#TODO: Try finding currently active view by comparing Rectangles of available views -> Difficult, because rectangles retrieved from Python differ from those rported by Softimage
-#TODO: Pass in Viewport under mouse to contexts script items and menu functions. Also include material editor
-#Report:  ApplyGenOp does not care about ImmedMode, ApplyTopoOp/ApplyOp do, but they ignore siOperationMode parameter (always honor ImmedMode, even when setting siPersistentOperation)
-#TODO: Finish Menu Items: Extract Edges as Curve
-
-#Report: Fillet Surfaces freezes XSI when setting too low a Start Radius value
-#Report: Trim by Projection does not always produce a proper trim when moving trim curve (sometimes only on back side)
-#Report: Open/Close Surface freezes XSI when closing both u and v on a cylinder
-#Report: Snip crahses XSI when selecting two Iso curves on a surface, call Snip, then adjust the Position parameter (which will set both positions to the same value, freezing XSI
-#Report: Snip crashes XSI when selecting an opened cone surface and calling Snip, then adjusting the snip parameter
-#Report: Timer event execution will not wait for Pick session.
-#Report: No command for menu Items:  "Remove Knot" (Application.SetCurveKnotMultiplicity("circle.knot[14]", 0, "siPersistentOperation")  -> scripting required
-# "Extract Edges As Curve", "Merges Curves",
-#Report: There are no separate commands for menu items "Align Bezier Handles, -Back to Forward, -Forward to Back", (uses AlignBezierKnotsTangents)  
-#TODO: Store Keys in preferences instead of config file
-#TODO: Implement proper keywords file switching when changing script language of an item
-#TODO: Execute button should only execute current text selection in editor
-#TODO: Separate QMenuConfigurator into QMenuConfigurator (custom Prop only) and QMenuPreferences (file and debug prefs only)
-
-#TODO: Evaluate if using a Selection Info class and event is really faster when evaluating contexts
-#TODO: Create texture Editor and Render Tree example menu items
-
-#TODO: Convert Merge clusters menu item into a command
-#TODO: Implement QMenu command as Python lib so it can be called as a function and not as a command (prevents QMenu from appearing as the Undo/Repeat item in the edit menu)
-#TODO: Fix QMenu menu not appearing on second monitor -> Eugen
-
-#TODO: Use dictionaries in globalQMenu_Menus, ..Items etc? 
-#TODO: Implement "LastClickedView" attribute and class and a command to query "full" and "nice" View Signature (TO find currently active Window?). Already implemented in getView?
-#TODO: Add categorisation to menus (like script items)
-#TODO: GET XSI window handle using native Desktop.GetApplicationWindowHandle() function (faster than python and win32 code?)
-
-#Try: Check if it is fast enough to have a custom command to execute context scripts (VB, JS, Py) instead of using the ExecuteScriptCode command, which is very slow
-#TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
-
-#Report: It is not possible to prevent a command from being repeatable (should be a capability flag of the command, or at least tied to noLogging)
-#Report: It is not possible to set more than one shader ball model at a time
-#Report: How to query name of currently active window? How to query currently active window.
-#Report bug: When calling executeScriptCode for the first time on code stored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
-#Report bug: Execute Script Code is insanely slow compare to executing the code directly
-#Report bug: Pasting into the text editor causes "\n" charcters to be replacd with "\n\r"
-#Report bug: When executing context script error is thrown when last character is a whitespace or return char (Problem with text widget?) or comment
-#Report Bug: Strange bug in XSI7.01: When a command allows notifications and is executed and undone, it causes itself or other commands to be unfindable through App.Commands("Commandname") (-> returns none)
-#Report Bug: Local subdivision _does_ work when assigned to a key! Currently is flagged as not.
-#Report duplicate commands (Dice Polygons, Dice Object & Dice Object/Polygons does the same)
-#Report duplicate commands (Invert Polygons, Invert All Normals, Invert Selected Polygons; Delete Components vs Delete Component)
-#Report duplicate commands (InsertCurveKnot, SetCurveKnotMultiplicity, 
-#Report (custom?) commands not supporting key assignment are still listed in the keyboard mapping command list (should better not be listed?) 
-
-#TODO: Implement Cleanup functionality to delete empty script items and menus
-
-#Cleanup: Rename QMenu_MenuItem class and related functions (e.g. getQMenu_MenuItemByName) to "ScriptItem"
-
-#Japanese font is untested
-
-#Report: oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad does not work?
-#TODO: Enable color coding for text fields according to set script language - > Bug in XSI that prevents certain text editor features from being displayed already
-
-
-
-# ============================= Helpful code snippets==========================================
-"""
-if ( !originalsetting ) { 
-   prefs.SetPreferenceValue( "scripting.cmdlog", false ); 
-"""
-
-"""
-Application.InstallCustomPreferences("QMenuConfigurator","QMenu")
 """
 
 #============================== Plugin Code Start =============================================
@@ -810,7 +763,6 @@ def XSILoadPlugin( in_reg ):
 	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
 	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
 		 																 #wrong menus are displayed based on selection that does not ecist anymore in new scene)
-
 	in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup )
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
