@@ -34,7 +34,7 @@
 #Maybe-Bugs:
 #SI bug: When calling executeScriptCode for the first time on code stored in an ActiveX class attribute (e.g. MenuItem.dode) an attribute error will be thrown. Subsequent calls do not exhibit this behaviour
 #SI Bug: Strange bug in XSI7.01: When a command allows notifications and is executed and undone, it causes itself or other commands to be unfindable through App.Commands("Commandname") (-> returns none)
-
+#SI Bug: ApplyGenOp does not care about ImmedMode, ApplyTopoOp/ApplyOp do, but they ignore siOperationMode parameter (always honor ImmedMode, even when setting siPersistentOperation)
 
 
 # ============================= Helpful code snippets==========================================
@@ -1096,8 +1096,8 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
 	oCodeEditor.SetAttribute(c.siUIFolding, True ) #Broken since XSI7.0
-	oCodeEditor.SetAttribute(c.siUIKeywordFile, getDefaultConfigFilePath ("Python.Keywords"))
-	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF)
+	oCodeEditor.SetAttribute(c.siUIKeywordFile, getDefaultConfigFilePath ("Python.keywords")) #Broken since XSI7.0
+	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF) #Broken since XSI7.0
 	oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad )    #Broken since XSI7.0
 
 	#oCodeEditor.SetAttribute(c.siUIKeywords, "def pass")
@@ -5293,7 +5293,7 @@ def QMenuDestroy_OnEvent (in_ctxt):
 
 def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
-	oMenu.AddCallbackItem("Open QMenu Configurator","QMenuConfiguratorMenuClicked")
+	oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
 	oMenu.AddCallbackItem("Edit QMenu Preferences","QMenuPreferencesMenuClicked")
 	if Application.GetValue("preferences.QMenu.QMenuEnabled") == False:
 		oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
