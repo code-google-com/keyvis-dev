@@ -1,2 +1,0 @@
-QMenu: A C++ plugin that displays quad menus
-QMenuConfigurator: A custom preference PPG that allows for easy configuration of Quad menus that QMenu can display
