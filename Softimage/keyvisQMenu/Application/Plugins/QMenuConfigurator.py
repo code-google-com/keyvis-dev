@@ -730,7 +730,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Author = "Stefan Kubicek"
 	in_reg.Name = "QMenuConfigurator"
 	in_reg.Email = "stefan@keyvis.at"
-	in_reg.URL = "mailto:stefan@keyvis.at"
+	in_reg.URL = "http://www.keyvis.at"
 	in_reg.Major = 0
 	in_reg.Minor = 9
 
