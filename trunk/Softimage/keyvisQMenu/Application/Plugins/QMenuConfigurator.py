@@ -785,7 +785,7 @@ def QMenuConfigurator_OnInit( ):
 	Print ("QMenu: QMenuConfigurator_OnInit called",c.siVerbose)
 	initializeQMenuGlobals(False)
 	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
-	globalQMenu_ConfigStatus.Changed = True #When opening the PPG we assume that changes are made. This is a somewhat bold assumption but checking every value for changes is too laborious 
+	globalQMenu_ConfigStatus.Changed = True #When opening the PPG we assume that changes are made. This is a simplification but checking every value for changes would be too laborious.
 	RefreshQMenuConfigurator()
 	#Print ("Currently Inspected PPG's are: " + str(PPG.Inspected))
 	PPG.Refresh()
@@ -5228,7 +5228,7 @@ def QMenuExecution_OnEvent (in_ctxt):
 			QMenuExecuteMenuItem_Execute (oItem, bNonVerboseErrorReporting)
 			
 def QMenuInitialize_OnEvent (in_ctxt):
-	Print ("QMenu Startup event called",c.siVerbose)
+	Print ("QMenu: QMenu Startup event called",c.siVerbose)
 	initializeQMenuGlobals(True)
 	FirstStartup = False
 	#Load the QMenu Config File
@@ -5255,6 +5255,10 @@ def QMenuInitialize_OnEvent (in_ctxt):
 		result = loadQMenuConfiguration(QMenuConfigFile)
 		if result:
 			Print("Successfully loaded QMenu Config file from: " + str(QMenuConfigFile) , c.siVerbose)
+			try:
+				Application.SetValue("preferences.QMenu.QMenuConfigurationFile", QMenuConfigFile,"")
+			except:
+				Print("Could not set preferences.QMenu.QMenuConfigurationFile!", c.siVerbose)
 			App.Preferences.SetPrefeRenceValue("QMenu.QMenuConfigurationFile", str(QMenuConfigFile))
 			App.Preferences.SetPreferenceValue("QMenu.FirstStartup", False)
 		else:
@@ -5293,14 +5297,23 @@ def QMenuDestroy_OnEvent (in_ctxt):
 
 def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
-	oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
-	oMenu.AddCallbackItem("Edit QMenu Preferences","QMenuPreferencesMenuClicked")
-	if Application.GetValue("preferences.QMenu.QMenuEnabled") == False:
-		oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
-	else:
-		oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
+	
+	try:
+		enabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
+		oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
+		oMenu.AddCallbackItem("Edit QMenu Preferences","QMenuPreferencesMenuClicked")
+		if enabled == False:
+			oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
+		else:
+			oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
+	except:
+		Print("QMenu Preferences not found - if you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
+		oMenu.AddCallbackItem("QMenu Preferences not found!","QMenuPreferenceNotFoundClicked")
 	return True
 
+def QMenuPreferenceNotFoundClicked(in_ctxt):
+	Print("As the menu says: QMenu Preferences were not found. If the error persists after restarting Softimage, try reinstalling the QMenu addon.", c.siError)
+	
 def QMenuConfiguratorMenuClicked( in_ctxt ):
     App.OpenQMenuEditor()
     return True
