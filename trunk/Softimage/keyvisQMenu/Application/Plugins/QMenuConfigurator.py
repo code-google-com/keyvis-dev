@@ -7,7 +7,7 @@
 # Code dependencies: none
 
 # = Bugs and TODOs= 
-
+#TODO: Try using a proper command for DisplayMenuSet and see if problem with modal PPGs persists
 #QMenu Bug: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode, CreateModelAndCOnvertToRef)
 #	-> Report: Creating a blend curve in immediate mode from menu will let me adjust params. Creating one using same ApplyGenOp command will not. Why? How To?
 #   -> SetThumbnail, SelectionInfo, SetUserKeyword commands fail when called from QMenu (in general: Modal dialogues do not display after QMenuRender is called)
@@ -5191,9 +5191,9 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 					if ((oDispEvent.Key == KeyPressed) and (oDispEvent.KeyMask == KeyMask )): #We have found a display event that matches the key(s) that were just pressed
 						Consumed = True
 						
-						
 						#Finally display the corresponding menu set associated with the display event and get the users input
 						oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
+						#Now after user has clicked on something...
 						if oChosenMenuItem != None:
 							globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 							globalQMenu_LastUsedItem.set(oChosenMenuItem)
@@ -5307,12 +5307,12 @@ def QMenu_Init( in_ctxt ):
 		else:
 			oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
 	except:
-		Print("QMenu Preferences not found - if you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
+		Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
 		oMenu.AddCallbackItem("QMenu Preferences not found!","QMenuPreferenceNotFoundClicked")
 	return True
 
 def QMenuPreferenceNotFoundClicked(in_ctxt):
-	Print("As the menu says: QMenu Preferences were not found. If the error persists after restarting Softimage, try reinstalling the QMenu addon.", c.siError)
+	Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siError)
 	
 def QMenuConfiguratorMenuClicked( in_ctxt ):
     App.OpenQMenuEditor()
