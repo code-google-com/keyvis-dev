@@ -3896,392 +3896,6 @@ def RefreshDisplayEvents():
 	if len(globalQMenu_DisplayEvents) == 0:
 		PPG.DisplayEvent.Value = -1
 	
-def saveQMenuConfiguration(fileName):
-	Print("QMenu: saveQMenuConfiguration called", c.siVerbose)
-	
-	#Lets check if the path exists
-	folderName = os.path.dirname (fileName) #.rsplit("\\")
-	if os.path.exists(folderName):
-		if os.path.isfile(fileName) == True: #Does the file already exist? Lets make a backup copy with timestamp first
-			#timestring = time.strftime ("_%Y.%M.%d_%H.%M.%S")
-			fileData = os.stat(fileName) #get some file information, including last changed date and time, which we will use to create a unique backup file name
-			changeDate = time.localtime(fileData.st_atime) #Get a readable form of the file change date 
-			fileNameSansExtension = fileName.rsplit(".",1)[0]
-			timestring = ("_" + str(changeDate.tm_year) + "." + str(changeDate.tm_mon) + "." + str(changeDate.tm_mday) + "_" + str(changeDate.tm_hour) + "." + str(changeDate.tm_min) + "." + str(changeDate.tm_sec))
-			try:
-				backupFileName = (fileNameSansExtension + timestring + ".xml")
-				Print("Saving current QMenu configuration backup as " + backupFileName)
-				os.rename(fileName, (fileNameSansExtension + timestring + ".xml"))
-			except:
-				Print("Current Qmenu configuration backup file could not be created - attempting to overwrite...",c.siWarning)
-			globalQMenu_MenuItems = getGlobalObject("globalQMenu_MenuItems").Items
-			globalQMenu_Menus = getGlobalObject("globalQMenu_Menus").Items
-			globalQMenu_MenuSets = getGlobalObject("globalQMenu_MenuSets").Items
-			globalQMenu_DisplayContexts = getGlobalObject("globalQMenu_DisplayContexts").Items
-			globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures").Items
-			globalQMenu_DisplayEvents = getGlobalObject("globalQMenu_DisplayEvents").Items
-
-			oConfigDoc = DOM.Document()
-			RootNode = oConfigDoc.createElement("QMenuComponents") #Create Root level node
-			oConfigDoc.appendChild(RootNode)
-
-			#VersionNode = oConfigDoc.createElement("QMenu_Version")
-			RootNode.setAttribute("QMenu_Version", (str(Application.Plugins("QMenuConfigurator").Major) + "." +str(Application.Plugins("QMenuConfigurator").Minor)))
-			
-			MenuItemsNode = oConfigDoc.createElement("QMenu_MenuItems")
-			RootNode.appendChild(MenuItemsNode)
-			MenusNode = oConfigDoc.createElement("QMenu_Menus")
-			RootNode.appendChild(MenusNode)
-			MenuSetsNode = oConfigDoc.createElement("QMenu_MenuSets")
-			RootNode.appendChild(MenuSetsNode)
-			MenuDisplayContextsNode = oConfigDoc.createElement("QMenu_MenuDisplayContexts")
-			RootNode.appendChild(MenuDisplayContextsNode)
-			ViewsNode = oConfigDoc.createElement("QMenuViewSignatures")
-			RootNode.appendChild(ViewsNode)
-			DisplayEventsNode = oConfigDoc.createElement("QMenuDisplayEvents")
-			RootNode.appendChild(DisplayEventsNode)
-
-		# === Save Menu Items ===	
-			for oMenuItem in globalQMenu_MenuItems:
-				MenuItemNode = oConfigDoc.createElement("QMenu_MenuItem")
-				MenuItemNode.setAttribute("UID", oMenuItem.UID)
-				MenuItemNode.setAttribute("name", oMenuItem.Name)
-				MenuItemNode.setAttribute("type", oMenuItem.Type)
-				MenuItemNode.setAttribute("category", oMenuItem.Category)
-				MenuItemNode.setAttribute("language", oMenuItem.Language)
-				if oMenuItem.Switch:
-					MenuItemNode.setAttribute("switch", "True")
-				else:
-					MenuItemNode.setAttribute("switch", "False")
-				
-				oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.Code)
-				if oMenuItem.Code == "": oMenuItemCode.nodeValue = " "
-				MenuItemNode.appendChild(oMenuItemCode)
-				
-				#Test setting code as an attribute...
-				#MenuItemNode.setAttribute("code", oMenuItem.Code)
-				MenuItemsNode.appendChild(MenuItemNode)	
-			
-		# === Save Menus ===
-			for oMenu in globalQMenu_Menus:
-				MenuNode = oConfigDoc.createElement("QMenu_Menu")
-				MenuNode.setAttribute("name", str(oMenu.Name))
-				MenuNode.setAttribute("type", oMenu.Type)
-				MenuNode.setAttribute("language", oMenu.Language)
-				if oMenu.ExecuteCode == True:
-					MenuNode.setAttribute("executeCode", "True")
-				if oMenu.ExecuteCode == False:
-					MenuNode.setAttribute("executeCode", "False")
-					
-				oMenuCode = oConfigDoc.createTextNode (oMenu.Code)
-				#oMenuCode.nodeValue = str(oMenu.Code)
-				if oMenu.Code == "": oMenuCode.nodeValue = " "
-				MenuNode.appendChild(oMenuCode)	
-				
-				MenuItems = getattr(oMenu, "items")
-				NameList = list()
-				for MenuItem in MenuItems:
-					if MenuItem.Type == "MissingCommand":
-						NameList.append("Command")
-					elif MenuItem.Type == "CommandPlaceholder":
-						NameList.append("Command")
-					else:
-						NameList.append(str(MenuItem.Type)) #Finally this could only be a command or a scripted menu item
-					NameList.append(str(MenuItem.Name))
-					NameList.append(str(MenuItem.UID))
-				
-				MenuItemsNames = convertListToString(NameList)
-				MenuNode.setAttribute("items", MenuItemsNames)
-				MenusNode.appendChild(MenuNode)
-			
-		# === Save Menu Sets ===
-			for oMenuSet in globalQMenu_MenuSets:
-				MenuSetNode = oConfigDoc.createElement("QMenu_MenuSet")
-				MenuSetNode.setAttribute("name", oMenuSet.Name)
-				MenuSetNode.setAttribute("type", oMenuSet.Type)
-				
-				Attributes = ["AMenus","AContexts","BMenus","BContexts","CMenus","CContexts","DMenus","DContexts"]
-				for Attr in Attributes:
-					AttrList = list()
-					oItems = getattr(oMenuSet, Attr)
-					#Print(Attr + ": " + str(oItems))
-					for oItem in oItems:
-						if oItem != None:
-							AttrList.append (str(oItem.Name))
-						else:
-							AttrList.append("None")
-					AttrString = convertListToString(AttrList)
-					#Print(AttrString)
-					MenuSetNode.setAttribute(Attr, AttrString)
-				MenuSetsNode.appendChild(MenuSetNode)
-		
-		# === Save Menu Contexts ===
-			for oDisplayContext in globalQMenu_DisplayContexts:
-				DisplayContextNode = oConfigDoc.createElement("QMenu_MenuDisplayContext")
-				DisplayContextNode.setAttribute("name", oDisplayContext.Name)
-				DisplayContextNode.setAttribute("type", oDisplayContext.Type)
-				DisplayContextNode.setAttribute("language", oDisplayContext.Language)
-				DisplayContextNode.setAttribute("scandepth", str(oDisplayContext.ScanDepth))	
-				
-				
-				oDisplayContextCode = oConfigDoc.createTextNode (oDisplayContext.Code)
-				if oDisplayContext.Code == "": oDisplayContextCode.nodeValue = " "
-				DisplayContextNode.appendChild(oDisplayContextCode)
-				MenuDisplayContextsNode.appendChild(DisplayContextNode)
-			
-		# === Save View Signatures ===
-			for oSignature in globalQMenu_ViewSignatures:
-				ViewSignatureNode = oConfigDoc.createElement("QMenuViewSignature")
-				ViewSignatureNode.setAttribute("name",oSignature.Name)
-				ViewSignatureNode.setAttribute("type", oSignature.Type)
-				ViewSignatureNode.setAttribute("signature", str(oSignature.Signature))
-				MenuSetNames = list()
-				for MenuSet in oSignature.MenuSets:
-					MenuSetNames.append(MenuSet.Name)
-				MenuSetNamesString = convertListToString(MenuSetNames)
-				
-				ViewSignatureNode.setAttribute("menuSets", MenuSetNamesString)
-				ViewsNode.appendChild(ViewSignatureNode)
-
-		# === Save Display Events ===
-			for oDisplayEvent in globalQMenu_DisplayEvents:
-				#Print("Saving Display events")
-				DisplayEventNode = oConfigDoc.createElement("QMenuDisplayEvent")
-				DisplayEventNode.setAttribute("number", str(oDisplayEvent.Number))
-				DisplayEventNode.setAttribute("type", oDisplayEvent.Type)
-				DisplayEventNode.setAttribute("key", str(oDisplayEvent.Key))
-				DisplayEventNode.setAttribute("keyMask", str(oDisplayEvent.KeyMask))
-				DisplayEventsNode.appendChild(DisplayEventNode)	
-				#Print("\nDisplayeventsnode with number " + str(oDisplayEvent.Number) + " saved\n")
-
-			#Finally write out the whole configuration document as an xml file
-			try:
-				ConfigDocFile = open(fileName,"w")
-				oConfigDoc.writexml(ConfigDocFile,indent = "",addindent = "", newl = "")
-				ConfigDocFile.close()
-				return True
-			except:
-				return False
-	else:
-		Print("Cannot save QMenu Configuration to '" + fileName + "' because the folder does not exist. Please correct the file path and try again.", c.siError)
-		
-def loadQMenuConfiguration(fileName):
-	Print("QMenu: loadQMenuConfiguration called", c.siVerbose)
-
-	if fileName != "":
-		if os.path.isfile(fileName) == True:
-			QMenuConfigFile = DOM.parse(fileName)
-			#In case the file could be loaded and parsed we can destroy the existing configuration in memory and refill it with the new data from the file
-			initializeQMenuGlobals(True)
-			globalQMenu_Separators = getGlobalObject("globalQMenu_Separators")
-			globalQMenu_MenuItems = getGlobalObject("globalQMenu_MenuItems")
-			globalQMenu_Menus = getGlobalObject("globalQMenu_Menus")
-			globalQMenu_MenuSets = getGlobalObject("globalQMenu_MenuSets")
-			globalQMenu_DisplayContexts = getGlobalObject("globalQMenu_DisplayContexts")
-			globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
-			globalQMenu_DisplayEvents = getGlobalObject("globalQMenu_DisplayEvents")
-			
-		#=== Start creating QMenu objects from the file data ===
-			Components = QMenuConfigFile.getElementsByTagName("QMenuComponents")
-
-			for Component in Components[0].childNodes:
-				if Component.localName == "QMenu_MenuItems":
-					QMenu_MenuItems = Component.childNodes
-					for MenuItem in QMenu_MenuItems:
-						if str(MenuItem.localName) != "None":
-							#Print("MenuItemLocalName is: " + MenuItem.localName)
-							NewMenuItem = App.QMenuCreateObject("MenuItem")
-							NewMenuItem.Name = MenuItem.getAttribute("name")
-							NewMenuItem.Category = MenuItem.getAttribute("category")
-							NewMenuItem.Language = MenuItem.getAttribute("language")
-							if MenuItem.getAttribute("switch") == "True":
-								NewMenuItem.Switch = True
-							
-							CodeNode = MenuItem.childNodes[0]
-							if CodeNode.nodeValue != " ":
-								NewMenuItem.Code = CodeNode.nodeValue
-							
-							#Test reading code from code attribute
-							#NewMenuItem.Code = MenuItem.getAttribute("code")
-	
-							globalQMenu_MenuItems.addMenuItem(NewMenuItem)
-
-			for Component in Components[0].childNodes:			
-				if Component.localName == "QMenu_Menus":
-					QMenu_Menus = Component.childNodes
-					#Create all menus first to avoid a race condition (menus can contain other menus)
-					for Menu in QMenu_Menus: 
-						if str(Menu.localName) != "None":
-							#Print("MenuLocalName is: " + Menu.localName)
-							oNewMenu = App.QMenuCreateObject("Menu")
-							globalQMenu_Menus.addMenu(oNewMenu)
-							oNewMenu.Name = Menu.getAttribute("name")
-							oNewMenu.Language = Menu.getAttribute("language")
-							executeCode = Menu.getAttribute("executeCode")
-							if executeCode == "True":
-								oNewMenu.ExecuteCode = True
-							if executeCode == "False":
-								oNewMenu.ExecuteCode = False
-							CodeNode = Menu.childNodes[0]
-							if CodeNode.nodeValue != " ":
-								oNewMenu.Code = CodeNode.nodeValue
-					
-					#Then fill the menus with menu items, menus, commands and separators
-					for Menu in QMenu_Menus: 
-						if str(Menu.localName) != "None":
-							oNewMenu = getQMenu_MenuByName(Menu.getAttribute("name"))
-							MenuItemNames = str(Menu.getAttribute("items"))
-							#Print ("MenuItems are:"  + str(MenuItemNames))
-							MenuItemNamesList = MenuItemNames.split(";")
-							i = 0
-							while i < (len(MenuItemNamesList)-1):
-								if MenuItemNamesList[i] == "QMenu_MenuItem":
-									oMenuItem = getQMenu_MenuItemByName(MenuItemNamesList[i+1])
-									if oMenuItem != None:
-										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
-								if MenuItemNamesList[i] == "QMenu_Menu":
-									oMenuItem = getQMenu_MenuByName(MenuItemNamesList[i+1])
-									if oMenuItem != None:
-										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
-								if MenuItemNamesList[i] == "Command":
-									oMenuItem = App.Commands(MenuItemNamesList[i+1]) #Get Command by name
-									#oMenuItem = getCommandByUID(MenuItemNamesList[i+2]) #Get Command by UID through a Python function, which is slower but safer
-									#oMenuItem = App.GetCommandByUID(MenuItemNamesList[i+2]) #Get Command by UID through custom c++ command, which is much faster than Python but still slow
-									
-									if oMenuItem != None:
-										oDummyCmd = App.QMenuCreateObject("CommandPlaceholder")
-										oDummyCmd.Name = (MenuItemNamesList[i+1])
-										
-										oDummyCmd.UID = (MenuItemNamesList[i+2])
-										oNewMenu.insertMenuItem (len(oNewMenu.Items), oDummyCmd)
-									else: #Command could not be found? Insert Dummy command instead, it might become available at a later session
-										#Print("A command named '" + str(MenuItemNamesList[i+1]) + "' could not be found!", c.siWarning)
-										oMissingCmd = App.QMenuCreateObject("MissingCommand")
-										oMissingCmd.Name = (MenuItemNamesList[i+1])
-										
-										oMissingCmd.UID = (MenuItemNamesList[i+2])
-										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMissingCmd)
-										
-								if MenuItemNamesList[i] == "QMenuSeparator":
-									oMenuItem = getQMenuSeparatorByName(MenuItemNamesList[i+1])
-									if oMenuItem != None:
-										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
-								i = i+3 #Increase counter by 3 to get to the next item (we save 3 properties per item: type, name, UID)
-				
-			for Component in Components[0].childNodes:
-				if Component.localName == "QMenu_MenuDisplayContexts":
-					QMenuContexts = Component.childNodes
-					for Context in QMenuContexts:
-						if str(Context.localName) == "QMenu_MenuDisplayContext":
-							oNewContext = App.QMenuCreateObject("MenuDisplayContext")
-							oNewContext.Name = Context.getAttribute("name")
-							oNewContext.Language = Context.getAttribute("language")
-							oNewContext.ScanDepth = int(Context.getAttribute("scandepth"))
-							CodeNode = Context.childNodes[0]
-							if CodeNode.nodeValue != " ":
-								oNewContext.Code = CodeNode.nodeValue
-							result = globalQMenu_DisplayContexts.addContext(oNewContext)
-
-								
-			for Component in Components[0].childNodes:
-				if Component.localName == "QMenu_MenuSets":
-					QMenu_MenuSets = Component.childNodes
-					for Set in QMenu_MenuSets:
-						if str(Set.localName) == ("QMenu_MenuSet"):
-							oNewMenuSet = App.QMenuCreateObject("MenuSet")
-							oNewMenuSet.Name = Set.getAttribute("name")
-							
-							AContextNames = ((Set.getAttribute("AContexts")).split(";"))
-							AMenuNames = ((Set.getAttribute("AMenus")).split(";"))
-
-							if len(AContextNames) == len(AMenuNames):
-								for AContextName in AContextNames:
-									oAContext = getQMenu_MenuDisplayContextByName(str(AContextName))
-									if oAContext != None:
-										ContextIndex = AContextNames.index(AContextName)
-										AMenuName = AMenuNames[ContextIndex]
-										oAMenu = getQMenu_MenuByName(AMenuName)
-										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.AContexts), oAContext, "A")
-										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.AMenus), oAMenu, "A")
-							
-							BContextNames = ((Set.getAttribute("BContexts")).split(";"))
-							BMenuNames = ((Set.getAttribute("BMenus")).split(";"))
-
-							if len(BContextNames) == len(BMenuNames):
-								for BContextName in BContextNames:
-									oBContext = getQMenu_MenuDisplayContextByName(str(BContextName))
-									if oBContext != None:
-										ContextIndex = BContextNames.index(BContextName)
-										BMenuName = BMenuNames[ContextIndex]
-										oBMenu = getQMenu_MenuByName(BMenuName)
-										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.BContexts), oBContext, "B")
-										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.BMenus), oBMenu, "B")
-							
-							CContextNames = ((Set.getAttribute("CContexts")).split(";"))
-							CMenuNames = ((Set.getAttribute("CMenus")).split(";"))
-
-							if len(CContextNames) == len(CMenuNames):
-								for CContextName in CContextNames:
-									oCContext = getQMenu_MenuDisplayContextByName(str(CContextName))
-									if oCContext != None:
-										ContextIndex = CContextNames.index(CContextName)
-										CMenuName = CMenuNames[ContextIndex]
-										oCMenu = getQMenu_MenuByName(CMenuName)
-										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.CContexts), oCContext, "C")
-										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.CMenus), oCMenu, "C")
-										
-							DContextNames = ((Set.getAttribute("DContexts")).split(";"))
-							DMenuNames = ((Set.getAttribute("DMenus")).split(";"))
-
-							if len(DContextNames) == len(DMenuNames):
-								for DContextName in DContextNames:
-									oDContext = getQMenu_MenuDisplayContextByName(str(DContextName))
-									if oDContext != None:
-										ContextIndex = DContextNames.index(DContextName)
-										DMenuName = DMenuNames[ContextIndex]
-										oDMenu = getQMenu_MenuByName(DMenuName)
-										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.DContexts), oDContext, "D")
-										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.DMenus), oDMenu, "D")
-							globalQMenu_MenuSets.addSet(oNewMenuSet)
-
-							
-			for Component in Components[0].childNodes:
-				if Component.localName == "QMenuViewSignatures":
-					QMenuSignatures = Component.childNodes
-					for Signature in QMenuSignatures:
-						if str(Signature.localName) == "QMenuViewSignature":
-							oNewSignature = App.QMenuCreateObject("ViewSignature")
-							oNewSignature.Name = Signature.getAttribute("name")
-
-							oNewSignature.Signature = Signature.getAttribute("signature")
-
-							MenuSets = Signature.getAttribute("menuSets").split(";")
-
-							for MenuSet in MenuSets:
-								oMenuSet = getQMenu_MenuSetByName(MenuSet)
-								if oMenuSet != None:
-									oNewSignature.insertMenuSet(len(oNewSignature.MenuSets), oMenuSet)
-
-							result = globalQMenu_ViewSignatures.addSignature(oNewSignature)
-								
-			for Component in Components[0].childNodes:
-				if Component.localName == "QMenuDisplayEvents":
-					QMenuDisplayEvents = Component.childNodes
-					for Event in QMenuDisplayEvents:
-						if str(Event.localName) == "QMenuDisplayEvent":
-							oNewDisplayEvent = App.QMenuCreateObject("DisplayEvent")
-							oNewDisplayEvent.Number = int(Event.getAttribute("number"))
-							#Print("\nFound Display Event Number " + str(oNewDisplayEvent.Number))
-							oNewDisplayEvent.Key = int(Event.getAttribute("key"))
-							oNewDisplayEvent.KeyMask = int(Event.getAttribute("keyMask"))
-							result = globalQMenu_DisplayEvents.addEvent(oNewDisplayEvent)
-			gc.collect()
-			return True
-		else:
-			Print("Could not load QMenu Configuration from '" + str(fileName) + "' because the file could not be found!", c.siError)
-			gc.collect()
-			return False
-
 
 			
 #=========================================================================================================================
@@ -5300,8 +4914,8 @@ def QMenu_Init( in_ctxt ):
 	
 	try:
 		enabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
+		oMenu.AddCallbackItem("Inspect QMenu Preferences","QMenuPreferencesMenuClicked")
 		oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
-		oMenu.AddCallbackItem("Edit QMenu Preferences","QMenuPreferencesMenuClicked")
 		if enabled == False:
 			oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
 		else:
@@ -5333,6 +4947,395 @@ def QMenuEnableClicked(in_ctxt):
 #=========================================================================================================================	
 #=========================================== Helper functions ============================================================
 #=========================================================================================================================	
+def saveQMenuConfiguration(fileName):
+	Print("QMenu: saveQMenuConfiguration called", c.siVerbose)
+	
+	#Lets check if the path exists
+	folderName = os.path.dirname (fileName) #.rsplit("\\")
+	if os.path.exists(folderName):
+		if os.path.isfile(fileName) == True: #Does the file already exist? Lets make a backup copy with timestamp first
+			#timestring = time.strftime ("_%Y.%M.%d_%H.%M.%S")
+			fileData = os.stat(fileName) #get some file information, including last changed date and time, which we will use to create a unique backup file name
+			changeDate = time.localtime(fileData.st_atime) #Get a readable form of the file change date 
+			fileNameSansExtension = fileName.rsplit(".",1)[0]
+			timestring = ("_" + str(changeDate.tm_year) + "." + str(changeDate.tm_mon) + "." + str(changeDate.tm_mday) + "_" + str(changeDate.tm_hour) + "." + str(changeDate.tm_min) + "." + str(changeDate.tm_sec))
+			try:
+				backupFileName = (fileNameSansExtension + timestring + ".xml")
+				Print("Saving current QMenu configuration backup as " + backupFileName)
+				os.rename(fileName, (fileNameSansExtension + timestring + ".xml"))
+			except:
+				Print("Current Qmenu configuration backup file could not be created - attempting to overwrite...",c.siWarning)
+		
+		globalQMenu_MenuItems = getGlobalObject("globalQMenu_MenuItems").Items
+		globalQMenu_Menus = getGlobalObject("globalQMenu_Menus").Items
+		globalQMenu_MenuSets = getGlobalObject("globalQMenu_MenuSets").Items
+		globalQMenu_DisplayContexts = getGlobalObject("globalQMenu_DisplayContexts").Items
+		globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures").Items
+		globalQMenu_DisplayEvents = getGlobalObject("globalQMenu_DisplayEvents").Items
+
+		oConfigDoc = DOM.Document()
+		RootNode = oConfigDoc.createElement("QMenuComponents") #Create Root level node
+		oConfigDoc.appendChild(RootNode)
+
+		#VersionNode = oConfigDoc.createElement("QMenu_Version")
+		RootNode.setAttribute("QMenu_Version", (str(Application.Plugins("QMenuConfigurator").Major) + "." +str(Application.Plugins("QMenuConfigurator").Minor)))
+		
+		MenuItemsNode = oConfigDoc.createElement("QMenu_MenuItems")
+		RootNode.appendChild(MenuItemsNode)
+		MenusNode = oConfigDoc.createElement("QMenu_Menus")
+		RootNode.appendChild(MenusNode)
+		MenuSetsNode = oConfigDoc.createElement("QMenu_MenuSets")
+		RootNode.appendChild(MenuSetsNode)
+		MenuDisplayContextsNode = oConfigDoc.createElement("QMenu_MenuDisplayContexts")
+		RootNode.appendChild(MenuDisplayContextsNode)
+		ViewsNode = oConfigDoc.createElement("QMenuViewSignatures")
+		RootNode.appendChild(ViewsNode)
+		DisplayEventsNode = oConfigDoc.createElement("QMenuDisplayEvents")
+		RootNode.appendChild(DisplayEventsNode)
+
+	# === Save Menu Items ===	
+		for oMenuItem in globalQMenu_MenuItems:
+			MenuItemNode = oConfigDoc.createElement("QMenu_MenuItem")
+			MenuItemNode.setAttribute("UID", oMenuItem.UID)
+			MenuItemNode.setAttribute("name", oMenuItem.Name)
+			MenuItemNode.setAttribute("type", oMenuItem.Type)
+			MenuItemNode.setAttribute("category", oMenuItem.Category)
+			MenuItemNode.setAttribute("language", oMenuItem.Language)
+			if oMenuItem.Switch:
+				MenuItemNode.setAttribute("switch", "True")
+			else:
+				MenuItemNode.setAttribute("switch", "False")
+			
+			oMenuItemCode = oConfigDoc.createTextNode (oMenuItem.Code)
+			if oMenuItem.Code == "": oMenuItemCode.nodeValue = " "
+			MenuItemNode.appendChild(oMenuItemCode)
+			
+			#Test setting code as an attribute...
+			#MenuItemNode.setAttribute("code", oMenuItem.Code)
+			MenuItemsNode.appendChild(MenuItemNode)	
+		
+	# === Save Menus ===
+		for oMenu in globalQMenu_Menus:
+			MenuNode = oConfigDoc.createElement("QMenu_Menu")
+			MenuNode.setAttribute("name", str(oMenu.Name))
+			MenuNode.setAttribute("type", oMenu.Type)
+			MenuNode.setAttribute("language", oMenu.Language)
+			if oMenu.ExecuteCode == True:
+				MenuNode.setAttribute("executeCode", "True")
+			if oMenu.ExecuteCode == False:
+				MenuNode.setAttribute("executeCode", "False")
+				
+			oMenuCode = oConfigDoc.createTextNode (oMenu.Code)
+			#oMenuCode.nodeValue = str(oMenu.Code)
+			if oMenu.Code == "": oMenuCode.nodeValue = " "
+			MenuNode.appendChild(oMenuCode)	
+			
+			MenuItems = getattr(oMenu, "items")
+			NameList = list()
+			for MenuItem in MenuItems:
+				if MenuItem.Type == "MissingCommand":
+					NameList.append("Command")
+				elif MenuItem.Type == "CommandPlaceholder":
+					NameList.append("Command")
+				else:
+					NameList.append(str(MenuItem.Type)) #Finally this could only be a command or a scripted menu item
+				NameList.append(str(MenuItem.Name))
+				NameList.append(str(MenuItem.UID))
+			
+			MenuItemsNames = convertListToString(NameList)
+			MenuNode.setAttribute("items", MenuItemsNames)
+			MenusNode.appendChild(MenuNode)
+		
+	# === Save Menu Sets ===
+		for oMenuSet in globalQMenu_MenuSets:
+			MenuSetNode = oConfigDoc.createElement("QMenu_MenuSet")
+			MenuSetNode.setAttribute("name", oMenuSet.Name)
+			MenuSetNode.setAttribute("type", oMenuSet.Type)
+			
+			Attributes = ["AMenus","AContexts","BMenus","BContexts","CMenus","CContexts","DMenus","DContexts"]
+			for Attr in Attributes:
+				AttrList = list()
+				oItems = getattr(oMenuSet, Attr)
+				#Print(Attr + ": " + str(oItems))
+				for oItem in oItems:
+					if oItem != None:
+						AttrList.append (str(oItem.Name))
+					else:
+						AttrList.append("None")
+				AttrString = convertListToString(AttrList)
+				#Print(AttrString)
+				MenuSetNode.setAttribute(Attr, AttrString)
+			MenuSetsNode.appendChild(MenuSetNode)
+	
+	# === Save Menu Contexts ===
+		for oDisplayContext in globalQMenu_DisplayContexts:
+			DisplayContextNode = oConfigDoc.createElement("QMenu_MenuDisplayContext")
+			DisplayContextNode.setAttribute("name", oDisplayContext.Name)
+			DisplayContextNode.setAttribute("type", oDisplayContext.Type)
+			DisplayContextNode.setAttribute("language", oDisplayContext.Language)
+			DisplayContextNode.setAttribute("scandepth", str(oDisplayContext.ScanDepth))	
+			
+			
+			oDisplayContextCode = oConfigDoc.createTextNode (oDisplayContext.Code)
+			if oDisplayContext.Code == "": oDisplayContextCode.nodeValue = " "
+			DisplayContextNode.appendChild(oDisplayContextCode)
+			MenuDisplayContextsNode.appendChild(DisplayContextNode)
+		
+	# === Save View Signatures ===
+		for oSignature in globalQMenu_ViewSignatures:
+			ViewSignatureNode = oConfigDoc.createElement("QMenuViewSignature")
+			ViewSignatureNode.setAttribute("name",oSignature.Name)
+			ViewSignatureNode.setAttribute("type", oSignature.Type)
+			ViewSignatureNode.setAttribute("signature", str(oSignature.Signature))
+			MenuSetNames = list()
+			for MenuSet in oSignature.MenuSets:
+				MenuSetNames.append(MenuSet.Name)
+			MenuSetNamesString = convertListToString(MenuSetNames)
+			
+			ViewSignatureNode.setAttribute("menuSets", MenuSetNamesString)
+			ViewsNode.appendChild(ViewSignatureNode)
+
+	# === Save Display Events ===
+		for oDisplayEvent in globalQMenu_DisplayEvents:
+			#Print("Saving Display events")
+			DisplayEventNode = oConfigDoc.createElement("QMenuDisplayEvent")
+			DisplayEventNode.setAttribute("number", str(oDisplayEvent.Number))
+			DisplayEventNode.setAttribute("type", oDisplayEvent.Type)
+			DisplayEventNode.setAttribute("key", str(oDisplayEvent.Key))
+			DisplayEventNode.setAttribute("keyMask", str(oDisplayEvent.KeyMask))
+			DisplayEventsNode.appendChild(DisplayEventNode)	
+			#Print("\nDisplayeventsnode with number " + str(oDisplayEvent.Number) + " saved\n")
+
+		#Finally write out the whole configuration document as an xml file
+		try:
+			ConfigDocFile = open(fileName,"w")
+			oConfigDoc.writexml(ConfigDocFile,indent = "",addindent = "", newl = "")
+			ConfigDocFile.close()
+			#Print ("XML written to: " + str(fileName))
+			return True
+		except:
+			Print("An Error occured while attempting to write the QMenu configuration to " + filename)
+			return False
+	else:
+		Print("Cannot save QMenu configuration to '" + fileName + "' because the folder does not exist. Please correct the file path and try again.", c.siError)
+		return False
+		
+def loadQMenuConfiguration(fileName):
+	Print("QMenu: loadQMenuConfiguration called", c.siVerbose)
+
+	if fileName != "":
+		if os.path.isfile(fileName) == True:
+			QMenuConfigFile = DOM.parse(fileName)
+			#In case the file could be loaded and parsed we can destroy the existing configuration in memory and refill it with the new data from the file
+			initializeQMenuGlobals(True)
+			globalQMenu_Separators = getGlobalObject("globalQMenu_Separators")
+			globalQMenu_MenuItems = getGlobalObject("globalQMenu_MenuItems")
+			globalQMenu_Menus = getGlobalObject("globalQMenu_Menus")
+			globalQMenu_MenuSets = getGlobalObject("globalQMenu_MenuSets")
+			globalQMenu_DisplayContexts = getGlobalObject("globalQMenu_DisplayContexts")
+			globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
+			globalQMenu_DisplayEvents = getGlobalObject("globalQMenu_DisplayEvents")
+			
+		#=== Start creating QMenu objects from the file data ===
+			Components = QMenuConfigFile.getElementsByTagName("QMenuComponents")
+
+			for Component in Components[0].childNodes:
+				if Component.localName == "QMenu_MenuItems":
+					QMenu_MenuItems = Component.childNodes
+					for MenuItem in QMenu_MenuItems:
+						if str(MenuItem.localName) != "None":
+							#Print("MenuItemLocalName is: " + MenuItem.localName)
+							NewMenuItem = App.QMenuCreateObject("MenuItem")
+							NewMenuItem.Name = MenuItem.getAttribute("name")
+							NewMenuItem.Category = MenuItem.getAttribute("category")
+							NewMenuItem.Language = MenuItem.getAttribute("language")
+							if MenuItem.getAttribute("switch") == "True":
+								NewMenuItem.Switch = True
+							
+							CodeNode = MenuItem.childNodes[0]
+							if CodeNode.nodeValue != " ":
+								NewMenuItem.Code = CodeNode.nodeValue
+							
+							#Test reading code from code attribute
+							#NewMenuItem.Code = MenuItem.getAttribute("code")
+	
+							globalQMenu_MenuItems.addMenuItem(NewMenuItem)
+
+			for Component in Components[0].childNodes:			
+				if Component.localName == "QMenu_Menus":
+					QMenu_Menus = Component.childNodes
+					#Create all menus first to avoid a race condition (menus can contain other menus)
+					for Menu in QMenu_Menus: 
+						if str(Menu.localName) != "None":
+							#Print("MenuLocalName is: " + Menu.localName)
+							oNewMenu = App.QMenuCreateObject("Menu")
+							globalQMenu_Menus.addMenu(oNewMenu)
+							oNewMenu.Name = Menu.getAttribute("name")
+							oNewMenu.Language = Menu.getAttribute("language")
+							executeCode = Menu.getAttribute("executeCode")
+							if executeCode == "True":
+								oNewMenu.ExecuteCode = True
+							if executeCode == "False":
+								oNewMenu.ExecuteCode = False
+							CodeNode = Menu.childNodes[0]
+							if CodeNode.nodeValue != " ":
+								oNewMenu.Code = CodeNode.nodeValue
+					
+					#Then fill the menus with menu items, menus, commands and separators
+					for Menu in QMenu_Menus: 
+						if str(Menu.localName) != "None":
+							oNewMenu = getQMenu_MenuByName(Menu.getAttribute("name"))
+							MenuItemNames = str(Menu.getAttribute("items"))
+							#Print ("MenuItems are:"  + str(MenuItemNames))
+							MenuItemNamesList = MenuItemNames.split(";")
+							i = 0
+							while i < (len(MenuItemNamesList)-1):
+								if MenuItemNamesList[i] == "QMenu_MenuItem":
+									oMenuItem = getQMenu_MenuItemByName(MenuItemNamesList[i+1])
+									if oMenuItem != None:
+										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
+								if MenuItemNamesList[i] == "QMenu_Menu":
+									oMenuItem = getQMenu_MenuByName(MenuItemNamesList[i+1])
+									if oMenuItem != None:
+										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
+								if MenuItemNamesList[i] == "Command":
+									oMenuItem = App.Commands(MenuItemNamesList[i+1]) #Get Command by name
+									#oMenuItem = getCommandByUID(MenuItemNamesList[i+2]) #Get Command by UID through a Python function, which is slower but safer
+									#oMenuItem = App.GetCommandByUID(MenuItemNamesList[i+2]) #Get Command by UID through custom c++ command, which is much faster than Python but still slow
+									
+									if oMenuItem != None:
+										oDummyCmd = App.QMenuCreateObject("CommandPlaceholder")
+										oDummyCmd.Name = (MenuItemNamesList[i+1])
+										
+										oDummyCmd.UID = (MenuItemNamesList[i+2])
+										oNewMenu.insertMenuItem (len(oNewMenu.Items), oDummyCmd)
+									else: #Command could not be found? Insert Dummy command instead, it might become available at a later session
+										#Print("A command named '" + str(MenuItemNamesList[i+1]) + "' could not be found!", c.siWarning)
+										oMissingCmd = App.QMenuCreateObject("MissingCommand")
+										oMissingCmd.Name = (MenuItemNamesList[i+1])
+										
+										oMissingCmd.UID = (MenuItemNamesList[i+2])
+										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMissingCmd)
+										
+								if MenuItemNamesList[i] == "QMenuSeparator":
+									oMenuItem = getQMenuSeparatorByName(MenuItemNamesList[i+1])
+									if oMenuItem != None:
+										oNewMenu.insertMenuItem (len(oNewMenu.Items), oMenuItem)
+								i = i+3 #Increase counter by 3 to get to the next item (we save 3 properties per item: type, name, UID)
+				
+			for Component in Components[0].childNodes:
+				if Component.localName == "QMenu_MenuDisplayContexts":
+					QMenuContexts = Component.childNodes
+					for Context in QMenuContexts:
+						if str(Context.localName) == "QMenu_MenuDisplayContext":
+							oNewContext = App.QMenuCreateObject("MenuDisplayContext")
+							oNewContext.Name = Context.getAttribute("name")
+							oNewContext.Language = Context.getAttribute("language")
+							oNewContext.ScanDepth = int(Context.getAttribute("scandepth"))
+							CodeNode = Context.childNodes[0]
+							if CodeNode.nodeValue != " ":
+								oNewContext.Code = CodeNode.nodeValue
+							result = globalQMenu_DisplayContexts.addContext(oNewContext)
+
+								
+			for Component in Components[0].childNodes:
+				if Component.localName == "QMenu_MenuSets":
+					QMenu_MenuSets = Component.childNodes
+					for Set in QMenu_MenuSets:
+						if str(Set.localName) == ("QMenu_MenuSet"):
+							oNewMenuSet = App.QMenuCreateObject("MenuSet")
+							oNewMenuSet.Name = Set.getAttribute("name")
+							
+							AContextNames = ((Set.getAttribute("AContexts")).split(";"))
+							AMenuNames = ((Set.getAttribute("AMenus")).split(";"))
+
+							if len(AContextNames) == len(AMenuNames):
+								for AContextName in AContextNames:
+									oAContext = getQMenu_MenuDisplayContextByName(str(AContextName))
+									if oAContext != None:
+										ContextIndex = AContextNames.index(AContextName)
+										AMenuName = AMenuNames[ContextIndex]
+										oAMenu = getQMenu_MenuByName(AMenuName)
+										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.AContexts), oAContext, "A")
+										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.AMenus), oAMenu, "A")
+							
+							BContextNames = ((Set.getAttribute("BContexts")).split(";"))
+							BMenuNames = ((Set.getAttribute("BMenus")).split(";"))
+
+							if len(BContextNames) == len(BMenuNames):
+								for BContextName in BContextNames:
+									oBContext = getQMenu_MenuDisplayContextByName(str(BContextName))
+									if oBContext != None:
+										ContextIndex = BContextNames.index(BContextName)
+										BMenuName = BMenuNames[ContextIndex]
+										oBMenu = getQMenu_MenuByName(BMenuName)
+										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.BContexts), oBContext, "B")
+										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.BMenus), oBMenu, "B")
+							
+							CContextNames = ((Set.getAttribute("CContexts")).split(";"))
+							CMenuNames = ((Set.getAttribute("CMenus")).split(";"))
+
+							if len(CContextNames) == len(CMenuNames):
+								for CContextName in CContextNames:
+									oCContext = getQMenu_MenuDisplayContextByName(str(CContextName))
+									if oCContext != None:
+										ContextIndex = CContextNames.index(CContextName)
+										CMenuName = CMenuNames[ContextIndex]
+										oCMenu = getQMenu_MenuByName(CMenuName)
+										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.CContexts), oCContext, "C")
+										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.CMenus), oCMenu, "C")
+										
+							DContextNames = ((Set.getAttribute("DContexts")).split(";"))
+							DMenuNames = ((Set.getAttribute("DMenus")).split(";"))
+
+							if len(DContextNames) == len(DMenuNames):
+								for DContextName in DContextNames:
+									oDContext = getQMenu_MenuDisplayContextByName(str(DContextName))
+									if oDContext != None:
+										ContextIndex = DContextNames.index(DContextName)
+										DMenuName = DMenuNames[ContextIndex]
+										oDMenu = getQMenu_MenuByName(DMenuName)
+										oNewMenuSet.insertContextAtIndex (len(oNewMenuSet.DContexts), oDContext, "D")
+										oNewMenuSet.insertMenuAtIndex (len(oNewMenuSet.DMenus), oDMenu, "D")
+							globalQMenu_MenuSets.addSet(oNewMenuSet)
+
+							
+			for Component in Components[0].childNodes:
+				if Component.localName == "QMenuViewSignatures":
+					QMenuSignatures = Component.childNodes
+					for Signature in QMenuSignatures:
+						if str(Signature.localName) == "QMenuViewSignature":
+							oNewSignature = App.QMenuCreateObject("ViewSignature")
+							oNewSignature.Name = Signature.getAttribute("name")
+
+							oNewSignature.Signature = Signature.getAttribute("signature")
+
+							MenuSets = Signature.getAttribute("menuSets").split(";")
+
+							for MenuSet in MenuSets:
+								oMenuSet = getQMenu_MenuSetByName(MenuSet)
+								if oMenuSet != None:
+									oNewSignature.insertMenuSet(len(oNewSignature.MenuSets), oMenuSet)
+
+							result = globalQMenu_ViewSignatures.addSignature(oNewSignature)
+								
+			for Component in Components[0].childNodes:
+				if Component.localName == "QMenuDisplayEvents":
+					QMenuDisplayEvents = Component.childNodes
+					for Event in QMenuDisplayEvents:
+						if str(Event.localName) == "QMenuDisplayEvent":
+							oNewDisplayEvent = App.QMenuCreateObject("DisplayEvent")
+							oNewDisplayEvent.Number = int(Event.getAttribute("number"))
+							#Print("\nFound Display Event Number " + str(oNewDisplayEvent.Number))
+							oNewDisplayEvent.Key = int(Event.getAttribute("key"))
+							oNewDisplayEvent.KeyMask = int(Event.getAttribute("keyMask"))
+							result = globalQMenu_DisplayEvents.addEvent(oNewDisplayEvent)
+			gc.collect()
+			return True
+		else:
+			Print("Could not load QMenu Configuration from '" + str(fileName) + "' because the file could not be found!", c.siError)
+			gc.collect()
+			return False
 
 def getView( Silent = False):
 	CursorPos = win32gui.GetCursorPos()
