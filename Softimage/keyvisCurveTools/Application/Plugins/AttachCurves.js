@@ -1,9 +1,9 @@
 //______________________________________________________________________________
 // AttachCurvesPlugin
 // 11/2010 by Eugen Sares
-// last update: 25.11.2010
+// last update: 03.02.2011
 //
-// Credits to Guillaume Laforge for the C++ sourcecode!!
+// Credits to Guillaume Laforge for the C++ sourcecode!
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -22,7 +22,6 @@ function XSILoadPlugin( in_reg )
 }
 
 
-//______________________________________________________________________________
 
 function XSIUnloadPlugin( in_reg )
 {
@@ -33,7 +32,6 @@ function XSIUnloadPlugin( in_reg )
 }
 
 
-//______________________________________________________________________________
 
 function ApplyAttachCurves_Init( in_ctxt )
 {
@@ -53,72 +51,79 @@ function ApplyAttachCurves_Init( in_ctxt )
 }
 
 
-
-
-
-
-//______________________________________________________________________________
 //______________________________________________________________________________
 
 function ApplyAttachCurves_Execute(args)
 {
-
 	Application.LogMessage("ApplyAttachCurves_Execute called",siVerbose);
-	// TODO: This generated code works by hardcoding the exact names of the
-	// input and output objects.
-	// If you want to operator to be applied to objects with different names
-	// you way want to generalise this code to determine the objects
-	// based on the Selection or the arguments to this command
-	// 
-	// Note: The AddCustomOp command is an alternative way to build the operator
 	
 	try
-	{
-		// ToDo:
-		// If just one CurveList is selected, start a Pick Session	
-	
+	{	
 		cSel = args;
-		if(cSel == "") throw "Select at least 2 Nurbs Curves first.";
+		if(cSel == "") throw "Select a Nurbs Curve first.";
 		
-		//var cSelCurves = args.Filter("crvlist");
-		cSelCurves = SIFilter(cSel, siCurveFilter);
-		if(!cSelCurves) throw "Selection must be of type Curve.";
+		//var cCurveLists = args.Filter("crvlist");
+		var cCurveLists = SIFilter(cSel, siCurveFilter);
+		if(!cCurveLists) throw "Selection must be of type Curve.";
 		
-		var oCurve0 = cSelCurves(0);
-		var selCurvesCount = cSelCurves.Count;
-		//LogMessage(cSelCurves);
-		
-		if(selCurvesCount < 2) throw "Nothing to attach.";
+		var oCurve0 = cCurveLists(0);
+
+		if(cCurveLists.Count < 2)
+		{
+			do
+			{
+				// PickObject( LeftMessage, MiddleMessage, [PickedElement], [ButtonPressed], [ModifierPressed] )
+				var ret = PickObject("NurbsCurveList Object");
+				var buttonChoice = ret.Value( "ButtonPressed" );
+				var oItem = ret.Value( "PickedElement" );
+
+				if(buttonChoice == 0) break;
+				else if(oItem.Type == "crvlist")
+				{
+					cCurveLists.Add(oItem);
+					Selection.Add(oItem);
+				}
+					
+			} while(true);
+
+		}
+
+		// No additional Curves picked? Cancel.
+		if(cCurveLists.Count < 2) throw("Cancelled.");
 
 
+		// Workaround for unselectable added Subcurves problem.
+		var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(0), 3, siPersistentOperation, null);
+		SetValue(cleanOp + ".cleantol", 0, null);
 
-		// create Operator
+
+		// Create Operator
 		var newOp = XSIFactory.CreateObject("AttachCurves");
 
 
-		// OUTPUT Port and Group, Idx: 0
+		// OUTPUT Port and Group, GroupIdx: 0
 		// first Curve
 		// CustomOperator.AddPortGroup( Name, [Min], [Max], [Filter], [PickPrompt], [Flags] )
 		var oOutPortGroup = newOp.AddPortGroup("OutPortGroup");
 		// CustomOperator.AddOutputPortByClassID( TargetClassID, [PortName], [PortGroup], [Flags] )
 		newOp.AddOutputPortByClassID(siNurbsCurveID, "OUTPUT_PORT", oOutPortGroup.Index);
 		
-		// INPUT Port and Group, Idx: 1
+		// INPUT Port and Group, GroupIdx: 1
 		// Curve0
 		var oInCurve0PortGroup = newOp.AddPortGroup("InCurve0PortGroup", 1, 1, "", "", siOptionalInputPort);
 		newOp.AddInputPortByClassID(siNurbsCurveID, "IN_CURVE0_PORT", oInCurve0PortGroup.Index, siOptionalInputPort);
 
-		// INPUT Port and Group, Idx: 2
+		// INPUT Port and Group, GroupIdx: 2
 		// all other Curves
 		var oInCurvesPortGroup = newOp.AddPortGroup("InCurvesPortGroup", 1, 65535, "", "", siOptionalInputPort);
 		newOp.AddInputPortByClassID(siNurbsCurveID, "IN_CURVES_PORT", oInCurvesPortGroup.Index, siOptionalInputPort);
 
-		// INPUT Port and Group for Kine, Idx: 3
+		// INPUT Port and Group for Kine, GroupIdx: 3
 		// Curve0
 		var oInCurve0KinePortGroup = newOp.AddPortGroup("InCurve0KinePortGroup", 1, 1, "", "", siOptionalInputPort);
 		newOp.AddInputPortByClassID(siNurbsCurveID, "IN_CURVE0_KINE_PORT", oInCurve0KinePortGroup.Index, siOptionalInputPort);
 
-		// INPUT Port and Group for Kine, Idx: 4
+		// INPUT Port and Group for Kine, GroupIdx: 4
 		// all other Curves
 		var oInCurvesKinePortGroup = newOp.AddPortGroup("InCurvesKinePortGroup", 1, 65535, "", "", siOptionalInputPort);
 		newOp.AddInputPortByClassID(siNurbsCurveID, "IN_CURVES_KINE_PORT", oInCurvesKinePortGroup.Index, siOptionalInputPort);
@@ -135,9 +140,9 @@ function ApplyAttachCurves_Execute(args)
 
 		// INPUT connection
 		// oInCurvesPortGroup, oInCurvesKinePortGroup
-		for(var i = 1; i < selCurvesCount; i++)
+		for(var i = 1; i < cCurveLists.Count; i++)
 		{
-			var oCurve = cSelCurves(i);	// skipping Curve0!
+			var oCurve = cCurveLists(i);	// skipping Curve0!
 			newOp.ConnectToGroup(oInCurvesPortGroup.Index, oCurve.ActivePrimitive);
 			newOp.ConnectToGroup(oInCurvesKinePortGroup.Index, oCurve.Kinematics.Global);
 		}
@@ -158,13 +163,6 @@ function ApplyAttachCurves_Execute(args)
 }
 
 
-
-
-
-
-
-//______________________________________________________________________________
-
 function AttachCurves_Define( in_ctxt )
 {
 	var oCustomOperator;
@@ -181,16 +179,12 @@ function AttachCurves_Define( in_ctxt )
 }
 
 
-//______________________________________________________________________________
-
 function AttachCurves_Init( in_ctxt )
 {
 	Application.LogMessage("AttachCurves_Init called",siVerboseMsg);
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function AttachCurves_Term( in_ctxt )
 {
@@ -199,12 +193,6 @@ function AttachCurves_Term( in_ctxt )
 }
 
 
-
-
-
-
-
-//______________________________________________________________________________
 //______________________________________________________________________________
 
 function AttachCurves_Update( in_ctxt )
@@ -216,9 +204,8 @@ function AttachCurves_Update( in_ctxt )
 	// Get output CurveList target
 	var outCrvList0Geom = in_ctxt.OutputTarget.Geometry;
 
-// TODO: show PPG
-	//var updateWithInputTransforms = in_ctxt.GetParameterValue("updateWithInputTransforms");
-	//var updateWithObjectTransform = in_ctxt.GetParameterValue("updateWithObjectTransform");
+	var updateWithInputTransforms = in_ctxt.GetParameterValue("updateWithInputTransforms");
+	var updateWithObjectTransform = in_ctxt.GetParameterValue("updateWithObjectTransform");
 
 	var oAttachOp = in_ctxt.Source;
 
@@ -228,6 +215,7 @@ function AttachCurves_Update( in_ctxt )
 // TODO: compensate Curve0 Kine.Global
 	var oCurve0Kine = in_ctxt.GetInputValue("IN_CURVE0_KINE_PORT", "InCurve0KinePortGroup", 0);
 	var KINEGLOBAL0 = oCurve0Kine.Transform.Matrix4;
+	KINEGLOBAL0.Invert(KINEGLOBAL0);
 
 
 	// Loop through all additional Curves, add them to Curve0
@@ -241,37 +229,59 @@ function AttachCurves_Update( in_ctxt )
 		// Get CurveLists's kine.global matrix
 		var oKine = in_ctxt.GetInputValue("IN_CURVES_KINE_PORT", "InCurvesKinePortGroup", i);
 		var KINEGLOBAL = oKine.Transform.Matrix4;
-		
 
-		// Loop through all SubCurves of this CurveList,
-		// add the data to Curve0
+
+		// Loop through all SubCurves of this CurveList, add the data to Curve0
 		for(var j = 0; j < oCurves.Count; j++)
 		{
 			// Get NurbsCurve data
 			var oSubCrv = oCurves(j);	// Type: NurbsCurve
-			VBdata = new VBArray(oSubCrv.Get2(siSINurbs)); data = VBdata.toArray();
+			VBdata = new VBArray(oSubCrv.Get2(siSINurbs)); aSubCrvData = VBdata.toArray();
 
-			var subCrvCtrlPoints = data[0];	// can be 1 oder 2 dimensional for AddCurve
-// TODO: compensate Curves Kine.Global
-			var subCrvKnots = data[1];
-			var isClosed = data[2];
-			var degree = data[3];
-			var parameterization = data[4];
-
-			// Add Subcurve to CurveList 0
-			inCrvList0Geom.AddCurve( subCrvCtrlPoints, subCrvKnots, isClosed, degree, parameterization, siSINurbs);
+			// Get Point data
+			var aPoints = aSubCrvData[0];	// can be 1 oder 2 dimensional for AddCurve
 			
+			if(updateWithInputTransforms || updateWithObjectTransform)
+			{
+				var VBdata0 = new VBArray(aPoints);
+				var aPoints = VBdata0.toArray();
+
+				for(var k = 0; k < aPoints.length; k += 4)
+				{
+					var vec = XSIMath.CreateVector3();
+					vec.X = aPoints[k];
+					vec.Y = aPoints[k + 1];
+					vec.Z = aPoints[k + 2];
+
+					if(updateWithInputTransforms)
+						vec.MulByMatrix4(vec, KINEGLOBAL);
+
+					if(updateWithObjectTransform)
+						vec.MulByMatrix4(vec, KINEGLOBAL0);
+					
+					aPoints[k] = vec.X;
+					aPoints[k + 1] = vec.Y;
+					aPoints[k + 2] = vec.Z;
+
+				}
+			}
+			
+			// Add Subcurve to CurveList0
+			inCrvList0Geom.AddCurve(	aPoints,
+										aSubCrvData[1], // Knots
+										aSubCrvData[2], // isClosed
+										aSubCrvData[3], // degree
+										aSubCrvData[4]); // parameterization
+
 		}
 		
 	}
-
 
 	// Get inCrvList0Geom (NurbsCurveList)
 	var VBdata = inCrvList0Geom.Get2( siSINurbs ); var data = VBdata.toArray();
 
 	var numAllSubcurves = data[0];
 	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
-// ToDo: compensate Kine.Global
 	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
 	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
 	aAllKnots = removeUndefinedElementsFromArray(aAllKnots);
@@ -279,23 +289,6 @@ function AttachCurves_Update( in_ctxt )
 	var VBdata5 = new VBArray(data[5]); var aAllIsClosed = VBdata5.toArray();
 	var VBdata6 = new VBArray(data[6]); var aAllDegree = VBdata6.toArray();
 	var VBdata7 = new VBArray(data[7]); var aAllParameterization = VBdata7.toArray();
-	
-	
-	// Debug info
-/*	LogMessage("--------------------------------------");
-	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves:      " + numAllSubcurves);
-	LogMessage("aAllPoints:           " + aAllPoints);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	LogMessage("aAllKnots:            " + aAllKnots);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
-
 
 	// Set output CurveList
 	outCrvList0Geom.Set(
@@ -328,7 +321,6 @@ function removeUndefinedElementsFromArray(dirtyArr)
 }
 
 
-//______________________________________________________________________________
 // Function to remove empty items from a JScript Array
 // e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays
 function cleanArray(dirtyArr)
@@ -342,7 +334,24 @@ function cleanArray(dirtyArr)
 }
 
 
-//______________________________________________________________________________
+function logControlPointsArray(logString, aPoints, dp)
+{
+	LogMessage(logString);
+	
+	for ( var i = 0; i < aPoints.length; i += 4 )
+	{
+		var x = aPoints[i];
+		var y = aPoints[i + 1];
+		var z = aPoints[i + 2];
+		var w = aPoints[i + 3]; 
+		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp + "; y = " + Math.round(y*dp)/dp + "; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
+
+	}
+	
+	//LogMessage("");
+}
+
+
 // Tip: Use the "Refresh" option on the Property Page context menu to 
 // reload your script changes and re-execute the DefineLayout callback.
 function AttachCurves_DefineLayout( in_ctxt )
@@ -350,13 +359,17 @@ function AttachCurves_DefineLayout( in_ctxt )
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	oLayout.AddItem("updateWithInputTransforms");
-	oLayout.AddItem("updateWithObjectTransform");
+	//oLayout.AddRow();
+	oLayout.AddGroup( "Inputs", true);
+	oLayout.AddButton("HideUnhide", "Hide/Unhide");
+	oLayout.AddButton("Delete");
+	oLayout.AddItem("updateWithInputTransforms", "Update with input transforms");
+	oLayout.AddItem("updateWithObjectTransform", "Update with object transform");
+	oLayout.EndGroup();
+	//oLayout.EndRow();
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function AttachCurves_OnInit( )
 {
@@ -364,15 +377,11 @@ function AttachCurves_OnInit( )
 }
 
 
-//______________________________________________________________________________
-
 function AttachCurves_OnClosed( )
 {
 	Application.LogMessage("AttachCurves_OnClosed called",siVerbose);
 }
 
-
-//______________________________________________________________________________
 
 function AttachCurves_updateWithInputTransforms_OnChanged( )
 {
@@ -385,8 +394,6 @@ function AttachCurves_updateWithInputTransforms_OnChanged( )
 }
 
 
-//______________________________________________________________________________
-
 function AttachCurves_updateWithObjectTransform_OnChanged( )
 {
 	Application.LogMessage("AttachCurves_updateWithObjectTransform_OnChanged called",siVerbose);
@@ -398,7 +405,44 @@ function AttachCurves_updateWithObjectTransform_OnChanged( )
 }
 
 
-//______________________________________________________________________________
+function AttachCurves_HideUnhide_OnClicked( )
+{
+	Application.LogMessage("AttachCurves_Hide/Unhide_OnClicked called",siVerbose);
+
+	var op = PPG.Inspected.Item(0);
+
+	var cInputCurves = new ActiveXObject("XSI.Collection");
+	for( var i = 0; i < op.PortGroups(2).InstanceCount; i++)
+	{
+		var port = op.PortAt( 0, 2, i ); // PortIndex, PortGroupIndex, PortGroupInstance
+		var oCrvList = port.Target2.Parent;
+		ToggleVisibility(oCrvList, null, null);
+	}
+	
+	
+}
+
+
+function AttachCurves_Delete_OnClicked( )
+{
+	Application.LogMessage("AttachCurves_Delete_OnClicked called",siVerbose);
+
+	var op = PPG.Inspected.Item(0);
+
+	var cInputCurves = new ActiveXObject("XSI.Collection");
+	for( var i = 0; i < op.PortGroups(2).InstanceCount; i++)
+	{
+		var port = op.PortAt( 0, 2, i ); // PortIndex, PortGroupIndex, PortGroupInstance
+		var oCrvList = port.Target2.Parent;
+		cInputCurves.Add(oCrvList);
+	}
+
+	FreezeModeling(op, null, siUnspecified);
+	PPG.Close();
+	DeleteObj(cInputCurves);
+
+}
+
 
 function ApplyAttachCurves_Menu_Init( in_ctxt )
 {
@@ -408,4 +452,3 @@ function ApplyAttachCurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
