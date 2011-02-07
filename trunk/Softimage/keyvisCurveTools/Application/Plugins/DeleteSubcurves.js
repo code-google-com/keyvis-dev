@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // DeleteSubcurvesPlugin
 // 10/2009 by Eugen Sares
-// last update: 2010/10/26
+// last update: 2011/02/01
 //
 // Usage:
 // - Select Subcurves
@@ -24,8 +24,6 @@ function XSILoadPlugin( in_reg )
 }
 
 
-//______________________________________________________________________________
-
 function XSIUnloadPlugin( in_reg )
 {
 	var strPluginName;
@@ -34,8 +32,6 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function ApplyDeleteSubcurves_Init( in_ctxt )	// called before ApplyDeleteSubcurves_Execute
 {
@@ -59,7 +55,6 @@ function ApplyDeleteSubcurves_Init( in_ctxt )	// called before ApplyDeleteSubcur
 
 
 //______________________________________________________________________________
-//______________________________________________________________________________
 
 function ApplyDeleteSubcurves_Execute(data)
 {
@@ -67,104 +62,140 @@ function ApplyDeleteSubcurves_Execute(data)
 
 	try
 	{
-		var bPick, bNoCluster;
-		var oSel;
-	
-		if(data == "")
+		//var app = Application;
+
+		var cSel = Selection;
+
+		// Filter a Collection of Subcurve Clusters out of the Selection.
+		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
+		var cCurveLists = new ActiveXObject("XSI.Collection");
+
+		// Filter the Selection for Clusters and Subcurves.
+		for(var i = 0; i < cSel.Count; i++)
 		{
-		// Nothing is selected
-			bPick = true;
-			bNoCluster = true;
+			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
+			{
+				cSubcurveClusters.Add(cSel(i));
+				cCurveLists.Add( cSel(i).Parent3DObject );
+				
+			}
+
+			if( cSel(i).Type == "subcrvSubComponent" )
+			{
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+			}
+			
+/*			if( cSel(i).Type == "crvlist")
+			{
+				// Problem: PickElement does not bother if CurveLists is already selected.
+				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
+				SetSelFilter("SubCurve");
+				
+				var ret = pickElements("SubCurve");
+				var oObject = ret.oObject;
+				var elementIndices = ret.elementIndices;
+			}
+*/
 			
 		}
-		else if(data(0).Type == "subcrv" && ClassName(data(0)) == "Cluster" )
+
+		// If nothing usable was selected, start a Pick Session.
+		if(cSubcurveClusters.Count == 0)
 		{
-		// Subcurve Cluster is selected
-			var oCluster = data(0);
-			var oParent = oCluster.Parent3DObject;
-			bPick = false;
-			bNoCluster = false;
+			var ret = pickElements("SubCurve");
+			var oObject = ret.oObject;
+			var elementIndices = ret.elementIndices;
 			
-		} else if(data(0).Type == "subcrvSubComponent")
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+
+			cSubcurveClusters.Add(oCluster);
+			cCurveLists.Add( oObject );
+
+		}
+
+
+		DeselectAllUsingFilter("SubCurve");
+
+		// Construction mode automatic updating.
+		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
+		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
+
+	
+		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
+		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
+		
+		var createdOperators = new ActiveXObject("XSI.Collection");
+
+		// Apply Operator to all CurveLists a Cluster is on, with respect to Immediate Mode.
+		if(operationMode == siImmediateOperation)
 		{
-		// Subcurves are selected
-			oSel = data(0);
-			bPick = false;
-			bNoCluster = true;
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cSubcurveClusters.Count; i++)
+			{
+				// Add the Operator
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cSubcurveClusters(i);
+				
+				// Workaround for unselectable added Subcurves problem.
+				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				//SetValue(cleanOp + ".cleantol", 0, null);
+				
+				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
+				// Port names will be generated automatically!
+				var newOp = AddCustomOp("DeleteSubcurves", oOutput, [oInput1, oInput2], "DeleteSubcurves");
+
+/*				var rtn = GetKeyboardState();
+				modifier = rtn(1);
+				var bCtrlDown = false;
+				if(modifier == 2) bCtrlDown = true;
+
+				if(Application.Interactive && bAutoinspect && !bCtrlDown)
+					InspectObj(newOp, "", "", siModal, true);
+*/
+				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
+				FreezeModeling(cCurveLists(i), null, siUnspecified);
+				
+				//createdOperators.Add(newOp);
+			}
 			
 		} else
 		{
-		// Anything else is selected
-			// oSel is set after picking
-			bPick = true;
-			bNoCluster = true;
-			
-		}
-
-
-		if(bPick)
-		{
-			do
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cSubcurveClusters.Count; i++)
 			{
-			// Start Subcurve Pick Session
-				var subcurves, button;	// useless but needed in JScript
-				// PickElement() manages to select a CurveList first, then a Subcurve
-				var rtn = PickElement( "SubCurve", "subcurves", "", subcurves, button, 0 );
-				button = rtn.Value( "ButtonPressed" );
-				if(!button) throw "Argument must be Subcurves.";
+				// Define Outputs and Inputs.
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cSubcurveClusters(i);
 				
-				oSel = rtn.Value( "PickedElement" );
-				//var modifier = rtn.Value( "ModifierPressed" );
+				// Workaround for unselectable added Subcurves problem.
+				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				//SetValue(cleanOp + ".cleantol", 0, null);
 
-			} while (oSel.Type != "subcrvSubComponent");
-			
-		}
+				var newOp = AddCustomOp("DeleteSubcurves", oOutput, [oInput1, oInput2], "DeleteSubcurves");
 
-		if(bNoCluster)
-		{
-			var oSubComponent = oSel.SubComponent;
-			var oParent = oSubComponent.Parent3DObject;
-			var oComponentCollection = oSubComponent.ComponentCollection;
-			// LogMessage("No. of Subcurves: " + oComponentCollection	// OK
-			
-			// create an index Array from the Subcurve collection
-			var idxArray = new Array();
-			for(i = 0; i < oComponentCollection.Count; i++)
-			{
-				var subcrv = oComponentCollection.item(i);
-				// Logmessage("Subcurve [" + subcrv.Index + "] selected");
-				idxArray[i] = subcrv.Index;
+				//createdOperators.Add(newOp);
+				
 			}
 			
-			// create Cluster with Subcurves to delete
-			var oCluster = oParent.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", idxArray );
-
+/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+				AutoInspect(createdOperators); // Multi-PPG
+*/
 		}
 
-		// Clear the Subcurve Selection, otherwise some other Subcurves get selected.
-		DeselectAllUsingFilter("SubCurve");
-
-		
-		var newOp = XSIFactory.CreateObject("DeleteSubcurves");	// known to the system through XSILoadPlugin callback
-		// DeleteSubcurves_Init and
-		// DeleteSubcurves_Define are called...
-		
-		newOp.AddOutputPort(oParent.ActivePrimitive, "outputCurve");	// working
-		newOp.AddInputPort(oParent.ActivePrimitive, "inputCurve");	// working
-
-		// newOp.AddOutputPort(oParent.Name + ".crvlist", "outputCurve");	// also working
-		// newOp.AddInputPort(oParent.Name + ".crvlist", "inputCurve");	// also working
-		newOp.AddInputPort(oCluster, "deleteCluster");	// params: PortTarget, [PortName]
-
-		newOp.Connect();
-		return newOp;
+		return true;
 
 	} catch(e)
 	{
 		LogMessage(e, siWarning);
-	}
-	
-	return false;
+		return false;
+	};
 	
 }
 
@@ -222,20 +253,21 @@ function DeleteSubcurves_Update( in_ctxt )
 {
 	Application.LogMessage("DeleteSubcurves_Update called",siVerboseMsg);
 	
-	// Get output target
-	var geomOut = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
+	
+	// Get Port connections.
+	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+	var oSubcurveCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
+	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
+	var cInCurves = inCrvListGeom.Curves;
+	var inCurve0Degree = cInCurves(0).Degree;
 
-	// Get input Cluster
-	var inputClusterElements = in_ctxt.GetInputValue("deleteCluster").Elements;	// ClassName: ClusterElementCollection
-	var clusterCount = inputClusterElements.Count;
-
-	// Get input CurveList
-	var cInputCurves = in_ctxt.GetInputValue("inputCurve").Geometry.Curves;
+	var clusterCount = oSubcurveCluster.Elements.Count;
 
 
-	// Create boolean array which Subcurve to delete
-	var flagArray = new Array(cInputCurves.Count);
-	for(i = 0; i < clusterCount; i++) flagArray[inputClusterElements(i)] = true;
+	// Create boolean array which Subcurve to delete.
+	var flagArray = new Array(cInCurves.Count);
+	for(var i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
+	for(var i = 0; i < clusterCount; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
 
 
 	var numAllSubcurves = 0;
@@ -247,15 +279,16 @@ function DeleteSubcurves_Update( in_ctxt )
 	var aAllDegree = new Array();
 	var aAllParameterization = new Array();
 
-	if(cInputCurves.Count > clusterCount)
+	// Main loop
+	if(cInCurves.Count > clusterCount)
 	{
 	// When not all Subcurves have to be deleted:
-		for(i = 0; i < cInputCurves.Count; i++)
+		for(i = 0; i < cInCurves.Count; i++)
 		{
 			if(flagArray[i]) continue;
 
 			// Get NurbsCurve data
-			var subcrv = cInputCurves.item(i);	// get input Subcurve. Type: NurbsCurve, ClassName: NurbsCurve			
+			var subcrv = cInCurves.item(i);	// get input Subcurve. Type: NurbsCurve, ClassName: NurbsCurve			
 			VBdata = subcrv.Get2(siSINurbs); var data = VBdata.toArray();
 
 			// Get Point data
@@ -278,24 +311,48 @@ function DeleteSubcurves_Update( in_ctxt )
 
 	} else
 	{
-	// When all Subcurves are deleted:
-	
-	// Smallest possible CurveList: 1 Point
-	// var oEmpty = SICreateCurve("emptyCurve", 3, 1);
+	// When all Subcurves are deleted, set the CurveList to the smallest possible.
+	// Same as: var oEmpty = SICreateCurve("emptyCurve", degree, 1);
 		numAllSubcurves = 1;
-		ctrlPoints = [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1];	// 4 Points, each 0,0,0,1 (x,y,z,weight)
-		numCtrlPoints = [4];
-		knots = [0,0,0,1,1,1];	// 6 Knots
-		numKnots = [6];
-		isClosed = [false];
-		degree = [3];
-		parameterization = [siNonUniformParameterization];	// 1
+
+		switch(inCurve0Degree)
+		{
+			case 1:
+				aAllPoints = [0,0,0,1,0,0,0,1];	// x,y,z,weight
+				aAllNumPoints = [2];
+				aAllKnots = [0,1];
+				aAllNumKnots = [2];
+				aAllIsClosed = [false];
+				aAllDegree = [1];
+				aAllParameterization = [siNonUniformParameterization]; // 1
+				break;
+
+			case 2:
+				aAllPoints = [0,0,0,1,0,0,0,1,0,0,0,1];
+				aAllNumPoints = [3];
+				aAllKnots = [0,0,1,1];
+				aAllNumKnots = [4];
+				aAllIsClosed = [false];
+				aAllDegree = [2];
+				aAllParameterization = [siNonUniformParameterization];
+				break;
+
+			default:
+				aAllPoints = [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1];
+				aAllNumPoints = [4];
+				aAllKnots = [0,0,0,1,1,1];
+				aAllNumKnots = [6];
+				aAllIsClosed = [false];
+				aAllDegree = [3];
+				aAllParameterization = [siNonUniformParameterization];
+		
+		}
+
 	}
-	// ToDo: minimal Curve for degree 1 and 2
 
 
 	// overwrite the existing CurveList
-	geomOut.Set(
+	outCrvListGeom.Set(
 		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
 		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
@@ -305,7 +362,13 @@ function DeleteSubcurves_Update( in_ctxt )
 		aAllDegree, 			// 6. Array
 		aAllParameterization, 	// 7. Array
 		siSINurbs) ;		// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
-		
+
+	
+	// Update Clusters
+	// var oSubComp = oSubcurveCluster.CreateSubComponent();	// ERROR : 2009 - Access denied
+	// oSubComp.RemoveElement(...);
+	// SIRemoveFromCluster( oSubcurveCluster, oSubComp);
+
 	return true;
 }
 
