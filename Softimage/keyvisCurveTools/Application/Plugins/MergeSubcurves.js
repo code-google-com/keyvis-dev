@@ -69,7 +69,6 @@ function ApplyMergeSubcurves_Execute( args )
 	// Loop through Selection.
 	try
 	{
-		// For clarity's sake:
 		var bPick
 		var bNoCluster;
 		var oSel;
@@ -140,9 +139,22 @@ function ApplyMergeSubcurves_Execute( args )
 		}
 
 
-		// ToDo:
-		// check if all Subcurves have same degree
-		// if not, RaiseDegree
+
+		// Check if all Subcurves have same degree, raise degree if not.
+		var cCurves = oParent.ActivePrimitive.Geometry.Curves;
+
+		var minDegree = 3;
+		var maxDegree = 1;
+
+		for(var i = 0; i < cCurves.Count; i++)
+		{
+			if(cCurves(i).Degree > maxDegree) maxDegree = cCurves(i).Degree;
+			if(cCurves(i).Degree < minDegree) minDegree = cCurves(i).Degree;
+
+		}
+
+		if(minDegree < maxDegree)
+			ApplyTopoOp("RaiseNurbsCrvDegree", oParent, maxDegree, siPersistentOperation, null);
 
 
 		// Create the Operator
@@ -154,13 +166,14 @@ function ApplyMergeSubcurves_Execute( args )
 
 		newOp.Connect();
 
+
 		var immed = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		// ApplyTopoOp( PresetObj, [ConnectionSet], [ConnectType], [ImmediateMode], [OutputObjs], [ConstructionMode] )
 		//var cNewOps = ApplyTopoOp("MergeSubcurves" );
 		
 		//InspectObj(newOp);
 		AutoInspect(newOp);
-		
+
 		return newOp;
 
 	
@@ -184,7 +197,6 @@ function logCluster(oCluster)	// OK
 	}
 }
 
-//______________________________________________________________________________
 
 function MergeSubcurves_Define( in_ctxt )
 {
@@ -206,7 +218,6 @@ function MergeSubcurves_Define( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function MergeSubcurves_Init( in_ctxt )
 {
@@ -214,7 +225,6 @@ function MergeSubcurves_Init( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function MergeSubcurves_Term( in_ctxt )
 {
@@ -223,7 +233,6 @@ function MergeSubcurves_Term( in_ctxt )
 }
 
 
-//______________________________________________________________________________
 //______________________________________________________________________________
 
 function MergeSubcurves_Update( in_ctxt )
@@ -248,14 +257,16 @@ function MergeSubcurves_Update( in_ctxt )
 	// 1) PREPARE ARRAYS AND OBJECTS
 
 	// aBnds: array of all Boundaries
-	// Idx	selected?
-	// --------------
-	// 0	false
-	// 1	true
-	// 2	true
-	// 3	false
+	//
+	// Idx	selected	coords
+	// -----------------------
+	// 0	false		x,y,z
+	// 1	true		x,y,z	
+	// 2	true		x,y,z
+	// 3	false		x,y,z
 	// ...
-	
+
+	// Which Subcurve is a Boundary on?
 	// Bnd 0,1: begin, end on Subcurve 0
 	// Bnd 2,3: begin, end on Subcurve 1 ...
 	
@@ -281,6 +292,8 @@ function MergeSubcurves_Update( in_ctxt )
 
 
 	// aSubcurveUsed: is a Subcurve used?
+	// A "used" Subcurve will be ignored when creating aMergedCrvs.
+	//
 	// Idx	used
 	// ----------
 	// 0	false
@@ -326,10 +339,6 @@ function MergeSubcurves_Update( in_ctxt )
 		
 	}
 
-// TODO?
-	// For each Boundary, find nearest.
-
-
 
 // debug
 /*
@@ -352,6 +361,7 @@ for(var i = 0; i < aBnds.length; i++)
 
 return true;
 */
+
 
 	// 2) MAIN LOOP
 //LogMessage("MAIN LOOP -------------");
