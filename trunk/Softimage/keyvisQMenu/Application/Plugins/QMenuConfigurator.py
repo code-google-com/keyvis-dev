@@ -1010,7 +1010,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	#oFG = oLayout.AddGroup("") #First column for  existing assets #=======================================================
 	#oFG.SetAttribute(c.siUIShowFrame, False)
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("Choose the command, menu, or script item you want to add to the selected context or menu above...")
+	oLayout.AddStaticText("Choose a command, menu, or script item below, then add it to the selected context or menu above...")
 	oLayout.AddSpacer()
 	oLayout.AddRow()
 	oLayout.AddGroup("Existing Softimage Commands")
