@@ -2114,6 +2114,9 @@ def QMenuConfigurator_DeleteMenuSet_OnClicked():
 		#RefreshContextConfigurator()
 		RefreshViewMenuSetsWidgets()
 		RefreshMenuSetChooser()
+		RefreshMenuContexts()
+		RefreshMenuSetDetailsWidgets()
+		RefreshMenuItems()
 		PPG.Refresh()
 
 def QMenuConfigurator_ViewSignature_OnChanged():
@@ -2158,7 +2161,7 @@ def QMenuConfigurator_ViewSignatureName_OnChanged():
 
 					RefreshViewSignaturesList()
 					RefreshViewChooser()
-					PPG.View.Value = newSignatureName
+					#PPG.View.Value = newSignatureName
 					PPG.ViewSignatures.Value = oCurrentSignature.Name
 					PPG.ViewSignatureName.Value = oCurrentSignature.Name
 					PPG.ViewSignature.Value = oCurrentSignature.Signature
@@ -2547,8 +2550,11 @@ def QMenuConfigurator_RemoveMenuContext_OnClicked():
 		oCurrentMenuSet.removeMenuAtIndex( CurrentContextNumber , Quadrant)
 
 		RefreshMenuContexts()
-		if len(PPG.PPGLayout.Item("MenuSetChooser").UIItems) > CurrentContextNumber:
+		#Application.LogMessage ("len of UI items is: " + str(len(PPG.PPGLayout.Item("MenuContexts").UIItems)))
+		if len(PPG.PPGLayout.Item("MenuContexts").UIItems) > CurrentContextNumber*2:
 			PPG.MenuContexts.Value = CurrentContextNumber
+		else:
+			PPG.MenuContexts.Value = CurrentContextNumber -1
 			
 		RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
@@ -3093,7 +3099,7 @@ def RefreshMenuSetDetailsWidgets():
 					else:
 						PPG.MenuChooser.Value = "None"
 
-					PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
+					
 					if PPG.MenuContexts.Value > -1:
 						PPG.PPGLayout.Item("RemoveMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 						PPG.PPGLayout.Item("ReplaceMenuContext").SetAttribute (c.siUIButtonDisable, False)
@@ -3106,7 +3112,8 @@ def RefreshMenuSetDetailsWidgets():
 						PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
 				else:
 					PPG.MenuChooser.Value = "None"
-	
+				
+				PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 	else:
 		PPG.MenuChooser.SetCapabilityFlag(c.siReadOnly, False)
 	#Refresh Menu manipulation widgets...
@@ -3361,6 +3368,9 @@ def RefreshMenuContexts():
 	try:
 		if endrange >= CurrentContext: 
 			PPG.MenuContexts.Value = CurrentContext
+		else:
+			PPG.MenuContexts.Value = -1
+			
 	except:
 		PPG.MenuContexts.Value = -1
 		
