@@ -163,7 +163,9 @@ function ApplyDuplicateSubcurves_Execute(args)
 				if(modifier == 2) bCtrlDown = true;
 
 				if(Application.Interactive && bAutoinspect && !bCtrlDown)
-					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
+					// BUG: AutoInspect() does not work with Custom Ops?
+					// So we need to check CTRL key manually.
+					//AutoInspect(newOp);
 					InspectObj(newOp, "", "", siModal, true);
 
 				// FreezeModeling( [InputObjs], [Time], [PropagationType] )

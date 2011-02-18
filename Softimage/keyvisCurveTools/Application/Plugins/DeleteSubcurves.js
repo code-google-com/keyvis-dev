@@ -150,14 +150,16 @@ function ApplyDeleteSubcurves_Execute(data)
 				// Port names will be generated automatically!
 				var newOp = AddCustomOp("DeleteSubcurves", oOutput, [oInput1, oInput2], "DeleteSubcurves");
 
-/*				var rtn = GetKeyboardState();
+				/*				
+				var rtn = GetKeyboardState();
 				modifier = rtn(1);
 				var bCtrlDown = false;
 				if(modifier == 2) bCtrlDown = true;
 
 				if(Application.Interactive && bAutoinspect && !bCtrlDown)
 					InspectObj(newOp, "", "", siModal, true);
-*/
+				*/
+
 				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
 				FreezeModeling(cCurveLists(i), null, siUnspecified);
 				
@@ -184,9 +186,10 @@ function ApplyDeleteSubcurves_Execute(data)
 				
 			}
 
-/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+			/*
+			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
 				AutoInspect(createdOperators); // Multi-PPG
-*/
+			*/
 		}
 
 		return true;
