@@ -84,7 +84,7 @@ function ApplySplitSubcurves_Execute( args )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Subcurve_AUTO", elementIndices );
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", elementIndices );
 
 				cKnotClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
@@ -111,7 +111,7 @@ function ApplySplitSubcurves_Execute( args )
 			var oObject = ret.oObject;
 			var elementIndices = ret.elementIndices;
 			
-			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Subcurve_AUTO", elementIndices );
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", elementIndices );
 
 			cKnotClusters.Add(oCluster);
 			cCurveLists.Add( oObject );
@@ -161,6 +161,7 @@ function ApplySplitSubcurves_Execute( args )
 				// Port names will be generated automatically!
 				var newOp = AddCustomOp("SplitSubcurves", oOutput, [oInput1, oInput2], "SplitSubcurves");
 
+				/*
 				var rtn = GetKeyboardState();
 				modifier = rtn(1);
 				var bCtrlDown = false;
@@ -169,6 +170,7 @@ function ApplySplitSubcurves_Execute( args )
 				if(Application.Interactive && bAutoinspect && !bCtrlDown)
 					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
 					InspectObj(newOp, "", "", siModal, true);
+				*/
 
 				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
 				FreezeModeling(cCurveLists(i), null, siUnspecified);
@@ -196,10 +198,10 @@ function ApplySplitSubcurves_Execute( args )
 				
 			}
 
-			// No params to inspect (for now).
-/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+			/*
+			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
 				AutoInspect(createdOperators); // Multi-PPG
-*/
+			*/
 		}
 
 		return true;

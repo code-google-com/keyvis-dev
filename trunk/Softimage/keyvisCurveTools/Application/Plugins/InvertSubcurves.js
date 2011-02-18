@@ -126,6 +126,7 @@ function ApplyInvertSubcurves_Execute(args)
 				// Port names will be generated automatically!
 				var newOp = AddCustomOp("InvertSubcurves", oOutput, [oInput1, oInput2], "InvertSubcurves");
 
+				/*
 				var rtn = GetKeyboardState();
 				modifier = rtn(1);
 				var bCtrlDown = false;
@@ -134,6 +135,7 @@ function ApplyInvertSubcurves_Execute(args)
 				if(Application.Interactive && bAutoinspect && !bCtrlDown)
 					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
 					InspectObj(newOp, "", "", siModal, true);
+				*/
 
 				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
 				FreezeModeling(cCurveLists(i), null, siUnspecified);
@@ -151,7 +153,7 @@ function ApplyInvertSubcurves_Execute(args)
 				var oInput1 = cCurveLists(i).ActivePrimitive;
 				var oInput2 = cSubcurveClusters(i);
 				
-				// Workaround for unselectable added Subcurves problem.
+				// Workaround for unselectable added Subcurves problem... not needed here?
 				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
 				//SetValue(cleanOp + ".cleantol", 0, null);
 				//AddCustomOp("EmptyOp", oOutput, oInput1); // Does not help.
@@ -162,10 +164,10 @@ function ApplyInvertSubcurves_Execute(args)
 				
 			}
 
-			// No params to inspect (for now).
-/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+			/*
+			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
 				AutoInspect(createdOperators); // Multi-PPG
-*/
+			*/
 		}
 
 		return true;
