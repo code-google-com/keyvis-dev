@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // OpenCloseSubcurvesPlugin
 // 2010/04 by Eugen Sares
-// last update: 2010/12/05
+// last update: 2011/02/12
 //
 // Usage:
 // - Select Subcurves
@@ -10,8 +10,8 @@
 // 
 // Info: this Op has the parameter "OpenWithGap".
 // When checked, the last Segment (between the next to last and first Point) will be deleted when opening.
-// (what the factory OpenClose Op does).
-// When unchecked, the last Segment will persist.
+// (same as in the factory OpenClose).
+// When unchecked, the last Segment will remain.
 //
 //______________________________________________________________________________
 
@@ -31,8 +31,6 @@ function XSILoadPlugin( in_reg )
 }
 
 
-//______________________________________________________________________________
-
 function XSIUnloadPlugin( in_reg )
 {
 	var strPluginName;
@@ -41,8 +39,6 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function ApplyOpenCloseSubcurves_Init( in_ctxt )	// called after _Execute
 {
@@ -71,94 +67,145 @@ function ApplyOpenCloseSubcurves_Execute(args)
 
 	try
 	{
-		var bPick, bNoCluster;
-		var oSel;
-	
-		if(args == "")
+		var cSel = Selection;
+
+		// Filter a Collection of Subcurve Clusters out of the Selection.
+		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
+		var cCurveLists = new ActiveXObject("XSI.Collection");
+
+		// Filter the Selection for Clusters and Subcurves.
+		for(var i = 0; i < cSel.Count; i++)
 		{
-		// Nothing is selected
-			bPick = true;
-			bNoCluster = true;
+			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
+			{
+				cSubcurveClusters.Add(cSel(i));
+				cCurveLists.Add( cSel(i).Parent3DObject );
+				
+			}
+
+			if( cSel(i).Type == "subcrvSubComponent" )
+			{
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+			}
+			
+/*			if( cSel(i).Type == "crvlist")
+			{
+				// Problem: PickElement does not bother if CurveLists is already selected.
+				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
+				SetSelFilter("SubCurve");
+				
+				var ret = pickElements("SubCurve");
+				var oObject = ret.oObject;
+				var elementIndices = ret.elementIndices;
+			}
+*/
 			
 		}
-		else if(args(0).Type == "subcrv" && ClassName(args(0)) == "Cluster" )
+
+		// If nothing usable was selected, start a Pick Session.
+		if(cSubcurveClusters.Count == 0)
 		{
-		// Subcurve Cluster is selected
-			var oCluster = args(0);
-			var oParent = oCluster.Parent3DObject;
-			bPick = false;
-			bNoCluster = false;
-			
-		} else if(args(0).Type == "subcrvSubComponent")
+			var ret = pickElements("SubCurve");
+			var oObject = ret.oObject;
+			var elementIndices = ret.elementIndices;
+		
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+
+			cSubcurveClusters.Add(oCluster);
+			cCurveLists.Add( oObject );
+
+		}
+
+/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
 		{
-		// Subcurves are selected
-			oSel = args(0);
-			bPick = false;
-			bNoCluster = true;
+			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
+			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
+		}
+*/
+		DeselectAllUsingFilter("SubCurve");
+
+		// Construction mode automatic updating.
+		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
+		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
+
+
+		// Create Output Objects string
+/*		var cOutput = new ActiveXObject("XSI.Collection");
+		for(var i = 0; i < cSubcurveClusters.Count; i++)
+		{
+			cOutput.Add( cCurveLists(i) );
+		}
+*/		
+		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
+		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
+		
+		var createdOperators = new ActiveXObject("XSI.Collection");
+		
+		if(operationMode == siImmediateOperation)
+		{
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cSubcurveClusters.Count; i++)
+			{
+				// Add the Operator
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cSubcurveClusters(i);
+				
+				// Workaround for unselectable added Subcurves problem.
+				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				//SetValue(cleanOp + ".cleantol", 0, null);
+				
+				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
+				// Port names will be generated automatically!
+				var newOp = AddCustomOp("OpenCloseSubcurves", oOutput, [oInput1, oInput2], "OpenCloseSubcurves");
+
+				var rtn = GetKeyboardState();
+				modifier = rtn(1);
+				var bCtrlDown = false;
+				if(modifier == 2) bCtrlDown = true;
+
+				if(Application.Interactive && bAutoinspect && !bCtrlDown)
+					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
+					InspectObj(newOp, "", "", siModal, true);
+
+				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
+				FreezeModeling(cCurveLists(i), null, siUnspecified);
+				
+				createdOperators.Add(newOp);
+			}
 			
 		} else
 		{
-		// Anything else is selected
-			// oSel is set after picking
-			bPick = true;
-			bNoCluster = true;
-			
-		}
-
-
-		if(bPick)
-		{
-			do
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cSubcurveClusters.Count; i++)
 			{
-			// Start Subcurve Pick Session
-				var subcurves, button;	// useless but needed in JScript
-				// PickElement() manages to select a CurveList first, then a Subcurve
-				var rtn = PickElement( "SubCurve", "subcurves", "", subcurves, button, 0 );
-				button = rtn.Value( "ButtonPressed" );
-				if(!button) throw "Argument must be Subcurves.";
+				// Define Outputs and Inputs.
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cSubcurveClusters(i);
 				
-				oSel = rtn.Value( "PickedElement" );
-				//var modifier = rtn.Value( "ModifierPressed" );
+				// Workaround for unselectable added Subcurves problem.
+				var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				SetValue(cleanOp + ".cleantol", 0, null);
+				//AddCustomOp("EmptyOp", oOutput, oInput1); // Does not help.
 
-			} while (oSel.Type != "subcrvSubComponent");
-			
-		}
+				var newOp = AddCustomOp("OpenCloseSubcurves", oOutput, [oInput1, oInput2], "OpenCloseSubcurves");
 
-		if(bNoCluster)
-		{
-			var oSubComponent = oSel.SubComponent;
-			var oParent = oSubComponent.Parent3DObject;
-			var oComponentCollection = oSubComponent.ComponentCollection;
-			// LogMessage("No. of Subcurves: " + oComponentCollection	// OK
-			
-			// create an index Array from the Subcurve collection
-			var idxArray = new Array();
-			for(i = 0; i < oComponentCollection.Count; i++)
-			{
-				var subcrv = oComponentCollection.item(i);
-				// Logmessage("Subcurve [" + subcrv.Index + "] selected");
-				idxArray[i] = subcrv.Index;
+				createdOperators.Add(newOp);
+				
 			}
 			
-			// create Cluster with Subcurves to delete
-			var oCluster = oParent.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", idxArray );
+			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+				AutoInspect(createdOperators); // Multi-PPG
 
 		}
-		
 
-		var newOp = XSIFactory.CreateObject("OpenCloseSubcurves");	// known to the system through XSILoadPlugin callback
-		
-		newOp.AddOutputPort(oParent.ActivePrimitive, "outputCurve");	// working
-		newOp.AddInputPort(oParent.ActivePrimitive, "inputCurve");	// working
-		newOp.AddInputPort(oCluster, "openCloseClusterPort");	// params: PortTarget, [PortName]
-
-		newOp.Connect();
-		
-		//DeselectAllUsingFilter("SubCurve");
-		
-		InspectObj(newOp);
-		
-		return newOp;
+		return true;
 
 	} catch(e)
 	{
@@ -170,6 +217,28 @@ function ApplyOpenCloseSubcurves_Execute(args)
 
 
 //______________________________________________________________________________
+
+function pickElements(selFilter)
+{
+
+	var subcurves, button;	// useless, but needed in JScript.
+	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
+	button = rtn.Value( "ButtonPressed" );
+	if(!button) throw "Argument must be Subcurves.";
+	element = rtn.Value( "PickedElement" );
+	//var modifier = rtn.Value( "ModifierPressed" );
+	
+	// element.Type: subcrvSubComponent
+	// ClassName(element): CollectionItem
+
+	var oObject = element.SubComponent.Parent3DObject;
+	var elementIndices = element.SubComponent.ElementArray.toArray();
+
+	return {oObject: oObject, elementIndices: elementIndices};
+	
+}
+
 
 // Use this callback to build a set of parameters that will appear in the property page.
 function OpenCloseSubcurves_Define( in_ctxt )
@@ -189,8 +258,6 @@ function OpenCloseSubcurves_Define( in_ctxt )
 }
 
 
-//______________________________________________________________________________
-
 // User data can be stored in the operator context of the Init callback
 // and then retrieved later in the Update and Term callbacks.
 function OpenCloseSubcurves_Init( in_ctxt )
@@ -199,8 +266,6 @@ function OpenCloseSubcurves_Init( in_ctxt )
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function OpenCloseSubcurves_Term( in_ctxt )
 {
@@ -214,28 +279,27 @@ function OpenCloseSubcurves_Term( in_ctxt )
 
 function OpenCloseSubcurves_Update( in_ctxt )
 {
+	Application.LogMessage("OpenCloseSubcurves_Update called",siVerboseMsg);
+
+
+	// Get Params.
 	var OpenWithGap = in_ctxt.GetParameterValue("OpenWithGap");
 	
-	Application.LogMessage("OpenCloseSubcurves_Update called",siVerboseMsg);
-	
-	
-	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
 
-	var inputClusterElements = in_ctxt.GetInputValue("openCloseClusterPort").Elements;	// ClassName: ClusterElementCollection
-	var clusterCount = inputClusterElements.Count;
-
-	var inputCrvColl = in_ctxt.GetInputValue("inputCurve").Geometry.Curves;
-
-	// for quicker checking which Subcurve is marked/selected:
-	// "flagArray" is a boolean array which is true at the index of each selected Subcurve.
-	// inputClusterElements.FindIndex() can be used as well, but this should be faster at higher Subcurve counts.
-	var flagArray = new Array(inputCrvColl.Count);
-	for(i = 0; i < inputCrvColl.Count; i++) flagArray[i] = false;	// init
-	for(i = 0; i < clusterCount; i++) flagArray[inputClusterElements(i)] = true;
+	// Get Port connections.
+	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
+	var oSubcurveCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
+	var cInCurves = inCrvListGeom.Curves;
 
 
-	// create empty arrays to hold the new CurveList data
-	// http://softimage.wiki.softimage.com/index.php/Creating_a_merge_curve_SCOP
+	// Create boolean array which Subcurves to open/close.
+	var flagArray = new Array(cInCurves.Count);
+	for(i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
+	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+
+
+	// Create empty arrays to hold the new CurveList data.
 	var aAllPoints = new Array();
 	var aNumAllPoints = new Array();
 	var aAllKnots = new Array();
@@ -245,32 +309,31 @@ function OpenCloseSubcurves_Update( in_ctxt )
 	var aParameterization = new Array();
 
 	var tol = 10e-10;
-
-	// loop through all Subcurves
-	for(var subCrvIdx = 0; subCrvIdx < inputCrvColl.Count; subCrvIdx++)
+	
+	
+	// Loop through all Subcurves.
+	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
-		// get input Subcurve
-		var subCrv = inputCrvColl.item(subCrvIdx);	// Type: NurbsCurve, ClassName: NurbsCurve
+		// Get input Subcurve.
+		var subCrv = cInCurves.item(subCrvIdx);	// Type: NurbsCurve, ClassName: NurbsCurve
 		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 
-
-		// Get Point data
+		// Get Point data.
 		var vbArg0 = new VBArray(subCrvData[0]); var aPoints = vbArg0.toArray();
 		aNumAllPoints[subCrvIdx] = aPoints.length/4;	// /4? x,y,z,weight
 
-		// check if the first and last Point coincide
+		// Check if the first and last Point coincide.
 		var bFirstOnLast = false;
 		if(	Math.abs(aPoints[0] - aPoints[aPoints.length - 4]) < tol &&
 			Math.abs(aPoints[1] - aPoints[aPoints.length - 3]) < tol &&
 			Math.abs(aPoints[2] - aPoints[aPoints.length - 2]) < tol)
 				bFirstOnLast = true;
-//LogMessage("firstOnLast: " + firstOnLast);
 
-		// Get Knot data
+		// Get Knot data.
 		var vbArg1 = new VBArray(subCrvData[1]); var aKnots = vbArg1.toArray();
 		aNumAllKnots[subCrvIdx] = aKnots.length;
 
-		// Get other data
+		// Get other data.
 		aIsClosed[subCrvIdx] = subCrvData[2];
 		aDegree[subCrvIdx] = subCrvData[3];
 		aParameterization[subCrvIdx] = subCrvData[4];
@@ -293,34 +356,31 @@ function OpenCloseSubcurves_Update( in_ctxt )
 		if(flagArray[subCrvIdx])
 		{
 		// Subcurve was selected and will be opened/closed
-		
-			// Calculate only the Point array and Knot Vector, all other Curve params are already set
+		// Only the Point and Knot data need to be changed, rest is already set.
 
 			// This Operator works as a toggle:
 			// Open Curves that were closed, and vice versa.
 			if(aIsClosed[subCrvIdx] == true)
 			{
 			// OPEN the Subcurve		
-			// Note: Param. OpenWithGap defines whether the opened Curve's first and last Point will overlap or not.
+			// OpenWithGap: first and last Point of opened Curve will overlap or not?
 				if(!OpenWithGap)
 				{
-				// first and last Point will overlap after opening
-				// -> duplicate first Point to the end
+				// Overlap after opening:
+				// -> Duplicate first Point to the end
 					for(var i = 0; i < 4; i++)	aPoints.push(aPoints[i]);
 				}
 				
-				// remember last Knot value
+				// Remember last Knot value.
 				var lastKnot = aKnots[aKnots.length - 1];
-//LogMessage("lastKnot: " + lastKnot);
-//LogMessage("aKnots.length: " + aKnots.length);
 
-				// adapt Knot vector length: In open Curves: K = P + degree - 1
+				// Adapt Knot vector length: In open Curves: K = P + degree - 1
 				aKnots.length = aPoints.length / 4 + aDegree[subCrvIdx] - 1;	// /4? x,y,z,w
 				
-				// set first Knot to full Mult.
+				// Set first Knot to full Mult.
 				for(var i = 0; i < aDegree[subCrvIdx] - 1; i++)	aKnots[i] = aKnots[aDegree[subCrvIdx] - 1];
 				
-				// set last Knot to full Mult.
+				// Set last Knot to full Mult.
 				for(var i = aDegree[subCrvIdx]; i > 0; i--)	aKnots[aKnots.length - i] = lastKnot;
 
 				aIsClosed[subCrvIdx] = false;
@@ -334,18 +394,18 @@ function OpenCloseSubcurves_Update( in_ctxt )
 			
 				aIsClosed[subCrvIdx] = true;
 				
-			}	// end else
+			}
 
 		aNumAllPoints[subCrvIdx] = aPoints.length/4;
 		aNumAllKnots[subCrvIdx] = aKnots.length;
 		
-		}	// end if
+		}
 
-		// concatenate the Points and Knots arrays to get the complete CurveList data
+		// Concatenate the Points and Knots arrays to get the complete CurveList data.
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllKnots = aAllKnots.concat(aKnots);
 
-	}	// end of loop through all Subcurves
+	}
 
 
 // debug
@@ -379,7 +439,6 @@ function OpenCloseSubcurves_Update( in_ctxt )
 }
 
 
-//______________________________________________________________________________
 //______________________________________________________________________________
 
 function closeNurbsCurve(aPoints, aKnots, degree)
@@ -437,21 +496,17 @@ function closeNurbsCurve(aPoints, aKnots, degree)
 }
 
 
-//______________________________________________________________________________
-
 function OpenCloseSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
 	//oLayout.AddGroup("When opening Subcurve:");
-	oLayout.AddItem("OpenWithGap");
+	oLayout.AddItem("OpenWithGap", "Open with gap");
 	//oLayout.EndGroup();
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function OpenCloseSubcurves_OnInit( )
 {
@@ -459,15 +514,11 @@ function OpenCloseSubcurves_OnInit( )
 }
 
 
-//______________________________________________________________________________
-
 function OpenCloseSubcurves_OnClosed( )
 {
 	Application.LogMessage("OpenCloseSubcurves_OnClosed called",siVerbose);
 }
 
-
-//______________________________________________________________________________
 
 function OpenCloseSubcurves_OpenWithGap_OnChanged( )
 {
@@ -479,7 +530,6 @@ function OpenCloseSubcurves_OpenWithGap_OnChanged( )
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
 
-//______________________________________________________________________________
 
 function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 {
@@ -489,4 +539,4 @@ function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
+

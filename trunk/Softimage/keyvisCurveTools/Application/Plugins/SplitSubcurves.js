@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // SplitSubcurvesPlugin
 // 2010/05 by Eugen Sares
-// last update: 2010/12/12
+// last update: 2011/02/18
 //
 // Usage:
 // - Select Knot(s) on a NurbsCurve(List)
@@ -54,113 +54,156 @@ function ApplySplitSubcurves_Init( in_ctxt )
 }
 
 
-
-
-
-
-
 //______________________________________________________________________________
 
 function ApplySplitSubcurves_Execute( args )
 {
 	Application.LogMessage("ApplySplitSubcurves_Execute called",siVerbose);
 
-	// Note: The AddCustomOp command is an alternative way to build the operator
-	
 //	LogMessage(args);	// crvlist.knot[4,5]
 
 	try
 	{
-		// This isn't actually necessary...
-		var bPick
-		var bNoCluster;
-		var oSel;
-		var oCluster;
-		var oParent;
-	
-		if(args == "")
+		var cSel = Selection;
+
+		// Filter a Collection of Subcurve Clusters out of the Selection.
+		var cKnotClusters = new ActiveXObject("XSI.Collection");
+		var cCurveLists = new ActiveXObject("XSI.Collection");
+
+		// Filter the Selection for Clusters and Subcurves.
+		for(var i = 0; i < cSel.Count; i++)
 		{
-		// Nothing is selected
-			bPick = true;
-			bNoCluster = true;
+			if( cSel(i).Type == "knot" && ClassName(cSel(i)) == "Cluster")
+			{
+				cKnotClusters.Add(cSel(i));
+				cCurveLists.Add( cSel(i).Parent3DObject );
+				
+			}
+
+			if( cSel(i).Type == "knotSubComponent" )
+			{
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Subcurve_AUTO", elementIndices );
+
+				cKnotClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+			}
+			
+/*			if( cSel(i).Type == "crvlist")
+			{
+				// Problem: PickElement does not bother if CurveLists is already selected.
+				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
+				SetSelFilter("Knot");
+				
+				var ret = pickElements("Knot", "Argument must be Knots.");
+				var oObject = ret.oObject;
+				var elementIndices = ret.elementIndices;
+			}
+*/
 			
 		}
-		else if(args(0).Type == "knot" && ClassName(args(0)) == "Cluster" )
+
+		// If nothing usable was selected, start a Pick Session.
+		if(cKnotClusters.Count == 0)
 		{
-		// Curve Boundary Cluster is selected
-			oCluster = args(0);
-			oParent = oCluster.Parent3DObject;
-			bPick = false;
-			bNoCluster = false;
+			var ret = pickElements("Knot");
+			var oObject = ret.oObject;
+			var elementIndices = ret.elementIndices;
 			
-		} else if(args(0).Type == "knotSubComponent")
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Subcurve_AUTO", elementIndices );
+
+			cKnotClusters.Add(oCluster);
+			cCurveLists.Add( oObject );
+
+		}
+
+/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
 		{
-		// Curve Boundaries are selected
-			oSel = args(0);
-			bPick = false;
-			bNoCluster = true;
+			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
+			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
+		}
+*/
+		DeselectAllUsingFilter("Knot");
+
+		// Construction mode automatic updating.
+		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
+		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
+
+
+		// Create Output Objects string
+/*		var cOutput = new ActiveXObject("XSI.Collection");
+		for(var i = 0; i < cSubcurveClusters.Count; i++)
+		{
+			cOutput.Add( cCurveLists(i) );
+		}
+*/		
+		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
+		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
+		
+		var createdOperators = new ActiveXObject("XSI.Collection");
+		
+		if(operationMode == siImmediateOperation)
+		{
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cKnotClusters.Count; i++)
+			{
+				// Add the Operator
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cKnotClusters(i);
+
+				// Mult. 3 on degree 3 Curves, and 2 on degree 2 Curves.
+				// This factory Op also solves the selection problem in Custom Topo Ops.
+				SetCurveKnotMultiplicity(cKnotClusters(i), 3, siPersistentOperation);
+				
+				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
+				// Port names will be generated automatically!
+				var newOp = AddCustomOp("SplitSubcurves", oOutput, [oInput1, oInput2], "SplitSubcurves");
+
+				var rtn = GetKeyboardState();
+				modifier = rtn(1);
+				var bCtrlDown = false;
+				if(modifier == 2) bCtrlDown = true;
+
+				if(Application.Interactive && bAutoinspect && !bCtrlDown)
+					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
+					InspectObj(newOp, "", "", siModal, true);
+
+				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
+				FreezeModeling(cCurveLists(i), null, siUnspecified);
+				
+				createdOperators.Add(newOp);
+			}
 			
 		} else
 		{
-		// Anything else is selected
-			// oSel is set after picking
-			bPick = true;
-			bNoCluster = true;
-			
-		}
-
-
-		if(bPick)
-		{
-			do
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cKnotClusters.Count; i++)
 			{
-			// Start Subcurve Pick Session
-				var crvBounaries, button;	// useless but needed in JScript
-				// PickElement() manages to select a CurveList first, then a Subcurve:
-				var rtn = PickElement( "Knot", "Knot", "", crvBounaries, button, 0 );
-				button = rtn.Value( "ButtonPressed" );
-				if(!button) throw "Argument must be Knot.";
+				// Define Outputs and Inputs.
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cKnotClusters(i);
 				
-				oSel = rtn.Value( "PickedElement" );
-				//var modifier = rtn.Value( "ModifierPressed" );
+				// Mult. 3 on degree 3 Curves, and 2 on degree 2 Curves.
+				// This factory Op also solves the selection problem in Custom Topo Ops.
+				SetCurveKnotMultiplicity(cKnotClusters(i), 3, siPersistentOperation);
 
-			} while (oSel.Type != "knotSubComponent");
-			
+				var newOp = AddCustomOp("SplitSubcurves", oOutput, [oInput1, oInput2], "SplitSubcurves");
+
+				createdOperators.Add(newOp);
+				
+			}
+
+			// No params to inspect (for now).
+/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+				AutoInspect(createdOperators); // Multi-PPG
+*/
 		}
 
-		if(bNoCluster)
-		{
-			var oSubComponent = oSel.SubComponent;
-			oCluster = oSubComponent.CreateCluster("Knot_AUTO");
-			oParent = oSubComponent.Parent3DObject;
-			// var cComponents =  Selection(0).SubComponent.ComponentCollection;
-			// var cComponents = oSubComponent.ComponentCollection;
-			// var aBndryIndices = oSubComponent.ElementArray.toArray();
-			//var oCrvList = oParent.ActivePrimitive.Geometry;
-			// var oCluster = oCrvList.AddCluster( siKnotCluster, "Knot_AUTO", aKnotIndices); //, aBndryIndices );
+		return true;
 
-		}
-
-		// Mult. 3 on degree 3 Curves, and 2 on degree 2 Curves.
-		SetCurveKnotMultiplicity(oCluster, 3, siPersistentOperation);
-
-
-		// Create the Operator
-		var newOp = XSIFactory.CreateObject("SplitSubcurves");	// known to the system through XSILoadPlugin callback
-
-		// Connect the ports
-		newOp.AddIOPort(oParent.ActivePrimitive, "CurvePort");
-		newOp.AddInputPort(oCluster, "splitClusterPort");	// params: PortTarget, [PortName]
-		newOp.Connect();
-		
-		// Deselect all Knots
-		DeselectAllUsingFilter("Knot");
-
-		//InspectObj(newOp);
-		
-		return newOp;
-
-	
 	} catch(e)
 	{
 		LogMessage(e, siWarning);
@@ -169,42 +212,29 @@ function ApplySplitSubcurves_Execute( args )
 
 }
 
-
-/*
-// for debugging:
 //______________________________________________________________________________
-function logKnotVector(knotVector)	// OK
+
+function pickElements(selFilter, errorMsg)
 {
-	var knotString = "";
-		for(var j = 0; j < knotVector.Count; j++)
-		{
-			if(j > 0) knotString = knotString + ","
-			knotString = knotString + knotVector.item(j);
-		}
-		LogMessage(knotString);
+
+	var subcurves, button;	// useless, but needed in JScript.
+	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
+	button = rtn.Value( "ButtonPressed" );
+	if(!button) throw errorMsg;
+	element = rtn.Value( "PickedElement" );
+	//var modifier = rtn.Value( "ModifierPressed" );
+	
+	// element.Type: subcrvSubComponent
+	// ClassName(element): CollectionItem
+
+	var oObject = element.SubComponent.Parent3DObject;
+	var elementIndices = element.SubComponent.ElementArray.toArray();
+
+	return {oObject: oObject, elementIndices: elementIndices};
+	
 }
 
-
-//______________________________________________________________________________
-function logCluster(oCluster)	// OK
-{
-	LogMessage("Cluster.Name: " + oCluster.Name);
-	LogMessage("Cluster.Type: " + oCluster.Type);
-	for(var i = 0; i < oCluster.Elements.Count; i++)
-	{
-		oElement = oCluster.Elements(i);
-		LogMessage("i = " + i + ": " + oElement);
-	}
-}
-*/
-
-
-
-
-
-
-
-//______________________________________________________________________________
 
 function SplitSubcurves_Define( in_ctxt )
 {
@@ -213,17 +243,17 @@ function SplitSubcurves_Define( in_ctxt )
 	oCustomOperator = in_ctxt.Source;
 
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 1;
+	oCustomOperator.Debug = 0;
 	return true;
 }
 
-//______________________________________________________________________________
 
 function SplitSubcurves_Init( in_ctxt )
 {
 	Application.LogMessage("SplitSubcurves_Init called",siVerboseMsg);
 	return true;
 }
+
 
 function SplitSubcurves_Term( in_ctxt )
 {
@@ -232,28 +262,24 @@ function SplitSubcurves_Term( in_ctxt )
 }
 
 
-
-
-
-
-
 //______________________________________________________________________________
 
 function SplitSubcurves_Update( in_ctxt )
 {
 	Application.LogMessage("SplitSubcurves_Update called",siVerboseMsg);
 
-
-	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
+	//// Get Port connections.
+	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
+	var oKnotCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
+	var cInCurves = inCrvListGeom.Curves;
 	
+/*	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
 	var oKnotCluster = in_ctxt.GetInputValue("splitClusterPort");
-	
 	var cInCurves = in_ctxt.GetInputValue("InCurvePort").Geometry.Curves;
+*/
 
-
-	// create empty arrays to hold the new CurveList data
-	// http://softimage.wiki.softimage.com/index.php/Creating_a_merge_curve_SCOP
-
+	// Create arrays for complete CurveList data.
 	var numAllSubcurves = 0;
 	var aAllPoints = new Array();
 	var aAllNumPoints = new Array();
@@ -266,16 +292,16 @@ function SplitSubcurves_Update( in_ctxt )
 	
 	// the indices of the selected Knots do not correspond to the Subcurves' Knot Vectors
 	// so prepare some arrays for easy access:
-	
 	var aKnotHasKnotVecIdx = new Array();
 	var aKnotIsOnSubcurve = new Array();
 	var aKnotIsFirst = new Array();
 	var aAllSubcrvSlices = new Array();	// Array of Arrays
 	var aLastKnotIndices = new Array();
 
+
+	// INFO
 	// Example: CurveList with one open and one closed Subcurve
-	// Knots 3 and 12 were selected (one on each Subcurve)
-	// oKnotCluster = [3, 12]
+	// Knots 3 and 12 were selected (one on each Subcurve) -> oKnotCluster = [3, 12]
 	
 	// KnotVectors =		[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6]	[0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
 	// aKnotHasKnotVecIdx =	[0,       3, 4, 5,       8, 9, 10,		 0,       3, 4, 5, 6, 7,       10,11]
@@ -285,57 +311,57 @@ function SplitSubcurves_Update( in_ctxt )
 	// aLastKnotIndices =	[                              10,										  11]
 
 
-	// this is what we want:
+	// This is what we want:
 	// aAllSubcrvSlices =	[[0,            5,             10],     [0,                  7,           11]]
-	// could also be someting like: [ [], [0, 4, 11, 14], [], [0, 6, 40], [0, 7] ]
+	// Another example: [ [], [0, 4, 11, 14], [], [0, 6, 40], [0, 7] ]
 	
 	// Note:
-	// all selected Knots have already been converted to full multiplicity Knots in the Execute Callback.
-	// such a Knot conincides with a Point.
-	// conveniently, the KnotVector index of a full mult. Knot is also the index of that Point.
-	// In this example, where Knot 3 (full mult.) is selected:
+	// Knots with full multiplicity (knot repeated degree times - 1,2,3) is called Bezier Knot.
+	// Bezier Knots coincide with a Point. That's where we can split the Subcurve.
+	// All selected Knots have already been converted to Bezier Knots in the Execute Callback.
+	// Conveniently, the KnotVector index of a Bezier Knot is also the index of the Point.
+	// Example: Bezier Knot 3 is selected.
 	// aKnotHasKnotVecIdx[3] = 5
-	// 5 is the array position where the Knot Vector can be cut.
-	// 5 is also the Index of the Point corresponding to this Knot.
+	// 5 is the array position where the Knot Vector can be split, and also
+	// the index of the Point on this Knot.
 	
-	// the Subcurve Point- and Knot-Arrays are then sliced/concatenated according to aAllSubcrvSlices
+	// The Subcurve Point- and Knot-Arrays are then sliced/concatenated according to aAllSubcrvSlices
 	
-	// on closed Subcurves:
-	// if only the first/last Knot was selected, the Subcurve will just be opened!
+	// On closed Subcurves:
+	// If only the first/last Knot was selected, the Subcurve will be opened.
 
 
 
-// 1) Prepare arrays
-// aKnotHasKnotVecIdx, aKnotIsOnSubcurve, aKnotIsFirst, aLastKnotIndices
+	// 1) Prepare arrays
+	// aKnotHasKnotVecIdx, aKnotIsOnSubcurve, aKnotIsFirst, aLastKnotIndices
 	
-	// loop through all Subcurves
+	// Loop through all Subcurves.
 	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
-		// get input Subcurve
+		// Get input Subcurve.
 		var subCrv = cInCurves.item(subCrvIdx);
 		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 		
-		// get Control Points array
+		// Get Control Points array.
 		var VBdata0 = new VBArray(subCrvData[0]); var aPoints = VBdata0.toArray();
 
-		// put number of Control Points in an array
+		// Put number of Control Points in an array.
 		//aLastKnotIndices[subCrvIdx] = aPoints.length/4;	// /4? x,y,z,weight
 		
-		// get KnotVector
+		// Get KnotVector.
 		var VBdata1 = new VBArray(subCrvData[1]); var aKnots = VBdata1.toArray();
 
-		
 
-		// first Point in the KnotVector
+		// First Point in the KnotVector
 		aKnotHasKnotVecIdx.push(0);
 		aKnotIsOnSubcurve.push(subCrvIdx);
 		aKnotIsFirst.push(true);
 				
-		// loop through all Knots in the Vector
+		// Loop through all Knots in the Vector.
 		for(var i = 1; i < aKnots.length; i++)
 		{
-			// eliminate Multiplicity
-			// is the Knot different than the one before?
+			// Eliminate Multiplicity.
+			// Is the Knot different than the one before?
 			if(aKnots[i] != aKnots[i - 1])
 			{
 				aKnotHasKnotVecIdx.push(i);
@@ -344,7 +370,7 @@ function SplitSubcurves_Update( in_ctxt )
 			}
 		}
 		
-		// store the array index of this Subcurve's last Knot
+		// Store the array index of this Subcurve's last Knot.
 		aLastKnotIndices.push(aKnotHasKnotVecIdx[aKnotHasKnotVecIdx.length - 1]);
 		
 	}	// end for
@@ -356,45 +382,42 @@ function SplitSubcurves_Update( in_ctxt )
 	LogMessage("aKnotIsFirst: " + aKnotIsFirst);
 	LogMessage("aLastKnotIndices: " + aLastKnotIndices);
 	LogMessage("");
+	return true;
 */
-//return true;
 
-
-// 2) Prepare aAllSubcrvSlices array
+	// 2) Prepare array aAllSubcrvSlices
 
 	for(var i = 0; i < cInCurves.Count; i++) aAllSubcrvSlices[i] = [];
 	
-	// loop through all Knots in the input Cluster
-	// note: the Knots in oKnotCluster are NOT sorted by index!
+	// Loop through all Knots in the input Cluster.
+	// Note: the Knots in oKnotCluster are NOT sorted by index!
 	for(var i = 0; i < oKnotCluster.Elements.Count; i++)
 	{
 		var knotIdx = oKnotCluster.Elements(i);
 		var subcrv = aKnotIsOnSubcurve[knotIdx];
 		
-		// get slice array for the Knot's Subcurve
+		// Get slice array for the Knot's Subcurve.
 		var aSubcrvSlices = aAllSubcrvSlices[subcrv];
 
 		if(aAllSubcrvSlices[subcrv].length == 0)
 		{
-		// no Knots in this slice array yet
-			// put the Subcurve's start and end in it's slice array
-			// if they remain the only knots in this array, this will in 3) be interpreted as "open Subcrv"
+		// No Knots in this slice array yet.
+			// Put the Subcurve's start and end in it's slice array.
+			// If they remain the only knots in this array,
+			// the Subcurve will be opened in 3)
 			aSubcrvSlices.push(0);
 			aSubcrvSlices.push(aLastKnotIndices[subcrv]);
 		}
 
-		// splice in the Knot into Subcurve's slice array
-		// loop through the slice array
-//LogMessage("splicing Knots...");
+		// Splice in the Knot into Subcurve's slice array.
+		// Loop through slice array.
 		for(var j = 0; j < aSubcrvSlices.length; j++)
 		{
-			// if the Knot is already in the array, ignore it
-			// can happen for 0 or LAST, since these are put in every new slice array
-//LogMessage("knotIdx: " + knotIdx);
-//LogMessage("aKnotHasKnotVecIdx[knotIdx]: " + aKnotHasKnotVecIdx[knotIdx]);
+			// If the Knot is already in the array, ignore it.
+			// Can happen for 0 or LAST, since these are put in every new slice array.
 			if(aKnotHasKnotVecIdx[knotIdx] < aSubcrvSlices[j])
 			{
-			// splice it in here
+			// Splice it in here.
 				aSubcrvSlices.splice(j, 0, aKnotHasKnotVecIdx[knotIdx]);
 				break;
 			}
@@ -403,15 +426,14 @@ function SplitSubcurves_Update( in_ctxt )
 				break;
 			
 		}	// end for
-		
-		// write back the array
+
 		aAllSubcrvSlices[subcrv] = aSubcrvSlices;
 		
 	}	// end for
 
 
 
-// debug:
+//	debug:
 /*	LogMessage("");
 	LogMessage("aAllSubcrvSlices:");
 	for(var i = 0; i < aAllSubcrvSlices.length; i++)
@@ -419,31 +441,31 @@ function SplitSubcurves_Update( in_ctxt )
 		LogMessage(i + ": " + aAllSubcrvSlices[i]);
 	};
 */
-//return true;
+//	return true;
 
 
 
-// 3) Concatenate Subcurves / Subcurve slices
+	// 3) Concatenate Subcurves / Subcurve slices
 	
-	// loop through all Subcurves
+	// Loop through all Subcurves.
 	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
-		// Get input Subcurve
+		// Get input Subcurve.
 		var subCrv = cInCurves.item(subCrvIdx);
 		VBdata = new VBArray(subCrv.Get2(siSINurbs));									
 		var subCrvData = VBdata.toArray();
 
-		// Get Point data
+		// Get Point data.
 		var vbArg0 = new VBArray(subCrvData[0]);
 		var aPoints = vbArg0.toArray();
 		var numPoints = aPoints.length/4;	// /4? x,y,z,weight
 
-		// Get Knot data
+		// Get Knot data.
 		var vbArg1 = new VBArray(subCrvData[1]);
 		var aKnots = vbArg1.toArray();
 		var numKnots = aKnots.length;
 
-		// Get other data
+		// Get other data.
 		var isClosed = subCrvData[2];
 		var degree = subCrvData[3];
 		var parameterization = subCrvData[4];
@@ -462,30 +484,31 @@ function SplitSubcurves_Update( in_ctxt )
 		LogMessage("parameterization: " + parameterization );
 		LogMessage("");
 */
+
 		var aSubcrvSlices = aAllSubcrvSlices[subCrvIdx];	// above example: [0,5,10] and [0,7,11]
-//LogMessage("aSubcrvSlices: " + aSubcrvSlices);
+
 		switch(aSubcrvSlices.length)
 		{
 		case 2:	// [0,LAST]
-		// Only first & last Knot were selected
+		// Only first & last Knot were selected.
 			if(isClosed)
 			{
-			// Subcurve was closed -> Subcurve will be opened
-				// copy first Point to end
+			// Subcurve was closed -> Subcurve will be opened.
+				// Copy first Point to end.
 				for(var j = 0; j < 4; j++)	aPoints.push(aPoints[j]);	
 				
-				// adapt Knot vector length: In open Curves: K = P + degree - 1
+				// Adapt Knot vector length: In open Curves: K = P + degree - 1
 				aKnots.length = aPoints.length / 4 + degree - 1;	// x,y,z,w
 
-				// set first Knot to full Mult.
+				// Set first Knot to full Mult.
 				var firstKnot = aKnots[degree] - 1;
 				for(var j = 0; j < degree - 1; j++)	aKnots[j] = firstKnot;
 				
-				// set last Knot to full Mult.
+				// Set last Knot to full Mult.
 				var lastKnot = aKnots[aKnots.length - degree - 1] + 1;
 				for(var j = degree; j > 0; j--)	aKnots[aKnots.length - j] = lastKnot;
 
-				// write this Subcurve to the CurveList data
+				// Write this Subcurve to the CurveList data.
 				aAllPoints = aAllPoints.concat(aPoints);
 				aAllNumPoints[numAllSubcurves] = aPoints.length / 4;
 				aAllKnots = aAllKnots.concat(aKnots);
@@ -519,7 +542,7 @@ function SplitSubcurves_Update( in_ctxt )
 		// Knots were selected along the Subcurve, add it's slices to the CurveList data
 		// Example: aSubcrvSlices = [0,5,10],[0,7,11]
 
-			// Loop through all Knots in aSubcrvSlices
+			// Loop through all Knots in aSubcrvSlices.
 			var lastIdx = aSubcrvSlices.length - 1;
 			for(var i = 0; i < lastIdx; i++)
 			{
@@ -539,14 +562,14 @@ function SplitSubcurves_Update( in_ctxt )
 				
 				} else if(i == lastIdx - 1)
 				{
-				// Last slice pulled from a closed Subcurve
+				// Last slice pulled from a closed Subcurve.
 				// -> duplicate first Point to the end
 				for(var j = 0; j < 4; j++)	aPointsSlice.push(aPoints[j]);
 
 				// Adapt Knot vector length: In open Curves: K = P + degree - 1
 				aKnotsSlice.length = aPointsSlice.length / 4 + degree - 1;
 		
-				// Set last Knot to full Multiplicity
+				// Set last Knot to full Multiplicity.
 				var lastKnot = aKnotsSlice[aKnotsSlice.length - degree - 1] + 1;
 
 				for(var j = degree; j > 0; j--)	aKnotsSlice[aKnotsSlice.length - j] = lastKnot;
@@ -554,7 +577,7 @@ function SplitSubcurves_Update( in_ctxt )
 				}
 			}
 
-			// Write this Slice to the CurveList data
+			// Write this Slice to the CurveList data.
 			aAllPoints = aAllPoints.concat(aPointsSlice);
 			aAllNumPoints[numAllSubcurves] = aPointsSlice.length / 4;
 			aAllKnots = aAllKnots.concat(aKnotsSlice);
@@ -572,40 +595,31 @@ function SplitSubcurves_Update( in_ctxt )
 	}	// end for
 
 
-	// Test: add a simple testCurve
+	// Simple testCurve
 /*	var testCrvPoints = [0,0,0,1, 1,0,0,1];
 	var testCrvKnots = [0,1];
 	var testCrvIsClosed = false;
 	var testCrvDegree = 1;
 	var testCrvParameterization = siNonUniformParameterization;
-	
-	aAllPoints = aAllPoints.concat(testCrvPoints);
-	aAllNumPoints[numAllSubcurves] = testCrvPoints.length / 4;
-	aAllKnots = aAllKnots.concat(testCrvKnots);
-	aAllNumKnots[numAllSubcurves] = testCrvKnots.length;
-	aAllIsClosed[numAllSubcurves] = testCrvIsClosed
-	aAllDegree[numAllSubcurves] = testCrvDegree;
-	aAllParameterization[numAllSubcurves] = testCrvParameterization;
-	numAllSubcurves++;
-	// OK. All Subcurves are selectable.
 */
 
-// debug
-	LogMessage("--------------------------------------");
-	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves:      " + numAllSubcurves);
-	LogMessage("aAllPoints:           " + aAllPoints);
+	// Debug
+/*	LogMessage("New CurveList:");
+	LogMessage("allSubcurvesCnt:      ");
+	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
+	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	LogMessage("aAllKnots:            " + aAllKnots);
+	//LogMessage("aAllNumPoints:        " + aAllNumPoints);
+	//LogMessage("aAllKnots:            " + aAllKnots);
+	logKnotsArray("aAllKnots: " + aAllKnots, 100);
 	LogMessage("aAllKnots.length:     " + aAllKnots.length);
 	LogMessage("aAllNumKnots:         " + aAllNumKnots);
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
 	LogMessage("aAllDegree:           " + aAllDegree);
 	LogMessage("aAllParameterization: " + aAllParameterization);
+*/
 
-
-	// Overwrite this CurveList using Set
+	// Set output CurveList.
 	outCrvListGeom.Set(
 		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
@@ -623,6 +637,16 @@ function SplitSubcurves_Update( in_ctxt )
 
 //______________________________________________________________________________
 
+function SplitSubcurves_DefineLayout( in_ctxt )
+{
+	var oLayout,oItem;
+	oLayout = in_ctxt.Source;
+	oLayout.Clear();
+	//oLayout.AddItem("xxx"); 
+	return true;
+}
+
+
 function ApplySplitSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
@@ -631,4 +655,49 @@ function ApplySplitSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
+
+function logControlPointsArray(logString, aPoints, dp)
+{
+	LogMessage(logString);
+	
+	for ( var i = 0; i < aPoints.length; i += 4 )
+	{
+		var x = aPoints[i];
+		var y = aPoints[i + 1];
+		var z = aPoints[i + 2];
+		var w = aPoints[i + 3]; 
+		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp +
+									"; y = " + Math.round(y*dp)/dp +
+									"; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
+
+	}
+
+}
+
+
+function logKnotsArray(logString, aKnots, dp)
+{
+	//LogMessage(logString);
+	var sKnotArray = logString;
+	for ( var j = 0; j < aKnots.length; j++ )
+	{
+		var knotValue = Math.round(aKnots[j]*dp)/dp;
+		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		else sKnotArray = sKnotArray + ", " + knotValue;
+	}
+	
+	LogMessage( sKnotArray );
+	
+}
+
+
+function logCluster(oCluster)
+{
+	LogMessage("Cluster.Name: " + oCluster.Name);
+	LogMessage("Cluster.Type: " + oCluster.Type);
+	for(var i = 0; i < oCluster.Elements.Count; i++)
+	{
+		oElement = oCluster.Elements(i);
+		LogMessage("i = " + i + ": " + oElement);
+	}
+}

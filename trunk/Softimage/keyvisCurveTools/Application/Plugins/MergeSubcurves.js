@@ -23,7 +23,6 @@ function XSILoadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function XSIUnloadPlugin( in_reg )
 {
@@ -33,7 +32,6 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function ApplyMergeSubcurves_Init( in_ctxt )
 {
@@ -54,8 +52,6 @@ function ApplyMergeSubcurves_Init( in_ctxt )
 }
 
 
-
-
 //______________________________________________________________________________
 
 function ApplyMergeSubcurves_Execute( args )
@@ -63,120 +59,157 @@ function ApplyMergeSubcurves_Execute( args )
 
 	Application.LogMessage("ApplyMergeSubcurves_Execute called",siVerbose);
 
-
-// TODO:
-	// More than one Curvelist is selected.
-	// Loop through Selection.
 	try
 	{
-		var bPick
-		var bNoCluster;
-		var oSel;
-		var oCluster;
-		var oParent;
-	
-		if(args == "")
+		var cSel = Selection;
+
+		// Filter a Collection of Subcurve Clusters out of the Selection.
+		var cCrvBndryClusters = new ActiveXObject("XSI.Collection");
+		var cCurveLists = new ActiveXObject("XSI.Collection");
+
+		// Filter the Selection.
+		// Loop through all selected items.
+		for(var i = 0; i < cSel.Count; i++)
 		{
-		// Nothing is selected
-			bPick = true;
-			bNoCluster = true;
-			
+			// Curve Boundary Cluster selected.
+			if( cSel(i).Type == "crvbndry" && ClassName(cSel(i)) == "Cluster")
+			{
+				cCrvBndryClusters.Add(cSel(i));
+				cCurveLists.Add( cSel(i).Parent3DObject );
+				
+			}
+
+			// Curve Boundaries selected.
+			if( cSel(i).Type == "crvbndrySubComponent" )
+			{
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var oSubComponent = cSel(i).SubComponent;
+				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+
+				cCrvBndryClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+			}
+
+			// CurveLists selected.
+/*			if( cSel(i).Type == "crvlist")
+			{
+				// Problem: PickElement does not bother if CurveLists is already selected.
+				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
+				SetSelFilter("SubCurve");
+				
+				var ret = pickElements("SubCurve");
+				var oObject = ret.oObject;
+				var elementIndices = ret.elementIndices;
+			}
+*/
+
+			// SubCurves selected.
+			// ToDo?
+
 		}
-		else if(args(0).Type == "crvbndry" && ClassName(args(0)) == "Cluster" )
+
+		// If nothing usable was selected, start a Pick Session.
+		if(cCrvBndryClusters.Count == 0)
 		{
-		// Curve Boundary Cluster is selected
-			oCluster = args(0);
-			oParent = oCluster.Parent3DObject;
-			bPick = false;
-			bNoCluster = false;
-			
-		} else if(args(0).Type == "crvbndrySubComponent")
+			var components, button;	// useless, but needed in JScript.
+			// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+			var rtn = PickElement( "CurveBoundary", "CurveBoundary", "CurveBoundary", components, button, 0 );
+			button = rtn.Value( "ButtonPressed" );
+			if(!button) throw "Argument must be Curve Boundaries.";
+			element = rtn.Value( "PickedElement" );
+			//var modifier = rtn.Value( "ModifierPressed" );
+			var oObject = element.SubComponent.Parent3DObject;
+			//var elementIndices = element.SubComponent.ElementArray.toArray();
+			SelectGeometryComponents(element);
+
+			var oSubComponent = cSel(0).SubComponent;
+			var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+			// oObject.ActivePrimitive.Geometry.AddCluster(...) is not working here...
+
+			cCrvBndryClusters.Add(oCluster);
+			cCurveLists.Add( oObject );
+
+		}
+
+// Debug
+/*		for(var i = 0; i < cCrvBndryClusters.Count; i++)
 		{
-		// Curve Boundaries are selected
-			oSel = args(0);
-			bPick = false;
-			bNoCluster = true;
+			LogMessage("cCrvBndryClusters(" + i + "): " + cCrvBndryClusters(i));
+			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
+		}
+*/
+
+		DeselectAllUsingFilter("CurveBoundary");
+
+		// Construction mode automatic updating.
+		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
+		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
+	
+		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
+		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
+		
+		var createdOperators = new ActiveXObject("XSI.Collection");
+		
+		if(operationMode == siImmediateOperation)
+		{
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cCrvBndryClusters.Count; i++)
+			{
+				// Add the Operator
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cCrvBndryClusters(i);
+
+				// Make sure degree is the same for all Subcurves,
+				// apply Clean Op (fix for selection problem).
+				prepareCurveList(cCurveLists(i));
+				
+				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
+				// Port names will be generated automatically!
+				var newOp = AddCustomOp("MergeSubcurves", oOutput, [oInput1, oInput2], "MergeSubcurves");
+
+				var rtn = GetKeyboardState();
+				modifier = rtn(1);
+				var bCtrlDown = false;
+				if(modifier == 2) bCtrlDown = true;
+
+				if(Application.Interactive && bAutoinspect && !bCtrlDown)
+					//AutoInspect(newOp); // BUG: does not work with Custom Ops(?)
+					InspectObj(newOp, "", "", siModal, true);
+
+				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
+				FreezeModeling(cCurveLists(i), null, siUnspecified);
+				
+				createdOperators.Add(newOp);
+			}
 			
 		} else
 		{
-		// Anything else is selected
-			// oSel is set after picking
-			bPick = true;
-			bNoCluster = true;
-			
-		}
-
-
-		if(bPick)
-		{
-			do
+			// Loop through all selected/created Clusters and apply the Operator.
+			for(var i = 0; i < cCrvBndryClusters.Count; i++)
 			{
-			// Start Subcurve Pick Session
-				var crvBounaries, button;	// useless but needed in JScript
-				// PickElement() manages to select a CurveList first, then a Subcurve:
-				var rtn = PickElement( "CurveBoundary", "Curve Boundary", "", crvBounaries, button, 0 );
-				button = rtn.Value( "ButtonPressed" );
-				if(!button) throw "Argument must be Curve Boundary.";
+				// Define Outputs and Inputs.
+				var oOutput = cCurveLists(i).ActivePrimitive;
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cCrvBndryClusters(i);
+
+				// Make sure degree is the same for all Subcurves,
+				// apply Clean Op (fix for selection problem).
+				prepareCurveList(cCurveLists(i));
+
+				var newOp = AddCustomOp("MergeSubcurves", oOutput, [oInput1, oInput2], "MergeSubcurves");
+
+				createdOperators.Add(newOp);
 				
-				oSel = rtn.Value( "PickedElement" );
-				//var modifier = rtn.Value( "ModifierPressed" );
-
-			} while (oSel.Type != "crvbndrySubComponent");
+			}
 			
-		}
-
-		if(bNoCluster)
-		{
-			var oSubComponent = oSel.SubComponent;
-			oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
-			oParent = oSubComponent.Parent3DObject;
-			// var cComponents =  Selection(0).SubComponent.ComponentCollection;	// not working with Boundaries
-			// var cComponents = oSubComponent.ComponentCollection;
-			// var aBndryIndices = oSubComponent.ElementArray.toArray();
-			//var oCrvList = oParent.ActivePrimitive.Geometry;
-			// var oCluster = oCrvList.AddCluster( siBoundaryCluster, "Curve_Boundary_AUTO"); //, aBndryIndices );
+			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+				AutoInspect(createdOperators); // Multi-PPG
 
 		}
 
+		return true;
 
-
-		// Check if all Subcurves have same degree, raise degree if not.
-		var cCurves = oParent.ActivePrimitive.Geometry.Curves;
-
-		var minDegree = 3;
-		var maxDegree = 1;
-
-		for(var i = 0; i < cCurves.Count; i++)
-		{
-			if(cCurves(i).Degree > maxDegree) maxDegree = cCurves(i).Degree;
-			if(cCurves(i).Degree < minDegree) minDegree = cCurves(i).Degree;
-
-		}
-
-		if(minDegree < maxDegree)
-			ApplyTopoOp("RaiseNurbsCrvDegree", oParent, maxDegree, siPersistentOperation, null);
-
-
-		// Create the Operator
-		var newOp = XSIFactory.CreateObject("MergeSubcurves");	// known to the system through XSILoadPlugin callback
-
-		// Connect the ports
-		newOp.AddIOPort(oParent.ActivePrimitive, "CurvePort");	// autom: OutCurvePort, InCurvePort
-		newOp.AddInputPort(oCluster, "mergeClusterPort");	// params: PortTarget, [PortName]
-
-		newOp.Connect();
-
-
-		var immed = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
-		// ApplyTopoOp( PresetObj, [ConnectionSet], [ConnectType], [ImmediateMode], [OutputObjs], [ConstructionMode] )
-		//var cNewOps = ApplyTopoOp("MergeSubcurves" );
-		
-		//InspectObj(newOp);
-		AutoInspect(newOp);
-
-		return newOp;
-
-	
 	} catch(e)
 	{
 		LogMessage(e, siWarning);
@@ -185,6 +218,56 @@ function ApplyMergeSubcurves_Execute( args )
 }
 
 //______________________________________________________________________________
+
+// Unused here.
+/*
+function pickElements(selFilter, errorMsg)
+{
+
+	var components, button;	// useless, but needed in JScript.
+	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+	var rtn = PickElement( selFilter, selFilter, selFilter, components, button, 0 );
+	button = rtn.Value( "ButtonPressed" );
+	if(!button) throw errorMsg;
+	element = rtn.Value( "PickedElement" );
+	//var modifier = rtn.Value( "ModifierPressed" );
+	
+	var oObject = element.SubComponent.Parent3DObject;
+	var elementIndices = element.SubComponent.ElementArray.toArray();
+	return {oObject: oObject, elementIndices: elementIndices};
+	
+}
+*/
+
+function prepareCurveList(oCrvList)
+{
+	// Check if all Subcurves have same degree, raise degree if not.
+	var cCurves = oCrvList.ActivePrimitive.Geometry.Curves;
+
+	var minDegree = 3;
+	var maxDegree = 1;
+
+	for(var i = 0; i < cCurves.Count; i++)
+	{
+		if(cCurves(i).Degree > maxDegree) maxDegree = cCurves(i).Degree;
+		if(cCurves(i).Degree < minDegree) minDegree = cCurves(i).Degree;
+
+	}
+
+	if(minDegree < maxDegree)
+	{
+		ApplyTopoOp("RaiseNurbsCrvDegree", oCrvList, maxDegree, siPersistentOperation, null);
+
+	} else
+	{
+		// Workaround for unselectable added Subcurves problem.
+		var cleanOp = ApplyTopoOp("CrvClean", oCrvList, 3, siPersistentOperation, null);
+		SetValue(cleanOp + ".cleantol", 0, null);
+		
+	}
+
+}
+
 
 function logCluster(oCluster)	// OK
 {
@@ -250,13 +333,18 @@ function MergeSubcurves_Update( in_ctxt )
 
 	// Get Port connections.
 	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
-	var oMergeCluster = in_ctxt.GetInputValue("mergeClusterPort");
-	var cInCurves = in_ctxt.GetInputValue("InCurvePort").Geometry.Curves;
+	var cInCurves = in_ctxt.GetInputValue(0).Geometry.Curves; // Port 0: "Incrvlist"
+	var oMergeCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
 
 
 	// 1) PREPARE ARRAYS AND OBJECTS
 
-	// aBnds: array of all Boundaries
+	// Array to store the indices of the merged Curve Boundaries, for later selection.
+	var aNewSubcurves = new Array();
+
+
+	// aBnds:
+	// Array of all Boundaries
 	//
 	// Idx	selected	coords
 	// -----------------------
@@ -266,9 +354,9 @@ function MergeSubcurves_Update( in_ctxt )
 	// 3	false		x,y,z
 	// ...
 
-	// Which Subcurve is a Boundary on?
-	// Bnd 0,1: begin, end on Subcurve 0
-	// Bnd 2,3: begin, end on Subcurve 1 ...
+	// Tip: which Subcurve is a Boundary on?
+	// Bnd 0/1: begin/end on Subcurve 0
+	// Bnd 2/3: begin/end on Subcurve 1 ...
 	
 	var aBnds = new Array(cInCurves.Count * 2);
 	
@@ -291,8 +379,9 @@ function MergeSubcurves_Update( in_ctxt )
 		aBnds[ oMergeCluster.Elements(i) ].selected = true;
 
 
-	// aSubcurveUsed: is a Subcurve used?
-	// A "used" Subcurve will be ignored when creating aMergedCrvs.
+	// aSubcurveUsed:
+	// Is a Subcurve used?
+	// A "used" Subcurve will be ignored when creating aMergedCrvs (see below).
 	//
 	// Idx	used
 	// ----------
@@ -316,11 +405,11 @@ function MergeSubcurves_Update( in_ctxt )
 		// Get Point data
 		var VBdata0 = new VBArray(subCrvData[0]); var aPoints = VBdata0.toArray();
 
-		// Exclude Boundaries of closed Subcurves!
 		var isClosed = subCrvData[2];
 
 		if(isClosed)
 		{
+		// Closed Subcurves will be ignored furthermore.
 			aBnds[i * 2].selected = false;
 			aBnds[i * 2 + 1].selected = false;
 
@@ -340,33 +429,33 @@ function MergeSubcurves_Update( in_ctxt )
 	}
 
 
-// debug
+// Debug
 /*
-LogMessage("aSubcurveUsed: ");
-for(var i = 0; i < aSubcurveUsed.length; i++)
-{
-	LogMessage(aSubcurveUsed[i]);
-}
+	LogMessage("aSubcurveUsed: ");
+	for(var i = 0; i < aSubcurveUsed.length; i++)
+	{
+		LogMessage(aSubcurveUsed[i]);
+	}
 
-LogMessage("");
-LogMessage("aBnds: ");
-for(var i = 0; i < aBnds.length; i++)
-{
-	var bnd = aBnds[i];
-	LogMessage("aBnd[" + i + "].selected: " + bnd.selected);
-	//LogMessage("aBnd[" + i + "].x: " + bnd.x);
-	//LogMessage("aBnd[" + i + "].y: " + bnd.y);
-	//LogMessage("aBnd[" + i + "].z: " + bnd.z);
-}
+	LogMessage("");
+	LogMessage("aBnds: ");
+	for(var i = 0; i < aBnds.length; i++)
+	{
+		var bnd = aBnds[i];
+		LogMessage("aBnd[" + i + "].selected: " + bnd.selected);
+		//LogMessage("aBnd[" + i + "].x: " + bnd.x);
+		//LogMessage("aBnd[" + i + "].y: " + bnd.y);
+		//LogMessage("aBnd[" + i + "].z: " + bnd.z);
+	}
 
-return true;
+	return true;
 */
 
 
 	// 2) MAIN LOOP
-//LogMessage("MAIN LOOP -------------");
 	
-	// aMergedCrvs: Array of Objects containing Subcurve merge arrays.
+	// aMergedCrvs:
+	// Array of Objects containing Subcurve merge arrays.
 	// Example:
 	// Idx	aSubCrvs	aInvert					close
 	// ----------------------------------------------
@@ -380,190 +469,180 @@ return true;
 
 
 	// Loop through all input Subcurves.
-	// Skip the "used" ones = those already in a merge arrays.
 	for(var inCrvCnt = 0; inCrvCnt < cInCurves.Count; inCrvCnt++)
 	{
-		// If this Subcurve is used, skip it
-		if(aSubcurveUsed[inCrvCnt])
-		{
-//LogMessage("Subcurve " + inCrvCnt + " used. Skipping.");
-			continue;
-		}
+		// If this Subcurve is used, skip it.
+		if(aSubcurveUsed[inCrvCnt]) continue;
 		
-//LogMessage("Subcurve " + inCrvCnt + " unused. Adding...");
 		// Add a new "row" to aMergedCrvs.
 		aMergedCrvs[mergedCrvCnt] = new Object();
 		var oMergedCrv = aMergedCrvs[mergedCrvCnt];
 		mergedCrvCnt++;
 		
 		// Define Properties of Object "oMergedCrv":
-		// Property "aSubCrvs": array of indices which Subcurves to merge.
+		// Property "aSubCrvs":
+		// Array of indices which Subcurves to merge.
 		oMergedCrv.aSubCrvs = new Array();  // [inCrvCnt]; // 
 		var aSubCrvs = oMergedCrv.aSubCrvs;
 		aSubCrvs.push(inCrvCnt);
-		//aSubCrvs.push(123);
-		//aSubCrvs.push(456);
-//LogMessage("aMergedCrvs[" + (mergedCrvCnt-1) + "].aSubCrvs: " + aMergedCrvs[mergedCrvCnt-1].aSubCrvs);
+
 		// Mark this Subcurve as used
 		aSubcurveUsed[inCrvCnt] = true;
 		
-		// Property "aInvert": array of flags indicating if a Subcurve must be reversed before merging
+		// Property "aInvert":
+		// Array of booleans indicating if a Subcurve must be reversed before merging.
 		oMergedCrv.aInvert = [false];
 		var aInvert = oMergedCrv.aInvert;
 		
-		// Property "close": aSubCrvs will be a closed loop.
+		// Property "close":
+		// aSubCrvs will be a closed loop, because first and last Bnds merge.
 		oMergedCrv.close = false;
 
 
-
 		// BOUNDARY SEARCH LOOP
+		// Take leftmost Subcurve in aSubCrvs, check if it's left Border is selected,
+		// if yes, find closest Boundary inside the WeldRadius,
+		// if any, add the found Subcurve to array "aSubCrvs" before,
+		// continue until no more Boundaries are found to the left,
+		// then do the same with the right side of the array.
 		while(true)
 		{
-//LogMessage("SEARCH LOOP");
-			// If Subcurve array "aSubCrvs" has selected Boundaries at begin or end,
-			// find nearby Boundaries within mergeRadius and add them before or after.
-
-			// Get first Subcurve in array.
+			// Get first Boundary index of first Subcurve in aSubCrvs.
 			var firstSubCrv = aSubCrvs[0];
-//LogMessage("firstSubCrv: " + firstSubCrv);
-			// Get first Boundary.
 			if( aInvert[0] )
 				var firstBnd = firstSubCrv * 2 + 1;
 			else
 				var firstBnd = firstSubCrv * 2;
 	
-			// Get last Subcurve in array.
+			// Get last Boundary index of last Subcurve in sSubCrvs.
 			var lastSubCrv = aSubCrvs[aSubCrvs.length - 1];
-//LogMessage("lastSubCrv: " + lastSubCrv);
-			// Get last Boundary.
 			if( aInvert[aInvert.length - 1] )
 				var lastBnd = lastSubCrv * 2;
 			else
 				var lastBnd = lastSubCrv * 2 + 1;
 
-//LogMessage("firstBnd: " + firstBnd);
-//LogMessage("lastBnd: " + lastBnd);
 			var oFirstBnd = aBnds[firstBnd];
 			var oLastBnd = aBnds[lastBnd];
 
-			// Check if first Bnd is selected.
+
+			// First Boundary is selected?
 			if(oFirstBnd.selected == true)
 			{
-				// Deselect this Boundary first, so it won't find itself.
+				// Deselect it, so it won't find itself.
 				oFirstBnd.selected = false;
 
-				// Find nearby Subcurve Bnd.
+				// Find nearby Boundary!
 				var foundBnd = findBoundary( oFirstBnd.x, oFirstBnd.y, oFirstBnd.z, mergeRadius, aBnds );
-//LogMessage("begin foundBnd: " + foundBnd);
+
 				if(foundBnd != -1)
 				{
-				// Nearby Boundary was found.
+				// Nearby Boundary was found!
 
 					// Deselect found Boundary.
 					aBnds[foundBnd].selected = false;
 					
-					// Check for closed loop.
+					// Closed loop?
 					if(foundBnd == lastBnd)
 					{
-						// Mark this Subcurve array for later closing.
+						// Set close flag.
 						oMergedCrv.close = true;
 
 						// Deselect last Boundary.
 						oLastBnd.selected = false;
 
-						break; // Continue with for loop
+						break; // Leave while loop, continue with for loop.
 					}
 
-					// Not a closed loop...
+					// Not a closed loop.
 					// Calculate Subcurve index.
 					var foundSubCrv = Math.floor(foundBnd / 2);
-					// Add it to array at first.
-					//aSubCrvs = [foundSubCrv].concat(aSubCrvs); // This does not work, because aSubCrvs points to a new array then.
+					// Add it to array at beginning.
 					aSubCrvs.unshift(foundSubCrv);
-//LogMessage("aSubCrvs: " + aSubCrvs);
-					
+					//aSubCrvs = [foundSubCrv].concat(aSubCrvs); // This does not work, because aSubCrvs would point to a new array then!! (tricky bug...)
+
 					// Begin Bnd found? -> invert
-					if( foundBnd % 2 == 1 ) aInvert.unshift(false);
-					else aInvert.unshift(true);
+					if( foundBnd % 2 == 1 )
+						aInvert.unshift(false); // %: modulus
+					else
+						aInvert.unshift(true);
 					
-					// Mark it as used
+					// Mark it as used.
 					aSubcurveUsed[foundSubCrv] = true;
 
-				}	// end if, continue with do loop
+				}	// end if, continue with while loop
+				
 
-
-			} else if(oLastBnd.selected == true)	// Check if last Bnd is selected.
+			// Last Boundary is selected?
+			} else if(oLastBnd.selected == true)
 			{
-			// Deselect this Boundary first, so it won't find itself.
+				// Deselect it, so it won't find itself.
 				oLastBnd.selected = false;
 
-				// Find nearby Subcurve Bnd.
+				// Find nearby Boundary!
 				var foundBnd = findBoundary( oLastBnd.x, oLastBnd.y, oLastBnd.z, mergeRadius, aBnds );
-//LogMessage("end foundBnd: " + foundBnd);			
+
 				if(foundBnd != -1)
 				{
-				// Nearby Boundary was found.
+				// Nearby Boundary was found!
 
 					// Deselect found Boundary.
 					aBnds[foundBnd].selected = false;
 					
-					// Check for closed loop.
+					// Closed loop?
 					if(foundBnd == firstBnd)
 					{
-						// Mark this Subcurve array for later closing.
+						// Set close flag.
 						oMergedCrv.close = true;
 
 						// Deselect first Boundary.
 						aBnds[firstBnd].selected = false;
 
-						break; // Continue with for loop
+						break; // Leave while loop, continue with for loop.
 					}
 
-					// Not a closed loop...
+					// Not a closed loop.
 					// Calculate Subcurve index.
 					var foundSubCrv = Math.floor(foundBnd / 2);
-					// Add it to array at last.
+					// Add it to array at end.
 					aSubCrvs.push(foundSubCrv);
-//LogMessage("pushed aSubCrvs: " + aSubCrvs);
+
 					// End Bnd found? -> invert
-					if( foundBnd % 2 == 1 ) aInvert.push(true);
-					else aInvert.push(false);
+					if( foundBnd % 2 == 1 )
+						aInvert.push(true);
+					else
+						aInvert.push(false);
 					
-					// Mark it as used
+					// Mark it as used.
 					aSubcurveUsed[foundSubCrv] = true;
 
-				}	// end if, continue with do loop
+				}	// end if, continue with while loop
 				
-			} else break;	// Neither begin Bnd nor end Bnd was selected -> continue with for loop.
+			} else break; // Neither begin Bnd nor end Bnd was selected -> continue with for loop.
 
 		} // end while
-//LogMessage("aSubCrvs: " + aSubCrvs);
-//LogMessage("aMergedCrvs[" + (mergedCrvCnt-1) + "].aSubCrvs: " + aMergedCrvs[mergedCrvCnt-1].aSubCrvs);
-//LogMessage("--------------");
+
 	} 	// end for
+
+// Debug
 /*
-LogMessage("-------------");
-//LogMessage("aMergedCrvs.length: " + aMergedCrvs.length);
-LogMessage("mergedCrvCnt:" + mergedCrvCnt);
-LogMessage("aMergedCrvs:");
-for(var i = 0; i < mergedCrvCnt; i++)
-{
-	LogMessage("aMergedCrvs[" + i + "].aSubCrvs: " + aMergedCrvs[i].aSubCrvs + "   close: " + aMergedCrvs[i].close);
-	LogMessage("aInvert: " + aMergedCrvs[i].aInvert);
-}
-LogMessage("-------------");
+	LogMessage("-------------");
+	LogMessage("aMergedCrvs.length: " + aMergedCrvs.length);
+	LogMessage("mergedCrvCnt:" + mergedCrvCnt);
+	//LogMessage("aMergedCrvs:");
+	for(var i = 0; i < mergedCrvCnt; i++)
+	{
+		LogMessage("aMergedCrvs[" + i + "].aSubCrvs: " + aMergedCrvs[i].aSubCrvs + "   close: " + aMergedCrvs[i].close);
+		LogMessage("aInvert: " + aMergedCrvs[i].aInvert);
+	}
+	LogMessage("-------------");
+
+	return true;
 */
-//return true;
-
-
 
 
 	// 3) MERGE LOOP
-//LogMessage("MERGE");
-	// All Subcurves must have same degree.
-	// This has to be made sure in the _Execute callback.
 
-	// Create arrays for complete CurveList data
+	// Create arrays for complete CurveList data.
 	//var allSubcurvesCnt = 0;
 	var aAllPoints = new Array();
 	var aAllNumPoints = new Array();
@@ -573,29 +652,22 @@ LogMessage("-------------");
 	var aAllDegree = new Array();
 	var aAllParameterization = new Array();
 
+
 	// Create arrays for Subcurve data
 	var aMergedPoints = new Array();
-	//var mergedNumPoints;
 	var aMergedKnots = new Array();
-	//var mergedNumKnots;
-	//var mergedIsClosed;
-	//var mergedDegree;
-	//var mergedParameterization;
 
 
-//LogMessage("mergedCrvCnt: " + mergedCrvCnt);
-	// Loop through all "rows" in aMergedCrvs
+	// Loop through all "rows" in aMergedCrvs.
 	for(var allSubcurvesCnt = 0; allSubcurvesCnt < mergedCrvCnt; allSubcurvesCnt++)
 	{
-//LogMessage("");
-//LogMessage( "new Subcurve [" + allSubcurvesCnt + "]:" );
-		// var newSubcurve = empty
+		// Get Subcurve list to merge.
 		var aSubCrvs = aMergedCrvs[allSubcurvesCnt].aSubCrvs;
 		var aInvert = aMergedCrvs[allSubcurvesCnt].aInvert;
-		// Loop through all Subcurves in array, merge them
+
+		// Loop through all Subcurves.
 		for(var i = 0; i < aSubCrvs.length; i++)
 		{
-//LogMessage("aSubCrvs[i]: " + aSubCrvs[i]);
 			// Get next Subcurve in array
 			var subCrv = cInCurves.item( aSubCrvs[i] );
 			VBdata = new VBArray(subCrv.Get2(siSINurbs));
@@ -612,36 +684,34 @@ LogMessage("-------------");
 			// Invert if necessary
 			if(aInvert[i])
 			{
-				var ret = invertNurbsCurve(aPoints, aKnots, isClosed, degree);
+				var ret = invertNurbsCurve(aPoints, aKnots, isClosed);
 				// Param "isClosed" is actually irrelevant here, since closed Subcurves don't get merged anyway.
+				//var aPointsInv = ret.aPointsInv;
+				//aPoints = aPointsInv;
+				//var aKnotsInv = ret.aKnotsInv;
+				//aKnots = aKnotsInv;
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
+
 			}
 
+			// First Subcurve piece in array?
 			if(i == 0)
 			{
-			// First Subcurve piece in array
+				aMergedPoints = aPoints;
+				aMergedKnots = aKnots;
+
 				// Get other data
 				var isClosed = aSubCrvData[2];
 				// It is assured in the _Execute callback that all Subcurves have same degree!
 				var degree = aSubCrvData[3];
 				var parameterization = aSubCrvData[4];
 
-				aMergedPoints = aPoints;
-				//mergedNumPoints = aPoints.length // 4: x,y,z,w
-				aMergedKnots = aKnots;
-				//mergedNumKnots = aKnots.length;
-				//mergedIsClosed = isClosed;
-				//mergedDegree = degree;
-				//mergedParameterization = parameterization;
-//LogMessage("i=0");
-//logControlPointsArray("aMergedPoints: ", aMergedPoints, 1000);
-//logKnotsArray("aMergedKnots: ", aMergedKnots, 1000);
 			} else
 			{
-			// Concatenate other Subcurve pieces - this is what it's all about...
-			// Subcurve pieces are never closed here.
-				
+			// Merge(concat) other Subcurve pieces - this is what it's all about...
+			// All Subcurve pieces are open - closed ones were skipped firsthand.
+		
 				// POINTS
 				// Calc geom. average of last Point and first Point of next piece.
 				// SIVector3 ?
@@ -657,7 +727,7 @@ LogMessage("-------------");
 				
 				// KNOTS
 
-				// We simplify the NURBS math here and assume a Knot interval of 1.
+				// Let's simplify the NURBS math here and assume a Knot interval of 1.
 				var offset = aMergedKnots[aMergedKnots.length - 1] + 1;
 				
 				// Discard first Knot of next Curve piece.
@@ -666,9 +736,9 @@ LogMessage("-------------");
 				// degree 3: 0,0,0,1,2,3,...
 				aKnots = aKnots.slice(degree);
 				
-				offset = offset - aKnots[0];
+				offset -= aKnots[0];
 				
-				// Add the offset.
+				// Add the offset to all Knots.
 				for(var n = 0; n < aKnots.length; n++) aKnots[n] += offset;
 				
 				// Concatenate.
@@ -677,23 +747,19 @@ LogMessage("-------------");
 			}
 
 		} // end for i
-//LogMessage("merged!");
-//logControlPointsArray("aMergedPoints: ", aMergedPoints, 1000);
-//logKnotsArray("aMergedKnots: ", aMergedKnots, 1000);
+
 		if(aMergedCrvs[allSubcurvesCnt].close)
 		{
-		// Close the merged Subcurves
+		// Close the merged Subcurves.
 			var ret = closeNurbsCurve(aMergedPoints, aMergedKnots, degree);
 			aMergedPoints = ret.aPoints;
 			aMergedKnots = ret.aKnots;
 
 			var isClosed = true;
-//logControlPointsArray("aPoints closed: ", aPoints, 1000);
-//logKnotsArray("aKnots closed: ", aKnots, 1000);
+
 		}
 
-
-		// Put merged Subcurve data in CurveList
+		// Add merged Subcurve data to CurveList.
 		aAllPoints = aAllPoints.concat(aMergedPoints);
 		aAllNumPoints[allSubcurvesCnt] = aMergedPoints.length / 4;	//x,y,z,w
 		aAllKnots = aAllKnots.concat(aMergedKnots);
@@ -705,15 +771,15 @@ LogMessage("-------------");
 	} // end for allSubcurvesCnt
 
 
-	// Debug info
+	// Debug
 /*	LogMessage("New CurveList:");
 	LogMessage("allSubcurvesCnt:      ");
-	logControlPointsArray("aAllPoints: ", aAllPoints, 1000);
+	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
 	//LogMessage("aAllNumPoints:        " + aAllNumPoints);
 	//LogMessage("aAllKnots:            " + aAllKnots);
-	logKnotsArray(aAllKnots, 1000);
+	logKnotsArray("aAllKnots: " + aAllKnots, 100);
 	LogMessage("aAllKnots.length:     " + aAllKnots.length);
 	LogMessage("aAllNumKnots:         " + aAllNumKnots);
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
@@ -721,8 +787,7 @@ LogMessage("-------------");
 	LogMessage("aAllParameterization: " + aAllParameterization);
 */
 
-	// overwrite this CurveList using Set
-
+	// Set output CurveList.
 	outCrvListGeom.Set(
 		allSubcurvesCnt,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
@@ -735,16 +800,22 @@ LogMessage("-------------");
 		0) ;					// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
 
 	//output = in_ctxt.OutputTarget;
+	
+	// ToDo:
+	// Select unmerged Curve Boundaries.
+/*	if(in_ctxt.UserData == undefined)
+	{
+		var oCrvList = in_ctxt.Source.Parent3DObject;
+		//SelectGeometryComponents( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
+		ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
+		in_ctxt.UserData = true;
+	}
+*/
 	return true;
 }
 
-
-
-
-
-
 //______________________________________________________________________________
-//______________________________________________________________________________
+
 
 function closeNurbsCurve(aPoints, aKnots, degree)
 {
@@ -764,21 +835,18 @@ function closeNurbsCurve(aPoints, aKnots, degree)
 		aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
 
 	}
-	
+
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
 
 
-//______________________________________________________________________________
-
-function invertNurbsCurve(aPoints, aKnots, isClosed, degree/*, parameterization*/)
+function invertNurbsCurve(aPoints, aKnots, isClosed)
 {
 	// Invert Point array
 	var pLen = aPoints.length;
-	var aPointsInv = new Array(pLen);
+	var aPointsInv = new Array(); //pLen);
 
-//logControlPointsArray("aPoints: ", aPoints, 1000);
 	for(var i = 0; i < aPoints.length; i += 4)
 	{
 		aPointsInv[i] = aPoints[aPoints.length - i - 4];
@@ -787,25 +855,23 @@ function invertNurbsCurve(aPoints, aKnots, isClosed, degree/*, parameterization*
 		aPointsInv[i + 3] = aPoints[aPoints.length - i - 1];
 	}
 
-//logControlPointsArray("aPointsInv:" , aPointsInv, 1000);
-
-	// 
-	if(isClosed)
+	// Do not check this here!! (like in InvertSubcurves)
+	// Only open Subcurves get inverted in MergeSubcurves.
+/*	if(isClosed) 
 	{
-		// "Rotate" Point array right, so the former first Points is first again.
+		// Shift Point array right, so the former first Points is first again.
 		// original:	0,1,2,3,4
 		// reverse:		4,3,2,1,0
 		// correct: 	0,4,3,2,1
 		aPointsInv = ( aPointsInv.slice(pLen - 4) ).concat( aPointsInv.slice( 0, pLen - 4) );
 
 	}
-
-//logControlPointsArray("aPointsInv: ", aPointsInv, 1000);
+*/
 
 	// Invert Knot array
 	var kLen = aKnots.length;
 	var aKnotsInv = new Array();
-	var prevKnot = aKnots[kLen - 1];	// last Knot
+	var prevKnot = aKnots[kLen - 1]; // last Knot
 	var prevInvKnot = 0;
 	
 	for(var i = 0; i < kLen; i++)
@@ -818,14 +884,11 @@ function invertNurbsCurve(aPoints, aKnots, isClosed, degree/*, parameterization*
 		prevInvKnot = aKnotsInv[i];
 	}
 
-	
 	return {aPoints:aPointsInv,
 			aKnots:aKnotsInv};
 
 }
 
-
-//______________________________________________________________________________
 
 function findBoundary(x, y, z, mergeRadius, aBnds)
 {
@@ -835,16 +898,16 @@ function findBoundary(x, y, z, mergeRadius, aBnds)
 	// Loop through all Boundaries
 	for(var i = 0; i < aBnds.length; i++)
 	{
-		var bnd = aBnds[i];
 		// Deselected Bnds are ignored.
+		var bnd = aBnds[i]; // object
 		if(!bnd.selected) continue;
 
-		// Calculate body diagonal.
+		// Calculate distance/diagonal.
 		var dx = x - bnd.x;
 		var dy = y - bnd.y;
 		var dz = z - bnd.z;
-		var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);	// or: Math.pow(xxx, 2);
-//LogMessage("dist to Point " + i + ": " + dist);
+		var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);	// Math.pow(xxx, 2);
+
 		if(dist < mergeRadius)
 		{
 			if(dist < nearestDist || nearestDist == -1)
@@ -857,42 +920,37 @@ function findBoundary(x, y, z, mergeRadius, aBnds)
 		}
 		
 	}
-//LogMessage("nearestDist: " + nearestDist);
-//LogMessage("nearestBnd: " + nearestBnd);
-	// If no Boundary in radius was found, return -1.
+
+	// If no Boundary in radius was found, -1 is returned.
 	return nearestBnd;
 }
 
-
-//______________________________________________________________________________
 
 function MergeSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	oLayout.AddItem("cont");
-	oLayout.AddItem("seam");
-	oLayout.AddItem("modifytan");
+	//oLayout.AddItem("cont");
+	//oLayout.AddItem("seam");
+	//oLayout.AddItem("modifytan");
 	oLayout.AddItem("mergeRadius");
 	return true;
 }
 
-//______________________________________________________________________________
 
 function MergeSubcurves_OnInit( )
 {
 	Application.LogMessage("MergeSubcurves_OnInit called",siVerbose);
 }
 
-//______________________________________________________________________________
 
 function MergeSubcurves_OnClosed( )
 {
 	Application.LogMessage("MergeSubcurves_OnClosed called",siVerbose);
 }
 
-//______________________________________________________________________________
+
 /*
 function MergeSubcurves_cont_OnChanged( )
 {
@@ -905,7 +963,7 @@ function MergeSubcurves_cont_OnChanged( )
 }
 */
 
-//______________________________________________________________________________
+
 /*
 function MergeSubcurves_seam_OnChanged( )
 {
@@ -918,7 +976,7 @@ function MergeSubcurves_seam_OnChanged( )
 }
 */
 
-//______________________________________________________________________________
+
 /*
 function MergeSubcurves_modifytan_OnChanged( )
 {
@@ -931,7 +989,6 @@ function MergeSubcurves_modifytan_OnChanged( )
 }
 */
 
-//______________________________________________________________________________
 
 function MergeSubcurves_mergeRadius_OnChanged( )
 {
@@ -943,7 +1000,6 @@ function MergeSubcurves_mergeRadius_OnChanged( )
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
 
-//______________________________________________________________________________
 
 function ApplyMergeSubcurves_Menu_Init( in_ctxt )
 {
@@ -953,7 +1009,6 @@ function ApplyMergeSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function logControlPointsArray(logString, aPoints, dp)
 {
@@ -965,27 +1020,27 @@ function logControlPointsArray(logString, aPoints, dp)
 		var y = aPoints[i + 1];
 		var z = aPoints[i + 2];
 		var w = aPoints[i + 3]; 
-		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp + "; y = " + Math.round(y*dp)/dp + "; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
+		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp +
+									"; y = " + Math.round(y*dp)/dp +
+									"; z = " + Math.round(z*dp)/dp );
+									// + "; w = " + Math.round(w*dp)/dp );
 
 	}
-	
-	//LogMessage("");
-}
 
+}
 
 
 function logKnotsArray(logString, aKnots, dp)
 {
 	//LogMessage(logString);
-	var sKnotArray = logString; //"";
+	var sKnotArray = logString;
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
 		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
-		else sKnotArray = sKnotArray + ", " + knotValue;//.toString(10);
+		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
 	LogMessage( sKnotArray );
-	//LogMessage("");
 	
 }

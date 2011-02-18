@@ -1,24 +1,23 @@
 //______________________________________________________________________________
-// DuplicateSubcurvesPlugin
+// InvertSubcurvesPlugin
 // 2009/11 by Eugen Sares
-// last update: 2011/02/18
+// last update: 2011/02/12
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
 {
 	in_reg.Author = "Eugen Sares";
-	in_reg.Name = "DuplicateSubcurvesPlugin";
+	in_reg.Name = "InvertSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
 
-	in_reg.RegisterOperator("DuplicateSubcurves");
-	in_reg.RegisterCommand("ApplyDuplicateSubcurves","ApplyDuplicateSubcurves");
-	in_reg.RegisterMenu(siMenuTbModelModifyCurveID,"ApplyDuplicateSubcurves_Menu",false,false);
+	in_reg.RegisterOperator("InvertSubcurves");
+	in_reg.RegisterCommand("ApplyInvertSubcurves","ApplyInvertSubcurves");
+	in_reg.RegisterMenu(siMenuTbModelModifyCurveID,"ApplyInvertSubcurves_Menu",false,false);
 	//RegistrationInsertionPoint - do not remove this line
 
 	return true;
 }
-
 
 
 function XSIUnloadPlugin( in_reg )
@@ -30,12 +29,11 @@ function XSIUnloadPlugin( in_reg )
 }
 
 
-
-function ApplyDuplicateSubcurves_Init( in_ctxt )
+function ApplyInvertSubcurves_Init( in_ctxt )
 {
 	var oCmd;
 	oCmd = in_ctxt.Source;	// source object that is the cause of the callback being fired
-	oCmd.Description = "Create an instance of DuplicateSubcurves operator";
+	oCmd.Description = "Create an instance of InvertSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
 
 	// TODO: You may want to add some arguments to this command so that the operator
@@ -50,16 +48,12 @@ function ApplyDuplicateSubcurves_Init( in_ctxt )
 }
 
 
-//______________________________________________________________________________
-
-function ApplyDuplicateSubcurves_Execute(args)
+function ApplyInvertSubcurves_Execute(args)
 {
-	Application.LogMessage("ApplyDuplicateSubcurves_Execute called",siVerbose);
+	Application.LogMessage("ApplyInvertSubcurves_Execute called",siVerbose);
 
 	try
 	{
-		//var app = Application;
-
 		var cSel = Selection;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
@@ -86,18 +80,6 @@ function ApplyDuplicateSubcurves_Execute(args)
 				cCurveLists.Add( oObject );
 			}
 			
-/*			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("SubCurve");
-				
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
-*/
-			
 		}
 
 		// If nothing usable was selected, start a Pick Session.
@@ -114,26 +96,13 @@ function ApplyDuplicateSubcurves_Execute(args)
 
 		}
 
-/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
-		DeselectAllUsingFilter("SubCurve");
+		//DeselectAllUsingFilter("SubCurve");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
 		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
 
-
-		// Create Output Objects string
-/*		var cOutput = new ActiveXObject("XSI.Collection");
-		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			cOutput.Add( cCurveLists(i) );
-		}
-*/		
+	
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
 		
@@ -150,12 +119,12 @@ function ApplyDuplicateSubcurves_Execute(args)
 				var oInput2 = cSubcurveClusters(i);
 				
 				// Workaround for unselectable added Subcurves problem.
-				var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
-				SetValue(cleanOp + ".cleantol", 0, null);
+				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				//SetValue(cleanOp + ".cleantol", 0, null);
 				
 				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
 				// Port names will be generated automatically!
-				var newOp = AddCustomOp("DuplicateSubcurves", oOutput, [oInput1, oInput2], "DuplicateSubcurves");
+				var newOp = AddCustomOp("InvertSubcurves", oOutput, [oInput1, oInput2], "InvertSubcurves");
 
 				var rtn = GetKeyboardState();
 				modifier = rtn(1);
@@ -183,19 +152,20 @@ function ApplyDuplicateSubcurves_Execute(args)
 				var oInput2 = cSubcurveClusters(i);
 				
 				// Workaround for unselectable added Subcurves problem.
-				var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
-				SetValue(cleanOp + ".cleantol", 0, null);
+				//var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
+				//SetValue(cleanOp + ".cleantol", 0, null);
 				//AddCustomOp("EmptyOp", oOutput, oInput1); // Does not help.
 
-				var newOp = AddCustomOp("DuplicateSubcurves", oOutput, [oInput1, oInput2], "DuplicateSubcurves");
+				var newOp = AddCustomOp("InvertSubcurves", oOutput, [oInput1, oInput2], "InvertSubcurves");
 
 				createdOperators.Add(newOp);
 				
 			}
-			
-			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
-				AutoInspect(createdOperators); // Multi-PPG
 
+			// No params to inspect (for now).
+/*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
+				AutoInspect(createdOperators); // Multi-PPG
+*/
 		}
 
 		return true;
@@ -208,8 +178,6 @@ function ApplyDuplicateSubcurves_Execute(args)
 	
 }
 
-
-//______________________________________________________________________________
 
 function pickElements(selFilter)
 {
@@ -234,24 +202,21 @@ function pickElements(selFilter)
 
 
 // Use this callback to build a set of parameters that will appear in the property page.
-function DuplicateSubcurves_Define( in_ctxt )
+function InvertSubcurves_Define( in_ctxt )
 {
-	Application.LogMessage("DuplicateSubcurves_Define called",siVerboseMsg);
+	Application.LogMessage("InvertSubcurves_Define called",siVerboseMsg);
 	
 	var oCustomOperator;
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
-/*
-	oPDef = XSIFactory.CreateParamDef2("DeleteTheseSubcurves",siString,"",null,null);
+	
+/*	oPDef = XSIFactory.CreateParamDef("offsetX",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset X","",0,null,null,null,null);
+	oCustomOperator.AddParameter(oPDef);
+	oPDef = XSIFactory.CreateParamDef("offsetY",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Y","",0,null,null,null,null);
+	oCustomOperator.AddParameter(oPDef);
+	oPDef = XSIFactory.CreateParamDef("offsetZ",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Z","",1,null,null,null,null);
 	oCustomOperator.AddParameter(oPDef);
 */
-	oPDef = XSIFactory.CreateParamDef("offsetX",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset X","",0,null,null,-100,100);
-	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("offsetY",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Y","",0,null,null,-100,100);
-	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("offsetZ",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Z","",0,null,null,-100,100);
-	oCustomOperator.AddParameter(oPDef);
-	
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
 
@@ -259,98 +224,84 @@ function DuplicateSubcurves_Define( in_ctxt )
 }
 
 
-
 // User data can be stored in the operator context of the Init callback
 // and then retrieved later in the Update and Term callbacks.
-function DuplicateSubcurves_Init( in_ctxt )
+function InvertSubcurves_Init( in_ctxt )
 {
-	Application.LogMessage("DuplicateSubcurves_Init called",siVerboseMsg);
+	Application.LogMessage("InvertSubcurves_Init called",siVerboseMsg);
 	return true;
 }
 
 
-
-function DuplicateSubcurves_Term( in_ctxt )
+function InvertSubcurves_Term( in_ctxt )
 {
-	Application.LogMessage("DuplicateSubcurves_Term called",siVerboseMsg);
-	// var cluster = in_ctxt.GetInputValue("duplicateClusterPort");	// ERROR : 21000 - Unspecified failure
-	// DeleteObj(cluster);
+	Application.LogMessage("InvertSubcurves_Term called",siVerboseMsg);
 	return true;
 }
 
 
 //______________________________________________________________________________
 
-function DuplicateSubcurves_Update( in_ctxt )
+function InvertSubcurves_Update( in_ctxt )
 {
-	Application.LogMessage("DuplicateSubcurves_Update called",siVerboseMsg);
+	Application.LogMessage("InvertSubcurves_Update called",siVerboseMsg);
 
 
-	// Get Params.
-	var offsetX = in_ctxt.GetParameterValue("offsetX");
-	var offsetY = in_ctxt.GetParameterValue("offsetY");
-	var offsetZ = in_ctxt.GetParameterValue("offsetZ");
-
-
-	// Get Port connections.
+	// Get Port connections
 	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+	//var oSubcurveCluster = in_ctxt.GetInputValue("inverseClusterPort");
+	//var cInCurves = in_ctxt.GetInputValue("InCurvePort").Geometry.Curves;
 	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
 	var oSubcurveCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
 	var cInCurves = inCrvListGeom.Curves;
 
 
-	// Get complete data description of input CurveList.
-	var VBdata = inCrvListGeom.Get2( siSINurbs ); var data = VBdata.toArray();
-
-	var numAllSubcurves = data[0];
-	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
-	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
-	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
-	aAllKnots = removeUndefinedElementsFromArray(aAllKnots);
-	var VBdata4 = new VBArray(data[4]); var aAllNumKnots = VBdata4.toArray();
-	var VBdata5 = new VBArray(data[5]); var aAllIsClosed = VBdata5.toArray();
-	var VBdata6 = new VBArray(data[6]); var aAllDegree = VBdata6.toArray();
-	var VBdata7 = new VBArray(data[7]); var aAllParameterization = VBdata7.toArray();
+	// Create empty arrays to hold the new CurveList data.
+	var aAllPoints = new Array();
+	var aAllNumPoints = new Array();
+	var aAllKnots = new Array();
+	var aAllNumKnots = new Array();
+	var aAllIsClosed = new Array();
+	var aAllDegree = new Array();
+	var aAllParameterization = new Array();
 
 
-	// Array to store the indices of new/duplicated Subcurves, for later selection.
-	var aNewSubcurves = new Array();
-
-
-	// Create boolean array which Subcurves to duplicate.
+	// Create boolean array which Subcurve to invert.
 	var flagArray = new Array(cInCurves.Count);
 	for(var i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
 	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+	// debug:
+	//for(var i = 0; i < cInCurves.Count; i++) LogMessage( flagArray[i] );
 
 
-	// Main loop: add Subcurves to duplicate.
-	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
+	// Add Subcurves to invert
+	for(numAllSubcurves = 0; numAllSubcurves < cInCurves.Count; numAllSubcurves++)
 	{
-		// Skip all untagged Subcurves.
-		if(!flagArray[subCrvIdx]) continue;
+		// Get input Subcurve
+		var subCrv = cInCurves.item(numAllSubcurves);
+		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var aSubCrvData = VBdata.toArray();
+		
+		// Get Point data
+		var VBdata0 = new VBArray(aSubCrvData[0]); var aPoints = VBdata0.toArray();
 
-		// Get input Subcurve.
-		var subCrv = cInCurves.item(subCrvIdx);
-		VBdata = new VBArray(subCrv.Get2(siSINurbs));
-		var aSubCrvData = VBdata.toArray();
+		// Get Knot data
+		var VBdata1 = new VBArray(aSubCrvData[1]); var aKnots = VBdata1.toArray();
+		
+		// Get other data
+		isClosed = aSubCrvData[2];
+		degree = aSubCrvData[3];
+		parameterization = aSubCrvData[4];
 
-		// Get Point data.
-		var VBdata0 = new VBArray(aSubCrvData[0]);
-		var aPoints = VBdata0.toArray();
-
-		// Add Offset.
-		for(var j = 0; j < aPoints.length; j+= 4)
+		if( flagArray[numAllSubcurves] )
 		{
-			aPoints[j] += offsetX;
-			aPoints[j+1] += offsetY;
-			aPoints[j+2] += offsetZ;
+			// Invert Point and Knot arrays
+			var ret = invertNurbsCurve(aPoints, aKnots, isClosed); // , degree, parameterization);
+			aPoints = ret.aPoints;
+			aKnots = ret.aKnots;
 		}
+		
 
-		// Get Knot data.
-		var VBdata1 = new VBArray(aSubCrvData[1]);
-		var aKnots = VBdata1.toArray();
-
-		// Add Subcurve at the array ends.
+		// Concat Curve data to CurveList data
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	//x,y,z,w
 		aAllKnots = aAllKnots.concat(aKnots);
@@ -359,29 +310,10 @@ function DuplicateSubcurves_Update( in_ctxt )
 		aAllDegree[numAllSubcurves] = aSubCrvData[3];
 		aAllParameterization[numAllSubcurves] = aSubCrvData[4];
 
-		// For later selection: store the index of this duplicated Subcurve.
-		aNewSubcurves = aNewSubcurves.concat(numAllSubcurves);
-		
-		numAllSubcurves++;
-
 	}
-LogMessage("aNewSubcurves: " + aNewSubcurves);
 
-	// Debug info
-/*	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves:      " + numAllSubcurves);
-	LogMessage("aAllPoints:           " + aAllPoints);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	LogMessage("aAllKnots:            " + aAllKnots);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
 
-	// Set output CurveList.
+	// Set output CurveList
 	outCrvListGeom.Set(
 		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
@@ -394,25 +326,95 @@ LogMessage("aNewSubcurves: " + aNewSubcurves);
 		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
 
 
-	// Add new Subcurves to input Clusters - not yet possible!
-	// var oSubComp = oSubcurveCluster.CreateSubComponent();	// ERROR : 2009 - Access denied
-	// oSubComp.RemoveElement(...);
-	// SIRemoveFromCluster( oSubcurveCluster, oSubComp);
-	
-	// Select newly created Subcurves, but only when the Op was newly created!
-	if(in_ctxt.UserData == undefined)
-	{
-		var oCrvList = in_ctxt.Source.Parent3DObject;
-		//SelectGeometryComponents( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		in_ctxt.UserData = true;
-	}
-
 	return true;
 }
 
 
 //______________________________________________________________________________
+
+function invertNurbsCurve(aPoints, aKnots, isClosed) //, degree, parameterization)
+{
+	// Invert Point array
+	var pLen = aPoints.length;
+	var aPointsInv = new Array(pLen);
+
+//logControlPointsArray("", aPoints, 100);
+	for(var i = 0; i < aPoints.length; i += 4)
+	{
+		aPointsInv[i] = aPoints[aPoints.length - i - 4];
+		aPointsInv[i + 1] = aPoints[aPoints.length - i - 3];
+		aPointsInv[i + 2] = aPoints[aPoints.length - i - 2];
+		aPointsInv[i + 3] = aPoints[aPoints.length - i - 1];
+	}
+ 
+	if(isClosed)
+	{
+		// Shift Point array right, so the former first Points is first again.
+		// original:	0,1,2,3,4
+		// reverse:		4,3,2,1,0
+		// correct: 	0,4,3,2,1
+		aPointsInv = ( aPointsInv.slice(pLen - 4) ).concat( aPointsInv.slice( 0, pLen - 4) );
+
+	}
+//logControlPointsArray("", aPointsInv, 100);
+
+	// Invert Knot array
+	var kLen = aKnots.length;
+	var aKnotsInv = new Array();
+	var prevKnot = aKnots[kLen - 1];	// last Knot
+	var prevInvKnot = 0;
+	
+	for(var i = 0; i < kLen; i++)
+	{
+		var knot = aKnots[kLen - 1 - i];
+		// Difference of neighboring Knots in aKnots and aKnotsInv is the same,
+		// but in reverse order.
+		aKnotsInv[i] =  prevKnot - knot + prevInvKnot;
+		prevKnot = knot;
+		prevInvKnot = aKnotsInv[i];
+	}
+
+	return {aPoints:aPointsInv,
+			aKnots:aKnotsInv};
+
+}
+
+
+function logControlPointsArray(logString, aPoints, dp)
+{
+	LogMessage(logString);
+	
+	for ( var i = 0; i < aPoints.length; i += 4 )
+	{
+		var x = aPoints[i];
+		var y = aPoints[i + 1];
+		var z = aPoints[i + 2];
+		var w = aPoints[i + 3]; 
+		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp +
+									"; y = " + Math.round(y*dp)/dp +
+									"; z = " + Math.round(z*dp)/dp );
+									// + "; w = " + Math.round(w*dp)/dp );
+
+	}
+
+}
+
+
+function logKnotsArray(logString, aKnots, dp)
+{
+	//LogMessage(logString);
+	var sKnotArray = logString;
+	for ( var j = 0; j < aKnots.length; j++ )
+	{
+		var knotValue = Math.round(aKnots[j]*dp)/dp;
+		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		else sKnotArray = sKnotArray + ", " + knotValue;
+	}
+	
+	LogMessage( sKnotArray );
+	
+}
+
 
 // Function to remove empty items from a JScript Array
 // e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays
@@ -427,28 +429,20 @@ function removeUndefinedElementsFromArray(dirtyArr)
 }
 
 
-
-function ApplyDuplicateSubcurves_Menu_Init( in_ctxt )
+function ApplyInvertSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("Duplicate Subcurves","ApplyDuplicateSubcurves");
+	oMenu.AddCommandItem("Invert Subcurves","ApplyInvertSubcurves");
 	return true;
 }
 
 
-function DuplicateSubcurves_DefineLayout( in_ctxt )
+function InvertSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddRow();
-	//oLayout.AddGroup( "Inputs", true);
-	oLayout.AddItem("offsetX", "Offset X");
-	oLayout.AddItem("offsetY", "Offset Y");
-	oLayout.AddItem("offsetZ", "Offset Z");
-	//oLayout.EndGroup();
-	//oLayout.EndRow();
+	//oLayout.AddItem("xxx");
 	return true;
 }
-

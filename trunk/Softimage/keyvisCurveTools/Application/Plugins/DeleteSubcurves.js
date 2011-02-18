@@ -183,7 +183,7 @@ function ApplyDeleteSubcurves_Execute(data)
 				//createdOperators.Add(newOp);
 				
 			}
-			
+
 /*			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
 				AutoInspect(createdOperators); // Multi-PPG
 */
