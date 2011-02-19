@@ -253,7 +253,11 @@ function DuplicateSubcurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("offsetZ",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Z","",0,null,null,-100,100);
 	oCustomOperator.AddParameter(oPDef);
-	
+	oPDef = XSIFactory.CreateParamDef("duplicates",siInt4,siClassifUnknown,siPersistable | siKeyable,"Duplicates","",1,null,null,0,10);
+	oCustomOperator.AddParameter(oPDef);
+	oPDef = XSIFactory.CreateParamDef("absRel",siInt4,siClassifUnknown,siPersistable | siKeyable,"Absolute/Relative","",1,null,null,0,10);
+	oCustomOperator.AddParameter(oPDef);
+
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
 
@@ -292,6 +296,7 @@ function DuplicateSubcurves_Update( in_ctxt )
 	var offsetX = in_ctxt.GetParameterValue("offsetX");
 	var offsetY = in_ctxt.GetParameterValue("offsetY");
 	var offsetZ = in_ctxt.GetParameterValue("offsetZ");
+	var duplicates = in_ctxt.GetParameterValue("duplicates");
 
 
 	// Get Port connections.
@@ -326,6 +331,7 @@ function DuplicateSubcurves_Update( in_ctxt )
 
 
 	// Main loop: add Subcurves to duplicate.
+
 	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
 		// Skip all untagged Subcurves.
@@ -340,34 +346,35 @@ function DuplicateSubcurves_Update( in_ctxt )
 		var VBdata0 = new VBArray(aSubCrvData[0]);
 		var aPoints = VBdata0.toArray();
 
-		// Add Offset.
-		for(var j = 0; j < aPoints.length; j+= 4)
-		{
-			aPoints[j] += offsetX;
-			aPoints[j+1] += offsetY;
-			aPoints[j+2] += offsetZ;
-		}
-
 		// Get Knot data.
 		var VBdata1 = new VBArray(aSubCrvData[1]);
 		var aKnots = VBdata1.toArray();
 
-		// Add Subcurve at the array ends.
-		aAllPoints = aAllPoints.concat(aPoints);
-		aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	//x,y,z,w
-		aAllKnots = aAllKnots.concat(aKnots);
-		aAllNumKnots[numAllSubcurves] = aKnots.length;
-		aAllIsClosed[numAllSubcurves] = aSubCrvData[2];
-		aAllDegree[numAllSubcurves] = aSubCrvData[3];
-		aAllParameterization[numAllSubcurves] = aSubCrvData[4];
+		for(var n = 0; n < duplicates; n++)
+		{
+			// Add Offset.
+			for(var j = 0; j < aPoints.length; j+= 4)
+			{
+				aPoints[j] = aPoints[j] + offsetX;
+				aPoints[j+1] = aPoints[j+1] + offsetY;
+				aPoints[j+2] = aPoints[j+2] + offsetZ;
+			}
 
-		// For later selection: store the index of this duplicated Subcurve.
-		aNewSubcurves = aNewSubcurves.concat(numAllSubcurves);
-		
-		numAllSubcurves++;
+			// Add Subcurve at the array ends.
+			aAllPoints = aAllPoints.concat(aPoints);
+			aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	//x,y,z,w
+			aAllKnots = aAllKnots.concat(aKnots);
+			aAllNumKnots[numAllSubcurves] = aKnots.length;
+			aAllIsClosed[numAllSubcurves] = aSubCrvData[2];
+			aAllDegree[numAllSubcurves] = aSubCrvData[3];
+			aAllParameterization[numAllSubcurves] = aSubCrvData[4];
 
+			// For later selection: store the index of this duplicated Subcurve.
+			aNewSubcurves = aNewSubcurves.concat(numAllSubcurves);
+			numAllSubcurves++;
+
+		}
 	}
-LogMessage("aNewSubcurves: " + aNewSubcurves);
 
 	// Debug info
 /*	LogMessage("New CurveList:");
@@ -429,6 +436,22 @@ function removeUndefinedElementsFromArray(dirtyArr)
 }
 
 
+function DuplicateSubcurves_DefineLayout( in_ctxt )
+{
+	var oLayout,oItem;
+	oLayout = in_ctxt.Source;
+	oLayout.Clear();
+	//oLayout.AddRow();
+	oLayout.AddItem("duplicates", "Duplicates");
+	oLayout.AddGroup("Translation", true);
+	oLayout.AddItem("offsetX", "Offset X");
+	oLayout.AddItem("offsetY", "Offset Y");
+	oLayout.AddItem("offsetZ", "Offset Z");
+	oLayout.EndGroup();
+	//oLayout.EndRow();
+	return true;
+}
+
 
 function ApplyDuplicateSubcurves_Menu_Init( in_ctxt )
 {
@@ -439,18 +462,13 @@ function ApplyDuplicateSubcurves_Menu_Init( in_ctxt )
 }
 
 
-function DuplicateSubcurves_DefineLayout( in_ctxt )
+/*function DuplicateSubcurves_offsetX_OnChanged( )
 {
-	var oLayout,oItem;
-	oLayout = in_ctxt.Source;
-	oLayout.Clear();
-	//oLayout.AddRow();
-	//oLayout.AddGroup( "Inputs", true);
-	oLayout.AddItem("offsetX", "Offset X");
-	oLayout.AddItem("offsetY", "Offset Y");
-	oLayout.AddItem("offsetZ", "Offset Z");
-	//oLayout.EndGroup();
-	//oLayout.EndRow();
-	return true;
+	Application.LogMessage("DuplicateSubcurves_offsetX_OnChanged called",siVerbose);
+	var oParam;
+	oParam = PPG.offsetX;
+	var paramVal;
+	paramVal = oParam.Value;
+	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
-
+*/
