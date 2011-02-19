@@ -153,7 +153,7 @@ function ApplyDuplicateSubcurves_Execute(args)
 				var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
 				SetValue(cleanOp + ".cleantol", 0, null);
 				
-				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
+				// Create Operator.
 				// Port names will be generated automatically!
 				var newOp = AddCustomOp("DuplicateSubcurves", oOutput, [oInput1, oInput2], "DuplicateSubcurves");
 
@@ -179,18 +179,43 @@ function ApplyDuplicateSubcurves_Execute(args)
 			// Loop through all selected/created Clusters and apply the Operator.
 			for(var i = 0; i < cSubcurveClusters.Count; i++)
 			{
-				// Define Outputs and Inputs.
-				var oOutput = cCurveLists(i).ActivePrimitive;
-				var oInput1 = cCurveLists(i).ActivePrimitive;
-				var oInput2 = cSubcurveClusters(i);
-				
 				// Workaround for unselectable added Subcurves problem.
 				var cleanOp = ApplyTopoOp("CrvClean", cCurveLists(i), 3, siPersistentOperation, null);
 				SetValue(cleanOp + ".cleantol", 0, null);
-				//AddCustomOp("EmptyOp", oOutput, oInput1); // Does not help.
 
-				var newOp = AddCustomOp("DuplicateSubcurves", oOutput, [oInput1, oInput2], "DuplicateSubcurves");
+				// Create Operator.
 
+				// Method 1: AddCustomOp()
+				// Port Groups cannot be defined this way!
+
+				// Define Outputs and Inputs.
+				var oOutput1 = cCurveLists(i).ActivePrimitive;
+				var oOutput2 = cSubcurveClusters(i);
+				var oInput1 = cCurveLists(i).ActivePrimitive;
+				var oInput2 = cSubcurveClusters(i);
+				
+				var newOp = AddCustomOp("DuplicateSubcurves", [oOutput1, oOutput2], [oInput1, oInput2], "DuplicateSubcurves");
+
+
+/*				// Method 2: adding Ports/Groups manually.
+
+				var newOp = XSIFactory.CreateObject("DuplicateSubcurves");
+
+				// Geometry Port Group
+				//var oPortGroup0 = newOp.AddPortGroup("Group_0"); // crvlist in/out
+				// Cluster Port Group
+				//var oPortGroup1 = newOp.AddPortGroup("Group_1"); // crvlist.cls.Subcurve in/out
+
+				newOp.AddOutputPort(cCurveLists(i).ActivePrimitive); //, "", oPortGroup0.Index);
+
+				// Connecting an Output Port to a Cluster does not work yet - ignored.
+				newOp.AddOutputPort(cSubcurveClusters(i)); //, "", oPortGroup1.Index);
+
+				newOp.AddInputPort(cCurveLists(i).ActivePrimitive); //, "", oPortGroup0.Index);
+				newOp.AddInputPort(cSubcurveClusters(i)); //, "", oPortGroup1.Index);
+
+				newOp.Connect();
+*/
 				createdOperators.Add(newOp);
 				
 			}
@@ -199,7 +224,7 @@ function ApplyDuplicateSubcurves_Execute(args)
 				AutoInspect(createdOperators); // Multi-PPG
 
 		}
-
+LogMessage("returning from execute callback");
 		return true;
 
 	} catch(e)
@@ -255,8 +280,9 @@ function DuplicateSubcurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("duplicates",siInt4,siClassifUnknown,siPersistable | siKeyable,"Duplicates","",1,null,null,0,10);
 	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("absRel",siInt4,siClassifUnknown,siPersistable | siKeyable,"Absolute/Relative","",1,null,null,0,10);
+	oPDef = XSIFactory.CreateParamDef("distribution",siInt4,siClassifUnknown,siPersistable | siKeyable,"Incremental/Total","",1,null,null,0,10);
 	oCustomOperator.AddParameter(oPDef);
+// ToDo: "updateSelectionOnEval"
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
@@ -299,12 +325,26 @@ function DuplicateSubcurves_Update( in_ctxt )
 	var duplicates = in_ctxt.GetParameterValue("duplicates");
 
 
-	// Get Port connections.
-	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
-	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
-	var oSubcurveCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
+	// Get input Port connections.
+	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // See SDK Explorer for Port Indices.
 	var cInCurves = inCrvListGeom.Curves;
-
+	var oSubcurveCluster = in_ctxt.GetInputValue(1);
+	
+	// Get output Port connections.
+	// OutputTarget (OperatorContext):
+	// In the case of a multi-output operator the operator is called once per output,
+	// and this property will return the currently evaluating target.
+	// In this case it may be necessary to also call OperatorContext.OutputPort
+	// to determine the name of the current output port, in order to know which output
+	// is being evaluated. 
+	var oOutTarget = in_ctxt.OutputTarget;
+/*LogMessage("in_ctxt.OutputTarget: " + oOutTarget);
+	var oOutPort = in_ctxt.OutputPort;
+LogMessage("in_ctxt.OutputPort: " + oOutPort);
+return;
+*/
+	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+		
 
 	// Get complete data description of input CurveList.
 	var VBdata = inCrvListGeom.Get2( siSINurbs ); var data = VBdata.toArray();
@@ -322,7 +362,7 @@ function DuplicateSubcurves_Update( in_ctxt )
 
 	// Array to store the indices of new/duplicated Subcurves, for later selection.
 	var aNewSubcurves = new Array();
-
+	var oldCount = numAllSubcurves;
 
 	// Create boolean array which Subcurves to duplicate.
 	var flagArray = new Array(cInCurves.Count);
@@ -409,12 +449,16 @@ function DuplicateSubcurves_Update( in_ctxt )
 	// SIRemoveFromCluster( oSubcurveCluster, oSubComp);
 	
 	// Select newly created Subcurves, but only when the Op was newly created!
-	if(in_ctxt.UserData == undefined)
+	if(numAllSubcurves > oldCount && in_ctxt.UserData == undefined)
 	{
 		var oCrvList = in_ctxt.Source.Parent3DObject;
+		var selString = oCrvList + ".subcrv[" + oldCount + "-LAST]";
 		//SelectGeometryComponents( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		in_ctxt.UserData = true;
+		//ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
+		SelectGeometryComponents(selString);
+//		ToggleSelection(selString);
+
+		//in_ctxt.UserData = true;
 	}
 
 	return true;
@@ -472,3 +516,15 @@ function ApplyDuplicateSubcurves_Menu_Init( in_ctxt )
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
 */
+
+
+function logCluster(oCluster)
+{
+	LogMessage("Cluster.Name: " + oCluster.Name);
+	LogMessage("Cluster.Type: " + oCluster.Type);
+	for(var i = 0; i < oCluster.Elements.Count; i++)
+	{
+		oElement = oCluster.Elements(i);
+		LogMessage("i = " + i + ": " + oElement);
+	}
+}
