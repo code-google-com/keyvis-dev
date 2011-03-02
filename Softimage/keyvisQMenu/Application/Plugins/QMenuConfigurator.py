@@ -15,9 +15,6 @@
 #TODO: Write "Remove from all Groups or from selected Groups" command 
 #TODO: Write "Toggle Backface Culling in View" command
 #TODO: WIP- Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
-#SI Bug: Sometimes, when deleting a camera that is used in a viewport the viewport name label is not updated to the new camera it is looking through
-#Ask: Commands have always the same UID across versions of Softimage? How are custom command's UID always the same, they don't get stored anywhere -> Does not look like it
-#TODO: Article about delayed events 
 
 #TODO: Try finding currently active view by comparing Rectangles of available views -> Difficult, because rectangles retrieved from Python differ from those rported by Softimage
 #TODO: Execute button should only execute current text selection in editor
@@ -28,7 +25,6 @@
 #TODO: Add categorisation to menus (like script items)
 #TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 #TODO: Implement Cleanup functionality to delete empty script items and menus
-#TODO: Japanese font is untested
 
 
 #Maybe-Bugs:
@@ -65,6 +61,9 @@ for view in Views:
 #============================== Plugin Code Start =============================================
 import win32com.client
 import win32com.server
+
+#from win32com.client.dynamic import Dispatch 
+
 
 import time
 from win32com.client import constants as c
@@ -1085,22 +1084,20 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
+	#oCodeEditor = d.Dispatch( oCodeEditor )	#dispatching does not help either
 	#oCodeEditor.SetAttribute(c.siUIHeight, oLayout.Item("CodeEditorHeight").Value)
 	Height = 200
 	try:
-		
 		Height = PPG.CodeEditorHeight.Value
 	except:
 		pass
 	oCodeEditor.SetAttribute(c.siUIHeight, Height)
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
-	oCodeEditor.SetAttribute(c.siUIFolding, True ) #Broken since XSI7.0
-	oCodeEditor.SetAttribute(c.siUIKeywordFile, getDefaultConfigFilePath ("Python.keywords")) #Broken since XSI7.0
-	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF) #Broken since XSI7.0
-	oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad )    #Broken since XSI7.0
-
-	#oCodeEditor.SetAttribute(c.siUIKeywords, "def pass")
+	oCodeEditor.SetAttribute(c.siUIFolding, True ) #Code folding Broken since XSI7.0
+	oCodeEditor.SetAttribute(c.siUIKeywordFile, getDefaultConfigFilePath ("Python.keywords")) #Code color coding broken since XSI7.0
+	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF) #Comment coloring broken since XSI7.0
+	oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad ) #File Loading menu item broken since XSI7.0
 	oLayout.EndGroup()
 	
 	#================================== Display Events Tab =======================================================================================
@@ -4755,9 +4752,9 @@ def QMenuGetSelectionDetails(MaxScanDepth):
 #Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
-	print ("Changed Object is: " + str(Object))
-	print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
-	print Object.Type 
+	Print ("Changed Object is: " + str(Object))
+	Print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
+	Print (Object.Type)
 	
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
@@ -4893,7 +4890,7 @@ def QMenuInitialize_OnEvent (in_ctxt):
 	
 	#App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("DoNothing = True", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
-	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
+	#App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 	
 def QMenuDestroy_OnEvent (in_ctxt): 
 	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
