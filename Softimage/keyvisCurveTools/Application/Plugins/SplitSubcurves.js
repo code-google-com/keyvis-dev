@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // SplitSubcurvesPlugin
 // 2010/05 by Eugen Sares
-// last update: 2011/02/18
+// last update: 2011/03/03
 //
 // Usage:
 // - Select Knot(s) on a NurbsCurve(List)
@@ -44,7 +44,7 @@ function ApplySplitSubcurves_Init( in_ctxt )
 
 	// TODO: You may want to add some arguments to this command so that the operator
 	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
+	// Tip: the Collection ArgumentHandler is very useful.
 	
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
@@ -275,13 +275,11 @@ function SplitSubcurves_Update( in_ctxt )
 	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // Port 0: "Incrvlist"
 	var oKnotCluster = in_ctxt.GetInputValue(1); // Port 1: "InSubcurve_AUTO"
 	var cInCurves = inCrvListGeom.Curves;
-	
-/*	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
-	var oKnotCluster = in_ctxt.GetInputValue("splitClusterPort");
-	var cInCurves = in_ctxt.GetInputValue("InCurvePort").Geometry.Curves;
-*/
 
-	// Create arrays for complete CurveList data.
+
+	// 1) Create Arrays.
+
+	// for CurveList data
 	var numAllSubcurves = 0;
 	var aAllPoints = new Array();
 	var aAllNumPoints = new Array();
@@ -291,170 +289,137 @@ function SplitSubcurves_Update( in_ctxt )
 	var aAllDegree = new Array();
 	var aAllParameterization = new Array();
 
-	
-	// the indices of the selected Knots do not correspond to the Subcurves' Knot Vectors
-	// so prepare some arrays for easy access:
-	var aKnotHasKnotVecIdx = new Array();
-	var aKnotIsOnSubcurve = new Array();
-	var aKnotIsFirst = new Array();
-	var aAllSubcrvSlices = new Array();	// Array of Arrays
-	var aLastKnotIndices = new Array();
+
+	// Main slice array. Holds arrays of indices where to split each Subcurves.
+	var aAllSubCrvSlices = new Array();
+	// Example:
+	// Subcurve   0           1    2   3
+	//         [ [0, 5, 10], [7], [], [2,4] ]
+
+	// Knot indices stored in the input Cluster do not correspond
+	// to the position of this Knot in the Knot Vector.
+	// Some helper arrays are needed.
+	//var aKnotIndices = new Array();
+	var aKnotIsOnSubCrv = new Array();
+	//var aKnotIsFirst = new Array();
+	var aLastKnots = new Array();
+	var aKnotsOnSubCrv = new Array();
 
 
-	// INFO
-	// Example: CurveList with one open and one closed Subcurve
-	// Knots 3 and 12 were selected (one on each Subcurve) -> oKnotCluster = [3, 12]
-	
-	// KnotVectors =		[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6]	[0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
-	// aKnotHasKnotVecIdx =	[0,       3, 4, 5,       8, 9, 10,		 0,       3, 4, 5, 6, 7,       10,11]
-	// aKnotIsOnSubcurve =	[0,       0, 0, 0,       0, 0, 0,		 1,       1, 1, 1, 1, 1,       1,  1]
-	// aKnotIsFirst =		[t,       f, f, f,       f, f, f,		 t,       f, f, f, f, f,       f,  f]
-	
-	// aLastKnotIndices =	[                              10,										  11]
+	// Explanation
+	// Example CurveList, one open and one closed Subcurve
+	// Knots 3 and 12 were selected (one on each Subcurve) -> oKnotCluster = (3, 12)
+
+	// oKnotCluster =		[               3,                                            12            ]
+	// aSubCrvSlices =		[0,             3,             6      ],[0,                   5,          7 ] 
+	// aKnots =				[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6] [0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
+	// aKnotIsOnSubCrv =	[0,       0, 0, 0,       0, 0, 0,		 1,       1, 1, 1, 1, 1,       1,  1]
+	// aLastKnots =			[                             10,										  11]
 
 
-	// This is what we want:
-	// aAllSubcrvSlices =	[[0,            5,             10],     [0,                  7,           11]]
-	// Another example: [ [], [0, 4, 11, 14], [], [0, 6, 40], [0, 7] ]
-	
 	// Note:
-	// Knots with full multiplicity (knot repeated degree times - 1,2,3) is called Bezier Knot.
-	// Bezier Knots coincide with a Point. That's where we can split the Subcurve.
-	// All selected Knots have already been converted to Bezier Knots in the Execute Callback.
-	// Conveniently, the KnotVector index of a Bezier Knot is also the index of the Point.
-	// Example: Bezier Knot 3 is selected.
-	// aKnotHasKnotVecIdx[3] = 5
-	// 5 is the array position where the Knot Vector can be split, and also
-	// the index of the Point on this Knot.
-	
-	// The Subcurve Point- and Knot-Arrays are then sliced/concatenated according to aAllSubcrvSlices
-	
-	// On closed Subcurves:
-	// If only the first/last Knot was selected, the Subcurve will be opened.
+	// Knots with full multiplicity (Knots repeated {degree} times) are called
+	// Bezier Knots, which always coincide with a Point. The Curve can be split there.
+	// To make sure the curvature remains unchanges, all selected Knots
+	// have to be raised to full mult. in the Execute Callback first.
 
 
-
-	// 1) Prepare arrays
-	// aKnotHasKnotVecIdx, aKnotIsOnSubcurve, aKnotIsFirst, aLastKnotIndices
-	
 	// Loop through all Subcurves.
-	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
+	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
 		// Get input Subcurve.
-		var subCrv = cInCurves.item(subCrvIdx);
-		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
+		var oSubCrv = cInCurves.item(subCrv);
+		VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
+		var subCrvData = VBdata.toArray();
 		
 		// Get Control Points array.
-		var VBdata0 = new VBArray(subCrvData[0]); var aPoints = VBdata0.toArray();
+		var VBdata0 = new VBArray(subCrvData[0]);
+		var aPoints = VBdata0.toArray();
 
 		// Put number of Control Points in an array.
-		//aLastKnotIndices[subCrvIdx] = aPoints.length/4;	// /4? x,y,z,weight
+		//aLastKnots[subCrv] = aPoints.length/4;	// /4? x,y,z,weight
 		
 		// Get KnotVector.
-		var VBdata1 = new VBArray(subCrvData[1]); var aKnots = VBdata1.toArray();
-
+		var VBdata1 = new VBArray(subCrvData[1]);
+		var aKnots = VBdata1.toArray();
 
 		// First Point in the KnotVector
-		aKnotHasKnotVecIdx.push(0);
-		aKnotIsOnSubcurve.push(subCrvIdx);
-		aKnotIsFirst.push(true);
-				
+		//aKnotIndices.push(0);
+		aKnotIsOnSubCrv.push(subCrv);
+		//aKnotIsFirst.push(true);
+		aLastKnots[subCrv] = 0;
+
+		var knot = 0;
+		aKnotsOnSubCrv.push(knot++);
+
 		// Loop through all Knots in the Vector.
 		for(var i = 1; i < aKnots.length; i++)
 		{
 			// Eliminate Multiplicity.
 			// Is the Knot different than the one before?
-			if(aKnots[i] != aKnots[i - 1])
+			if(aKnots[i] != aKnots[i - 1]) // also works when out of array bound
 			{
-				aKnotHasKnotVecIdx.push(i);
-				aKnotIsOnSubcurve.push(subCrvIdx);
-				aKnotIsFirst.push(false);
+				//aKnotIndices.push(i);
+				aKnotIsOnSubCrv.push(subCrv);
+				//aKnotIsFirst.push(false);
+				aLastKnots[subCrv] += 1;
+				aKnotsOnSubCrv.push(knot++);
+
 			}
+			
 		}
-		
-		// Store the array index of this Subcurve's last Knot.
-		aLastKnotIndices.push(aKnotHasKnotVecIdx[aKnotHasKnotVecIdx.length - 1]);
 		
 	}	// end for
 
-// debug:
-/*	LogMessage("");
-	LogMessage("aKnotHasKnotVecIdx: " + aKnotHasKnotVecIdx);
-	LogMessage("aKnotIsOnSubcurve: " + aKnotIsOnSubcurve);
-	LogMessage("aKnotIsFirst: " + aKnotIsFirst);
-	LogMessage("aLastKnotIndices: " + aLastKnotIndices);
-	LogMessage("");
-	return true;
-*/
 
-	// 2) Prepare array aAllSubcrvSlices
+	// 2) Prepare aAllSubCrvSlices:
+	// Copy Cluster Knots to aAllSubCrvSlices.
+	// Note: oKnotCluster is NOT sorted by index!
 
-	for(var i = 0; i < cInCurves.Count; i++) aAllSubcrvSlices[i] = [];
-	
-	// Loop through all Knots in the input Cluster.
-	// Note: the Knots in oKnotCluster are NOT sorted by index!
+	// Initialize.
+	for(var i = 0; i < cInCurves.Count; i++)
+		aAllSubCrvSlices[i] = new Array();
+
+	// Loop through all Knots in the input Cluster, splice them into aAllSubCrvSlices.
 	for(var i = 0; i < oKnotCluster.Elements.Count; i++)
 	{
-		var knotIdx = oKnotCluster.Elements(i);
-		var subcrv = aKnotIsOnSubcurve[knotIdx];
+		var knot = oKnotCluster.Elements(i);
+		var subCrv = aKnotIsOnSubCrv[knot];
 		
-		// Get slice array for the Knot's Subcurve.
-		var aSubcrvSlices = aAllSubcrvSlices[subcrv];
+		var knotOnSubCrv = aKnotsOnSubCrv[knot];
+		
+		var aSubCrvSlices = aAllSubCrvSlices[subCrv];
+		var length = aSubCrvSlices.length;
 
-		if(aAllSubcrvSlices[subcrv].length == 0)
+		if(length == 0)
+			aSubCrvSlices.push(knotOnSubCrv);
+		else
 		{
-		// No Knots in this slice array yet.
-			// Put the Subcurve's start and end in it's slice array.
-			// If they remain the only knots in this array,
-			// the Subcurve will be opened in 3)
-			aSubcrvSlices.push(0);
-			aSubcrvSlices.push(aLastKnotIndices[subcrv]);
+			for(var j = 0; j < length; j++)
+			{
+				if(knotOnSubCrv < aSubCrvSlices[j])
+				{
+					aSubCrvSlices.splice(j, 0, knotOnSubCrv);
+					break;
+
+				} else if(j == length - 1)
+					aSubCrvSlices.push(knotOnSubCrv);
+
+			}
+
 		}
 
-		// Splice in the Knot into Subcurve's slice array.
-		// Loop through slice array.
-		for(var j = 0; j < aSubcrvSlices.length; j++)
-		{
-			// If the Knot is already in the array, ignore it.
-			// Can happen for 0 or LAST, since these are put in every new slice array.
-			if(aKnotHasKnotVecIdx[knotIdx] < aSubcrvSlices[j])
-			{
-			// Splice it in here.
-				aSubcrvSlices.splice(j, 0, aKnotHasKnotVecIdx[knotIdx]);
-				break;
-			}
-			
-			if(aKnotHasKnotVecIdx[knotIdx] == aSubcrvSlices[j])
-				break;
-			
-		}	// end for
-
-		aAllSubcrvSlices[subcrv] = aSubcrvSlices;
-		
-	}	// end for
+	}
 
 
-
-//	debug:
-/*	LogMessage("");
-	LogMessage("aAllSubcrvSlices:");
-	for(var i = 0; i < aAllSubcrvSlices.length; i++)
-	{
-		LogMessage(i + ": " + aAllSubcrvSlices[i]);
-	};
-*/
-//	return true;
-
-
-
-	// 3) Concatenate Subcurves / Subcurve slices
+	// 3) Create Subcurves according to aAllSubCrvSlices.
 	
 	// Loop through all Subcurves.
-	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
+	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
 		// Get input Subcurve.
-		var subCrv = cInCurves.item(subCrvIdx);
-		VBdata = new VBArray(subCrv.Get2(siSINurbs));									
+		var oSubCrv = cInCurves.item(subCrv);
+		VBdata = new VBArray(oSubCrv.Get2(siSINurbs));									
 		var subCrvData = VBdata.toArray();
 
 		// Get Point data.
@@ -471,63 +436,15 @@ function SplitSubcurves_Update( in_ctxt )
 		var isClosed = subCrvData[2];
 		var degree = subCrvData[3];
 		var parameterization = subCrvData[4];
-	
-	
-// debug
-/*		LogMessage("");
-		LogMessage("Old Subcurve:");
-		LogMessage("subCrvIdx: " + subCrvIdx);
-		LogMessage("aPoints: " + aPoints.toString() );
-		LogMessage("numPoints: " + numPoints);
-		LogMessage("aKnots: " + aKnots.toString() );
-		LogMessage("numKnots: " + numKnots );
-		LogMessage("isClosed: " + isClosed );
-		LogMessage("degree: " + degree );
-		LogMessage("parameterization: " + parameterization );
-		LogMessage("");
-*/
 
-		var aSubcrvSlices = aAllSubcrvSlices[subCrvIdx];	// above example: [0,5,10] and [0,7,11]
 
-		switch(aSubcrvSlices.length)
+		// Get slice array for this Subcurve.
+		var aSubCrvSlices = aAllSubCrvSlices[subCrv];
+
+		// aSubCrvSlices is empty:
+		// Copy the Subcurve with no changes.
+		if(aSubCrvSlices.length == 0)
 		{
-		case 2:	// [0,LAST]
-		// Only first & last Knot were selected.
-			if(isClosed)
-			{
-			// Subcurve was closed -> Subcurve will be opened.
-				// Copy first Point to end.
-				for(var j = 0; j < 4; j++)	aPoints.push(aPoints[j]);	
-				
-				// Adapt Knot vector length: In open Curves: K = P + degree - 1
-				aKnots.length = aPoints.length / 4 + degree - 1;	// x,y,z,w
-
-				// Set first Knot to full Mult.
-				var firstKnot = aKnots[degree] - 1;
-				for(var j = 0; j < degree - 1; j++)	aKnots[j] = firstKnot;
-				
-				// Set last Knot to full Mult.
-				var lastKnot = aKnots[aKnots.length - degree - 1] + 1;
-				for(var j = degree; j > 0; j--)	aKnots[aKnots.length - j] = lastKnot;
-
-				// Write this Subcurve to the CurveList data.
-				aAllPoints = aAllPoints.concat(aPoints);
-				aAllNumPoints[numAllSubcurves] = aPoints.length / 4;
-				aAllKnots = aAllKnots.concat(aKnots);
-				aAllNumKnots[numAllSubcurves] = aKnots.length;
-				aAllIsClosed[numAllSubcurves] = false;	// open this Subcurve
-				aAllDegree[numAllSubcurves] = degree;
-				aAllParameterization[numAllSubcurves] = parameterization;
-				
-				numAllSubcurves++;
-				break;
-			}
-			// Subcurve was open, first and last Knot were selected (which doesn't make much sense, but can happen) ->
-			// simply do the same as in case 0:
-			
-		case 0:	// []
-		// No Knots were selected on this Subcurve ->
-		// Copy this Subcurve to the CurveList data unchanged
 			aAllPoints = aAllPoints.concat(aPoints);
 			aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	// x,y,z,w
 			aAllKnots = aAllKnots.concat(aKnots);
@@ -535,85 +452,98 @@ function SplitSubcurves_Update( in_ctxt )
 			aAllIsClosed[numAllSubcurves] = isClosed;
 			aAllDegree[numAllSubcurves] = degree;
 			aAllParameterization[numAllSubcurves] = parameterization;
-			
-			numAllSubcurves++;
-			break;
-
-
-		default:
-		// Knots were selected along the Subcurve, add it's slices to the CurveList data
-		// Example: aSubcrvSlices = [0,5,10],[0,7,11]
-
-			// Loop through all Knots in aSubcrvSlices.
-			var lastIdx = aSubcrvSlices.length - 1;
-			for(var i = 0; i < lastIdx; i++)
-			{
-				var startIdx = aSubcrvSlices[i];
-				var endIdx = aSubcrvSlices[i + 1];
-				var aPointsSlice = aPoints.slice(startIdx * 4, (endIdx + 1) * 4);	// x,y,z,w
-				var aKnotsSlice = aKnots.slice(startIdx, endIdx + degree);
-
-			if(isClosed)
-			{
-				if(i == 0)
-				{
-				// First slice pulled from a closed Subcurve ->
-				// Set first Knot to full Mult.
-				var firstKnot = aKnotsSlice[degree] - 1;
-				for(var j = 0; j < degree - 1; j++)	aKnotsSlice[j] = firstKnot;
 				
-				} else if(i == lastIdx - 1)
-				{
-				// Last slice pulled from a closed Subcurve.
-				// -> duplicate first Point to the end
-				for(var j = 0; j < 4; j++)	aPointsSlice.push(aPoints[j]);
+			numAllSubcurves++;
+			continue;
 
-				// Adapt Knot vector length: In open Curves: K = P + degree - 1
-				aKnotsSlice.length = aPointsSlice.length / 4 + degree - 1;
-		
-				// Set last Knot to full Multiplicity.
-				var lastKnot = aKnotsSlice[aKnotsSlice.length - degree - 1] + 1;
+		}
 
-				for(var j = degree; j > 0; j--)	aKnotsSlice[aKnotsSlice.length - j] = lastKnot;
 
-				}
+		// aSubCrvSlices is not empty:
+		// Slice the Subcurve.
+
+		var firstKnot = aSubCrvSlices[0];
+		var lastKnot = aSubCrvSlices[aSubCrvSlices.length - 1];
+
+		if(!isClosed)
+		{
+			// Subcurve was open.
+			
+			// Make sure we have clean start and end indices, because the slice loop expects those.
+			if(firstKnot != 0)
+				aSubCrvSlices.unshift(0);
+				
+			if( lastKnot != aLastKnots[subCrv] )
+				aSubCrvSlices.push( aLastKnots[subCrv] );
+
+
+		} else
+		{
+			// Subcurve was closed.
+
+			if(firstKnot != 0)
+			{
+				// Subcurve is closed, first/last Knot was not selected:
+				// SHIFT the Subcurve to the first selected Knot.
+
+				var ret = shiftNurbsCurve(aPoints, aKnots, firstKnot);
+				aPoints = ret.aPoints;
+				aKnots = ret.aKnots;
+
+			// Shift slice array as well.
+				for(var i = 0; i < aSubCrvSlices.length; i++)
+					aSubCrvSlices[i] -= firstKnot;
+
+				aSubCrvSlices.push(aLastKnots[subCrv]);
+
 			}
+
+			// OPEN the Subcurve.
+			var ret = openNurbsCurve(aPoints, aKnots, degree, false);
+			aPoints = ret.aPoints;
+			aKnots = ret.aKnots;
+			isClosed = false;
+
+		}
+
+
+		// Subcurve is always open here.
+//LogMessage("aSubCrvSlices: " + aSubCrvSlices);
+		// Slice loop: CONCAT all Slices to the CurveList data arrays.
+		for(var i = 0; i < aSubCrvSlices.length - 1; i++)
+		{
+			var startIdx = getKnotVectorIdx(aKnots, aSubCrvSlices[i]);
+			var endIdx = getKnotVectorIdx(aKnots, aSubCrvSlices[i + 1]);
+			
+			// Points
+			var aPointsSlice = aPoints.slice(startIdx * 4, (endIdx + 1) * 4);	// x,y,z,w
+
+			// Knots
+			var aKnotsSlice = aKnots.slice(startIdx, endIdx + degree);
 
 			// Write this Slice to the CurveList data.
 			aAllPoints = aAllPoints.concat(aPointsSlice);
 			aAllNumPoints[numAllSubcurves] = aPointsSlice.length / 4;
 			aAllKnots = aAllKnots.concat(aKnotsSlice);
 			aAllNumKnots[numAllSubcurves] = aKnotsSlice.length;
-			aAllIsClosed[numAllSubcurves] = false;	// Subcurve Slices are never closed
+			aAllIsClosed[numAllSubcurves] = isClosed;	// Subcurve Slices are never closed
 			aAllDegree[numAllSubcurves] = degree;
 			aAllParameterization[numAllSubcurves] = parameterization;
-				
+
 			numAllSubcurves++;
-				
-			}	// end for all Knots in aSubcrvSlices
 
-		}	// end switch
+		} // end for i
 
-	}	// end for
+	} // end for subCrv
 
-
-	// Simple testCurve
-/*	var testCrvPoints = [0,0,0,1, 1,0,0,1];
-	var testCrvKnots = [0,1];
-	var testCrvIsClosed = false;
-	var testCrvDegree = 1;
-	var testCrvParameterization = siNonUniformParameterization;
-*/
 
 	// Debug
 /*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt:      ");
+	LogMessage("numAllSubcurves: " + numAllSubcurves);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	//LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	//LogMessage("aAllKnots:            " + aAllKnots);
-	logKnotsArray("aAllKnots: " + aAllKnots, 100);
+	LogMessage("aAllNumPoints:        " + aAllNumPoints);
+	logKnotsArray("aAllKnots: ", aAllKnots, 100);
 	LogMessage("aAllKnots.length:     " + aAllKnots.length);
 	LogMessage("aAllNumKnots:         " + aAllNumKnots);
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
@@ -638,6 +568,136 @@ function SplitSubcurves_Update( in_ctxt )
 
 
 //______________________________________________________________________________
+
+function getKnotVectorIdx(aKnots, knot)
+{
+	if(knot < 0)
+		return -1;
+
+	var idx = -1;	
+
+	for(var i = 0; i < aKnots.length; i++)
+	{
+		if(aKnots[i] != aKnots[i - 1])
+			idx++;
+
+		if(idx == knot)
+			return i;
+
+	}
+
+	return -1;
+
+}
+
+
+function shiftNurbsCurve(aPoints, aKnots, knot)
+{
+	var startIdx = getKnotVectorIdx(aKnots, knot);
+
+	// Shift Points array.
+	var aPoints0 = aPoints.slice(0, startIdx * 4);
+	var aPoints1 = aPoints.slice(startIdx * 4);
+
+	aPoints = aPoints1.concat(aPoints0);
+
+	// Shift Knots array.
+	for(var i = 1; i <= startIdx; i++)
+		aKnots.push( aKnots[aKnots.length - 1] + aKnots[i] - aKnots[i - 1] );
+
+	aKnots = aKnots.slice(startIdx);
+
+	return {aPoints:aPoints,
+			aKnots:aKnots};
+
+}
+
+
+function openNurbsCurve(aPoints, aKnots, degree, openWithGap)
+{
+	if(!openWithGap)
+	{
+		// Overlap after opening:
+		// -> Duplicate first Point to the end
+		for(var i = 0; i < 4; i++)	aPoints.push(aPoints[i]);
+	}
+
+	// Set first Knot to full multiplicity (Bezier).
+	var ret = getKnotMult(aKnots, 0);
+	var mult0 = ret.multiplicity;
+	//var startOffset = 0;
+	
+	for(var i = 0; i < degree - mult0; i++)
+	{
+		aKnots.unshift(aKnots[0]);
+		//startOffset++;
+	}
+	
+	// Set length of Knot vector to K = P + degree - 1
+	aKnots.length = aPoints.length / 4 + degree - 1;	// /4? x,y,z,w
+	if(degree > 1)
+	{
+		// Set last Knot to full Mult:
+		// Look at KnotVector[length-degree],
+		// if this is the first index of a Knot (mult. 1,2 or 3), set it to full mult.,
+		// otherwise take the following Knot, set it to full mult., reduce the previous Knot's mult. accordingy.
+		var lastKnotIdx = aKnots.length - degree;
+
+		var ret = getKnotMult( aKnots, lastKnotIdx);
+		var lastKnot = ret.knot;
+		var mult = ret.multiplicity;
+		var startIdx = ret.startIdx;
+
+		if(startIdx < lastKnotIdx)
+		{
+			lastKnot = aKnots[startIdx + mult]; // get following Knot
+		}
+			
+		for(var i = 1; i <= degree; i++)
+			aKnots[aKnots.length - i] = lastKnot;
+	}
+
+	return {aPoints:aPoints,
+			aKnots:aKnots
+			/*startOffset:startOffset*/};
+}
+
+
+function getKnotMult(aKnots, knotIdx)
+{
+	// [0,0,0,1,2,3,3,4,5,5,5]
+	//  0,1,2,3,4,5,6,7,8,9,10
+	// Example: knotIdx 9 returns startIdx 8, mult. 3
+
+	var multiplicity = 0;
+	var startIdx = knotIdx;
+
+	// Get start of Knot.
+	while( aKnots[startIdx - 1] == aKnots[knotIdx] )
+		startIdx--;
+
+	var nextKnotIdx = startIdx;
+
+	// Get multiplicity.
+	while(nextKnotIdx < aKnots.length)
+	{
+		if( aKnots[startIdx] == aKnots[nextKnotIdx] )
+		{
+			multiplicity++;
+			nextKnotIdx++;
+		}
+		else break;
+	}
+
+	if(multiplicity)
+		var knot = aKnots[startIdx];
+
+	// Out of array bounds: mult. 0 is returned
+	return {knot:knot,
+			multiplicity:multiplicity,
+			startIdx:startIdx};
+}
+
 
 function SplitSubcurves_DefineLayout( in_ctxt )
 {

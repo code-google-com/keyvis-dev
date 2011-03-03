@@ -366,6 +366,9 @@ function AttachCurves_DefineLayout( in_ctxt )
 	oLayout.AddItem("updateWithInputTransforms", "Update with input transforms");
 	oLayout.AddItem("updateWithObjectTransform", "Update with object transform");
 	oLayout.EndGroup();
+	var text = "\nNote: Clusters/Cluster Properties are ignored\ndue to SDK limitations.";
+	oLayout.AddStaticText( text );
+
 	//oLayout.EndRow();
 	return true;
 }
