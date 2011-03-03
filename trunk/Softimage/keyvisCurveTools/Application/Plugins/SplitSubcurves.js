@@ -296,32 +296,25 @@ function SplitSubcurves_Update( in_ctxt )
 	// Subcurve   0           1    2   3
 	//         [ [0, 5, 10], [7], [], [2,4] ]
 
-	// Knot indices stored in the input Cluster do not correspond
-	// to the position of this Knot in the Knot Vector.
-	// Some helper arrays are needed.
-	//var aKnotIndices = new Array();
+	// Some helper arrays
 	var aKnotIsOnSubCrv = new Array();
-	//var aKnotIsFirst = new Array();
 	var aLastKnots = new Array();
 	var aKnotsOnSubCrv = new Array();
 
-
 	// Explanation
 	// Example CurveList, one open and one closed Subcurve
-	// Knots 3 and 12 were selected (one on each Subcurve) -> oKnotCluster = (3, 12)
+	// Knots 3 and 12 were selected (one on each Subcurve):
 
 	// oKnotCluster =		[               3,                                            12            ]
 	// aSubCrvSlices =		[0,             3,             6      ],[0,                   5,          7 ] 
 	// aKnots =				[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6] [0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
 	// aKnotIsOnSubCrv =	[0,       0, 0, 0,       0, 0, 0,		 1,       1, 1, 1, 1, 1,       1,  1]
 	// aLastKnots =			[                             10,										  11]
-
+	// aKnotsOnSubcurve =	[               3,                                            5             ]
 
 	// Note:
-	// Knots with full multiplicity (Knots repeated {degree} times) are called
-	// Bezier Knots, which always coincide with a Point. The Curve can be split there.
-	// To make sure the curvature remains unchanges, all selected Knots
-	// have to be raised to full mult. in the Execute Callback first.
+	// To make sure the curvature remains unchanged after splitting, all selected Knots are first raised
+	// to full multiplicity (Bezier) in the Execute Callback.
 
 
 	// Loop through all Subcurves.
@@ -335,18 +328,13 @@ function SplitSubcurves_Update( in_ctxt )
 		// Get Control Points array.
 		var VBdata0 = new VBArray(subCrvData[0]);
 		var aPoints = VBdata0.toArray();
-
-		// Put number of Control Points in an array.
-		//aLastKnots[subCrv] = aPoints.length/4;	// /4? x,y,z,weight
 		
 		// Get KnotVector.
 		var VBdata1 = new VBArray(subCrvData[1]);
 		var aKnots = VBdata1.toArray();
 
 		// First Point in the KnotVector
-		//aKnotIndices.push(0);
 		aKnotIsOnSubCrv.push(subCrv);
-		//aKnotIsFirst.push(true);
 		aLastKnots[subCrv] = 0;
 
 		var knot = 0;
@@ -356,12 +344,9 @@ function SplitSubcurves_Update( in_ctxt )
 		for(var i = 1; i < aKnots.length; i++)
 		{
 			// Eliminate Multiplicity.
-			// Is the Knot different than the one before?
 			if(aKnots[i] != aKnots[i - 1]) // also works when out of array bound
 			{
-				//aKnotIndices.push(i);
 				aKnotIsOnSubCrv.push(subCrv);
-				//aKnotIsFirst.push(false);
 				aLastKnots[subCrv] += 1;
 				aKnotsOnSubCrv.push(knot++);
 
@@ -369,11 +354,10 @@ function SplitSubcurves_Update( in_ctxt )
 			
 		}
 		
-	}	// end for
+	}
 
 
-	// 2) Prepare aAllSubCrvSlices:
-	// Copy Cluster Knots to aAllSubCrvSlices.
+	// 2) Prepare aAllSubCrvSlices: copy Knots in Cluster to aAllSubCrvSlices.
 	// Note: oKnotCluster is NOT sorted by index!
 
 	// Initialize.
@@ -483,14 +467,14 @@ function SplitSubcurves_Update( in_ctxt )
 
 			if(firstKnot != 0)
 			{
-				// Subcurve is closed, first/last Knot was not selected:
-				// SHIFT the Subcurve to the first selected Knot.
+				// Subcurve is closed, first/last Knot was not selected.
 
+				// SHIFT the Subcurve to the first selected Knot.
 				var ret = shiftNurbsCurve(aPoints, aKnots, firstKnot);
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
 
-			// Shift slice array as well.
+				// Shift slice array indices as well.
 				for(var i = 0; i < aSubCrvSlices.length; i++)
 					aSubCrvSlices[i] -= firstKnot;
 
@@ -508,7 +492,7 @@ function SplitSubcurves_Update( in_ctxt )
 
 
 		// Subcurve is always open here.
-//LogMessage("aSubCrvSlices: " + aSubCrvSlices);
+
 		// Slice loop: CONCAT all Slices to the CurveList data arrays.
 		for(var i = 0; i < aSubCrvSlices.length - 1; i++)
 		{
@@ -532,7 +516,7 @@ function SplitSubcurves_Update( in_ctxt )
 
 			numAllSubcurves++;
 
-		} // end for i
+		}
 
 	} // end for subCrv
 
