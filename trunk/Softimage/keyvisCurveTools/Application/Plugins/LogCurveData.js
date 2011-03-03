@@ -43,14 +43,17 @@ function LogCurveData_Execute(  )
 
 	Application.LogMessage("LogCurveData_Execute called",siVerbose);
 	// 
-// Logs NurbsCurve data of a Subcurve
-// from the Softimage SDK help
-// modified 01.2010 by Eugen
+//______________________________________________________________________________
+// LogCurveData Command
+// 2010/01 by Eugen Sares
+// last update: 2011/03/03
+//
+//______________________________________________________________________________
 
 	LogMessage( "===============================================================" );
 	LogMessage( "NURBSCURVE INFO" );
 
-	dp = 1000;	// decimal precision
+	dp = 100;	// decimal precision
 
 	do
 	{
@@ -85,10 +88,9 @@ function LogCurveData_Execute(  )
 		if(oObj.Type == "crvlist")
 		{
 			LogMessage("CurveList " + oObj.Name + " selected.");
-			//LogMessage("(If you want to log one or more Subcurves, select them first.)");
 			var curves = oObj.ActivePrimitive.Geometry.Curves;
 			LogMessage("Number of Subcurves: " + curves.Count);
-			for(var i = 0; i < curves.Count; i++)	// var i makes i a local variable!
+			for(var i = 0; i < curves.Count; i++)
 			{
 				var subcrv = curves.Item(i);
 				LogMessage( "===============================================================" );

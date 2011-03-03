@@ -110,7 +110,6 @@ function ApplyDeleteSubcurves_Execute(data)
 			var ret = pickElements("SubCurve");
 			var oObject = ret.oObject;
 			var elementIndices = ret.elementIndices;
-			
 			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
 
 			cSubcurveClusters.Add(oCluster);
@@ -205,6 +204,29 @@ function ApplyDeleteSubcurves_Execute(data)
 
 //______________________________________________________________________________
 
+
+function pickElements(selFilter)
+{
+
+	var subcurves, button;	// useless, but needed in JScript.
+	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
+	button = rtn.Value( "ButtonPressed" );
+	if(!button) throw "Argument must be Subcurves.";
+	element = rtn.Value( "PickedElement" );
+	//var modifier = rtn.Value( "ModifierPressed" );
+	
+	// element.Type: subcrvSubComponent
+	// ClassName(element): CollectionItem
+
+	var oObject = element.SubComponent.Parent3DObject;
+	var elementIndices = element.SubComponent.ElementArray.toArray();
+
+	return {oObject: oObject, elementIndices: elementIndices};
+	
+}
+
+
 // Use this callback to build a set of parameters that will appear in the property page.
 function DeleteSubcurves_Define( in_ctxt )
 {
@@ -223,8 +245,6 @@ function DeleteSubcurves_Define( in_ctxt )
 }
 
 
-//______________________________________________________________________________
-
 // User data can be stored in the operator context of the Init callback
 // and then retrieved later in the Update and Term callbacks.
 function DeleteSubcurves_Init( in_ctxt )
@@ -237,8 +257,6 @@ function DeleteSubcurves_Init( in_ctxt )
 }
 
 
-//______________________________________________________________________________
-
 function DeleteSubcurves_Term( in_ctxt )
 {
 	Application.LogMessage("DeleteSubcurves_Term called",siVerboseMsg);
@@ -249,7 +267,6 @@ function DeleteSubcurves_Term( in_ctxt )
 }
 
 
-//______________________________________________________________________________
 //______________________________________________________________________________
 
 function DeleteSubcurves_Update( in_ctxt )
@@ -387,4 +404,3 @@ function ApplyDeleteSubcurves_Menu_Init( in_ctxt )
 }
 
 
-//______________________________________________________________________________

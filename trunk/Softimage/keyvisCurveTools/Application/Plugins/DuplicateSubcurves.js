@@ -190,12 +190,12 @@ function ApplyDuplicateSubcurves_Execute(args)
 
 				// Define Outputs and Inputs.
 				var oOutput1 = cCurveLists(i).ActivePrimitive;
-				var oOutput2 = cSubcurveClusters(i);
+				//var oOutput2 = cSubcurveClusters(i);
 				var oInput1 = cCurveLists(i).ActivePrimitive;
 				var oInput2 = cSubcurveClusters(i);
 				
-				var newOp = AddCustomOp("DuplicateSubcurves", [oOutput1, oOutput2], [oInput1, oInput2], "DuplicateSubcurves");
-
+				var newOp = AddCustomOp("DuplicateSubcurves", oOutput1, [oInput1, oInput2], "DuplicateSubcurves");
+				// var newOp = AddCustomOp("DuplicateSubcurves", [oOutput1, oOutput2], [oInput1, oInput2], "DuplicateSubcurves");
 
 /*				// Method 2: adding Ports/Groups manually.
 
@@ -278,11 +278,13 @@ function DuplicateSubcurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("offsetZ",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Z","",0,null,null,-100,100);
 	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("duplicates",siInt4,siClassifUnknown,siPersistable | siKeyable,"Duplicates","",1,null,null,0,10);
-	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("distribution",siInt4,siClassifUnknown,siPersistable | siKeyable,"Incremental/Total","",1,null,null,0,10);
-	oCustomOperator.AddParameter(oPDef);
-// ToDo: "updateSelectionOnEval"
+	//oPDef = XSIFactory.CreateParamDef("duplicates",siInt4,siClassifUnknown,siPersistable | siKeyable,"Duplicates","",1,null,null,0,10);
+	//oCustomOperator.AddParameter(oPDef);
+	//oPDef = XSIFactory.CreateParamDef("distribution",siInt4,siClassifUnknown,siPersistable | siKeyable,"Incremental/Total","",1,null,null,0,10);
+	//oCustomOperator.AddParameter(oPDef);
+	
+// ToDo: "updateSelectionOnEval" instead of OperatorContext.UserData
+// to store if new Subcurves were selected once
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
@@ -322,8 +324,8 @@ function DuplicateSubcurves_Update( in_ctxt )
 	var offsetX = in_ctxt.GetParameterValue("offsetX");
 	var offsetY = in_ctxt.GetParameterValue("offsetY");
 	var offsetZ = in_ctxt.GetParameterValue("offsetZ");
-	var duplicates = in_ctxt.GetParameterValue("duplicates");
-
+	//var duplicates = in_ctxt.GetParameterValue("duplicates");
+	//var distribution = in_ctxt.GetParameterValue("distribution");
 
 	// Get input Port connections.
 	var inCrvListGeom = in_ctxt.GetInputValue(0).Geometry; // See SDK Explorer for Port Indices.
@@ -336,14 +338,16 @@ function DuplicateSubcurves_Update( in_ctxt )
 	// and this property will return the currently evaluating target.
 	// In this case it may be necessary to also call OperatorContext.OutputPort
 	// to determine the name of the current output port, in order to know which output
-	// is being evaluated. 
+	// is being evaluated.
+	
+	// Note: Clusters as output target are unsupported (ignored).
 	var oOutTarget = in_ctxt.OutputTarget;
 /*LogMessage("in_ctxt.OutputTarget: " + oOutTarget);
 	var oOutPort = in_ctxt.OutputPort;
 LogMessage("in_ctxt.OutputPort: " + oOutPort);
 return;
 */
-	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;
+	var outCrvListGeom = oOutTarget.Geometry;
 		
 
 	// Get complete data description of input CurveList.
@@ -390,7 +394,7 @@ return;
 		var VBdata1 = new VBArray(aSubCrvData[1]);
 		var aKnots = VBdata1.toArray();
 
-		for(var n = 0; n < duplicates; n++)
+		for(var n = 0; n < 1; n++) // n < duplicates
 		{
 			// Add Offset.
 			for(var j = 0; j < aPoints.length; j+= 4)
@@ -453,12 +457,11 @@ return;
 	{
 		var oCrvList = in_ctxt.Source.Parent3DObject;
 		var selString = oCrvList + ".subcrv[" + oldCount + "-LAST]";
-		//SelectGeometryComponents( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		//ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
+		//var selString = oCrvList + ".subcrv[" + aNewSubcurves + "]" );
 		SelectGeometryComponents(selString);
 //		ToggleSelection(selString);
 
-		//in_ctxt.UserData = true;
+		in_ctxt.UserData = true;
 	}
 
 	return true;
@@ -486,12 +489,13 @@ function DuplicateSubcurves_DefineLayout( in_ctxt )
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
 	//oLayout.AddRow();
-	oLayout.AddItem("duplicates", "Duplicates");
-	oLayout.AddGroup("Translation", true);
+	//oLayout.AddItem("duplicates", "Duplicates");
+// ToDo: Radio Button for param "distribution"
+	//oLayout.AddGroup("Translation", true);
 	oLayout.AddItem("offsetX", "Offset X");
 	oLayout.AddItem("offsetY", "Offset Y");
 	oLayout.AddItem("offsetZ", "Offset Z");
-	oLayout.EndGroup();
+	//oLayout.EndGroup();
 	//oLayout.EndRow();
 	return true;
 }
