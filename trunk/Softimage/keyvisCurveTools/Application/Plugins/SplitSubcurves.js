@@ -280,7 +280,7 @@ function SplitSubcurves_Update( in_ctxt )
 	// 1) Create Arrays.
 
 	// for CurveList data
-	var numAllSubcurves = 0;
+	var allSubcurvesCnt = 0;
 	var aAllPoints = new Array();
 	var aAllNumPoints = new Array();
 	var aAllKnots = new Array();
@@ -430,14 +430,14 @@ function SplitSubcurves_Update( in_ctxt )
 		if(aSubCrvSlices.length == 0)
 		{
 			aAllPoints = aAllPoints.concat(aPoints);
-			aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	// x,y,z,w
+			aAllNumPoints[allSubcurvesCnt] = aPoints.length / 4;	// x,y,z,w
 			aAllKnots = aAllKnots.concat(aKnots);
-			aAllNumKnots[numAllSubcurves] = aKnots.length;
-			aAllIsClosed[numAllSubcurves] = isClosed;
-			aAllDegree[numAllSubcurves] = degree;
-			aAllParameterization[numAllSubcurves] = parameterization;
+			aAllNumKnots[allSubcurvesCnt] = aKnots.length;
+			aAllIsClosed[allSubcurvesCnt] = isClosed;
+			aAllDegree[allSubcurvesCnt] = degree;
+			aAllParameterization[allSubcurvesCnt] = parameterization;
 				
-			numAllSubcurves++;
+			allSubcurvesCnt++;
 			continue;
 
 		}
@@ -507,14 +507,14 @@ function SplitSubcurves_Update( in_ctxt )
 
 			// Write this Slice to the CurveList data.
 			aAllPoints = aAllPoints.concat(aPointsSlice);
-			aAllNumPoints[numAllSubcurves] = aPointsSlice.length / 4;
+			aAllNumPoints[allSubcurvesCnt] = aPointsSlice.length / 4;
 			aAllKnots = aAllKnots.concat(aKnotsSlice);
-			aAllNumKnots[numAllSubcurves] = aKnotsSlice.length;
-			aAllIsClosed[numAllSubcurves] = isClosed;	// Subcurve Slices are never closed
-			aAllDegree[numAllSubcurves] = degree;
-			aAllParameterization[numAllSubcurves] = parameterization;
+			aAllNumKnots[allSubcurvesCnt] = aKnotsSlice.length;
+			aAllIsClosed[allSubcurvesCnt] = isClosed;	// Subcurve Slices are never closed
+			aAllDegree[allSubcurvesCnt] = degree;
+			aAllParameterization[allSubcurvesCnt] = parameterization;
 
-			numAllSubcurves++;
+			allSubcurvesCnt++;
 
 		}
 
@@ -523,7 +523,7 @@ function SplitSubcurves_Update( in_ctxt )
 
 	// Debug
 /*	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves: " + numAllSubcurves);
+	LogMessage("allSubcurvesCnt: " + allSubcurvesCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
 	LogMessage("aAllNumPoints:        " + aAllNumPoints);
@@ -537,7 +537,7 @@ function SplitSubcurves_Update( in_ctxt )
 
 	// Set output CurveList.
 	outCrvListGeom.Set(
-		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
+		allSubcurvesCnt,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
 		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
 		aAllKnots,				// 3. Array

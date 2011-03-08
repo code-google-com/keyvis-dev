@@ -224,7 +224,7 @@ function ApplyDuplicateSubcurves_Execute(args)
 				AutoInspect(createdOperators); // Multi-PPG
 
 		}
-LogMessage("returning from execute callback");
+
 		return true;
 
 	} catch(e)
@@ -369,9 +369,11 @@ return;
 	var oldCount = numAllSubcurves;
 
 	// Create boolean array which Subcurves to duplicate.
-	var flagArray = new Array(cInCurves.Count);
-	for(var i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
-	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+	var aSel = new Array(cInCurves.Count);
+	for(var i = 0; i < cInCurves.Count; i++)
+		aSel[i] = false;	// init
+	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)
+		aSel[oSubcurveCluster.Elements(i)] = true;
 
 
 	// Main loop: add Subcurves to duplicate.
@@ -379,7 +381,7 @@ return;
 	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
 		// Skip all untagged Subcurves.
-		if(!flagArray[subCrvIdx]) continue;
+		if(!aSel[subCrvIdx]) continue;
 
 		// Get input Subcurve.
 		var subCrv = cInCurves.item(subCrvIdx);
@@ -404,7 +406,7 @@ return;
 				aPoints[j+2] = aPoints[j+2] + offsetZ;
 			}
 
-			// Add Subcurve at the array ends.
+			// Add Subcurve.
 			aAllPoints = aAllPoints.concat(aPoints);
 			aAllNumPoints[numAllSubcurves] = aPoints.length / 4;	//x,y,z,w
 			aAllKnots = aAllKnots.concat(aKnots);

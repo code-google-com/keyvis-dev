@@ -269,11 +269,13 @@ function InvertSubcurves_Update( in_ctxt )
 
 
 	// Create boolean array which Subcurve to invert.
-	var flagArray = new Array(cInCurves.Count);
-	for(var i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
-	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+	var aSel = new Array(cInCurves.Count);
+	for(var i = 0; i < cInCurves.Count; i++)
+		aSel[i] = false;	// init
+	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)
+		aSel[oSubcurveCluster.Elements(i)] = true;
 	// debug:
-	//for(var i = 0; i < cInCurves.Count; i++) LogMessage( flagArray[i] );
+	//for(var i = 0; i < cInCurves.Count; i++) LogMessage( aSel[i] );
 
 
 	// Add Subcurves to invert
@@ -294,7 +296,7 @@ function InvertSubcurves_Update( in_ctxt )
 		degree = aSubCrvData[3];
 		parameterization = aSubCrvData[4];
 
-		if( flagArray[numAllSubcurves] )
+		if( aSel[numAllSubcurves] )
 		{
 			// Invert Point and Knot arrays
 			var ret = invertNurbsCurve(aPoints, aKnots, isClosed); // , degree, parameterization);
@@ -336,11 +338,10 @@ function InvertSubcurves_Update( in_ctxt )
 
 function invertNurbsCurve(aPoints, aKnots, isClosed) //, degree, parameterization)
 {
-	// Invert Point array
+	// Invert Point array.
 	var pLen = aPoints.length;
 	var aPointsInv = new Array(pLen);
 
-//logControlPointsArray("", aPoints, 100);
 	for(var i = 0; i < aPoints.length; i += 4)
 	{
 		aPointsInv[i] = aPoints[aPoints.length - i - 4];
@@ -358,9 +359,8 @@ function invertNurbsCurve(aPoints, aKnots, isClosed) //, degree, parameterizatio
 		aPointsInv = ( aPointsInv.slice(pLen - 4) ).concat( aPointsInv.slice( 0, pLen - 4) );
 
 	}
-//logControlPointsArray("", aPointsInv, 100);
 
-	// Invert Knot array
+	// Invert Knot array.
 	var kLen = aKnots.length;
 	var aKnotsInv = new Array();
 	var prevKnot = aKnots[kLen - 1];	// last Knot
