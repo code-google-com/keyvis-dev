@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // MergeSubcurvesPlugin
 // 2010/10 by Eugen Sares
-// last update: 2010/12/17
+// last update: 2011/03/03
 //
 // Usage:
 // - Select at least 2 Curve Boundaries on a NurbsCurveList
@@ -71,6 +71,49 @@ function ApplyMergeSubcurves_Execute( args )
 		// Loop through all selected items.
 		for(var i = 0; i < cSel.Count; i++)
 		{
+			// Subcurves selected
+/*			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
+			{
+			}
+			
+			if( cSel(i).Type == "subcrvSubComponent" )
+			{
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var aElements = cSel(i).SubComponent.ElementArray.toArray();
+				SetSelFilter("CurveBoundary");
+
+				var sSelection = oObject + ".crvbndry[";
+				for(var i = 0; i < aElements.length; i++)
+				{
+					sSelection += (aElements[i] * 2) + "," + (aElements[i] * 2 + 1);
+					if(i < aElements.length - 1)
+						sSelection += ","
+				}
+				sSelection += "]";
+				SelectGeometryComponents(sSelection);
+				//ToggleSelection(sSelection);
+
+				// Create array of selected Subcurve's Boundaries.
+				var aBnds = new Array();
+				for(var i = 0; i < aElements.length; i++)
+				{
+					aBnds.push(aElements[i] * 2);
+					aBnds.push(aElements[i] * 2 + 1);
+				}
+
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siBoundaryCluster, "Curve_Boundary_AUTO", [0] );
+				// WARNING : [object Error]
+				
+				//var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
+
+				var oSubComponent = cSel(i).SubComponent;
+				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+
+				cCrvBndryClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+
+			}
+*/
 			// Curve Boundary Cluster selected.
 			if( cSel(i).Type == "crvbndry" && ClassName(cSel(i)) == "Cluster")
 			{
@@ -91,20 +134,16 @@ function ApplyMergeSubcurves_Execute( args )
 			}
 
 			// CurveLists selected.
-/*			if( cSel(i).Type == "crvlist")
+			if( cSel(i).Type == "crvlist")
 			{
 				// Problem: PickElement does not bother if CurveLists is already selected.
 				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("SubCurve");
-				
+/*				5G
 				var ret = pickElements("SubCurve");
 				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
+				var aElements = ret.aElements;
 */
-
-			// SubCurves selected.
-			// ToDo?
+			}
 
 		}
 
@@ -119,7 +158,7 @@ function ApplyMergeSubcurves_Execute( args )
 			element = rtn.Value( "PickedElement" );
 			//var modifier = rtn.Value( "ModifierPressed" );
 			var oObject = element.SubComponent.Parent3DObject;
-			//var elementIndices = element.SubComponent.ElementArray.toArray();
+			//var aElements = element.SubComponent.ElementArray.toArray();
 			SelectGeometryComponents(element);
 
 			var oSubComponent = cSel(0).SubComponent;
@@ -233,8 +272,8 @@ function pickElements(selFilter, errorMsg)
 	//var modifier = rtn.Value( "ModifierPressed" );
 	
 	var oObject = element.SubComponent.Parent3DObject;
-	var elementIndices = element.SubComponent.ElementArray.toArray();
-	return {oObject: oObject, elementIndices: elementIndices};
+	var aElements = element.SubComponent.ElementArray.toArray();
+	return {oObject: oObject, aElements: aElements};
 	
 }
 */
@@ -354,7 +393,7 @@ function MergeSubcurves_Update( in_ctxt )
 	// 3	false		x,y,z
 	// ...
 
-	// Tip: which Subcurve is a Boundary on?
+	// Note: which Subcurve is a Boundary on?
 	// Bnd 0/1: begin/end on Subcurve 0
 	// Bnd 2/3: begin/end on Subcurve 1 ...
 	
@@ -391,17 +430,16 @@ function MergeSubcurves_Update( in_ctxt )
 	// ...
 
 	var aSubcurveUsed = new Array(cInCurves.Count);
-	
-	// Loop through all input Subcurves.
-	for(var i = 0; i < cInCurves.Count; i++)
+
+	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
 		//aSubcurveUsed[subCrvIdx] = new Object();
 		//var subcurveInfo = aSubcurveUsed[subCrvIdx];
-		aSubcurveUsed[i] = false;
+		aSubcurveUsed[subCrv] = false;
 		
 		// Get Subcurve data.
-		var subCrv = cInCurves.item(i);
-		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
+		var oSubCrv = cInCurves.item(subCrv);
+		VBdata = new VBArray(oSubCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 		// Get Point data
 		var VBdata0 = new VBArray(subCrvData[0]); var aPoints = VBdata0.toArray();
 
@@ -410,19 +448,19 @@ function MergeSubcurves_Update( in_ctxt )
 		if(isClosed)
 		{
 		// Closed Subcurves will be ignored furthermore.
-			aBnds[i * 2].selected = false;
-			aBnds[i * 2 + 1].selected = false;
+			aBnds[subCrv * 2].selected = false;
+			aBnds[subCrv * 2 + 1].selected = false;
 
 		} else
 		{
 		// Init aBnds with Boundary positions
-			aBnds[i * 2].x = aPoints[0];
-			aBnds[i * 2].y = aPoints[1];
-			aBnds[i * 2].z = aPoints[2];
+			aBnds[subCrv * 2].x = aPoints[0];
+			aBnds[subCrv * 2].y = aPoints[1];
+			aBnds[subCrv * 2].z = aPoints[2];
 
-			aBnds[i * 2 + 1].x = aPoints[aPoints.length - 4];
-			aBnds[i * 2 + 1].y = aPoints[aPoints.length - 3];
-			aBnds[i * 2 + 1].z = aPoints[aPoints.length - 2];
+			aBnds[subCrv * 2 + 1].x = aPoints[aPoints.length - 4];
+			aBnds[subCrv * 2 + 1].y = aPoints[aPoints.length - 3];
+			aBnds[subCrv * 2 + 1].z = aPoints[aPoints.length - 2];
 
 		}
 		
@@ -467,27 +505,25 @@ function MergeSubcurves_Update( in_ctxt )
 	var aMergedCrvs = new Array();
 	var mergedCrvCnt = 0;	// number of "rows" in aMergedCrvs
 
-
-	// Loop through all input Subcurves.
-	for(var inCrvCnt = 0; inCrvCnt < cInCurves.Count; inCrvCnt++)
+	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
 		// If this Subcurve is used, skip it.
-		if(aSubcurveUsed[inCrvCnt]) continue;
+		if(aSubcurveUsed[subCrv]) continue;
 		
 		// Add a new "row" to aMergedCrvs.
 		aMergedCrvs[mergedCrvCnt] = new Object();
 		var oMergedCrv = aMergedCrvs[mergedCrvCnt];
 		mergedCrvCnt++;
 		
-		// Define Properties of Object "oMergedCrv":
+		// Define Properties for Object "oMergedCrv":
 		// Property "aSubCrvs":
 		// Array of indices which Subcurves to merge.
-		oMergedCrv.aSubCrvs = new Array();  // [inCrvCnt]; // 
+		oMergedCrv.aSubCrvs = new Array();  // [subCrv];
 		var aSubCrvs = oMergedCrv.aSubCrvs;
-		aSubCrvs.push(inCrvCnt);
+		aSubCrvs.push(subCrv);
 
 		// Mark this Subcurve as used
-		aSubcurveUsed[inCrvCnt] = true;
+		aSubcurveUsed[subCrv] = true;
 		
 		// Property "aInvert":
 		// Array of booleans indicating if a Subcurve must be reversed before merging.
@@ -657,7 +693,6 @@ function MergeSubcurves_Update( in_ctxt )
 	var aMergedPoints = new Array();
 	var aMergedKnots = new Array();
 
-
 	// Loop through all "rows" in aMergedCrvs.
 	for(var allSubcurvesCnt = 0; allSubcurvesCnt < mergedCrvCnt; allSubcurvesCnt++)
 	{
@@ -669,8 +704,8 @@ function MergeSubcurves_Update( in_ctxt )
 		for(var i = 0; i < aSubCrvs.length; i++)
 		{
 			// Get next Subcurve in array
-			var subCrv = cInCurves.item( aSubCrvs[i] );
-			VBdata = new VBArray(subCrv.Get2(siSINurbs));
+			var oSubCrv = cInCurves.item( aSubCrvs[i] );
+			VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
 			var aSubCrvData = VBdata.toArray();
 			
 			// Get Point data
@@ -773,7 +808,7 @@ function MergeSubcurves_Update( in_ctxt )
 
 	// Debug
 /*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt:      ");
+	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
@@ -806,7 +841,6 @@ function MergeSubcurves_Update( in_ctxt )
 /*	if(in_ctxt.UserData == undefined)
 	{
 		var oCrvList = in_ctxt.Source.Parent3DObject;
-		//SelectGeometryComponents( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
 		ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
 		in_ctxt.UserData = true;
 	}

@@ -8,7 +8,7 @@
 // - Model > Modify > Curve > Open/Close Subcurve
 // The open/closed status of the of the selected Subcurves will be toggled.
 // 
-// Info: this Op has the parameter "openWithGap".
+// Info: this Op has the parameter "openingMode".
 // When checked, the last Segment (between the next to last and first Point) will be deleted when opening.
 // (same as in the factory OpenClose).
 // When unchecked, the last Segment will remain.
@@ -251,7 +251,9 @@ function OpenCloseSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 
-	oPDef = XSIFactory.CreateParamDef("openWithGap",siBool,siClassifUnknown,siPersistable | siKeyable,"","",true,null,null,null,null);
+	oPDef = XSIFactory.CreateParamDef("openingMode",siBool,siClassifUnknown,siPersistable | siKeyable,"Opening mode","",true,null,null,null,null);
+	oCustomOperator.AddParameter(oPDef);
+	oPDef = XSIFactory.CreateParamDef("closingMode",siBool,siClassifUnknown,siPersistable | siKeyable,"Closing mode","",true,null,null,null,null);
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
@@ -285,7 +287,8 @@ function OpenCloseSubcurves_Update( in_ctxt )
 
 
 	// Get Params.
-	var openWithGap = in_ctxt.GetParameterValue("openWithGap");
+	var openingMode = in_ctxt.GetParameterValue("openingMode");
+	var closingMode = in_ctxt.GetParameterValue("closingMode");
 	
 
 	// Get Port connections.
@@ -296,9 +299,11 @@ function OpenCloseSubcurves_Update( in_ctxt )
 
 
 	// Create boolean array which Subcurves to open/close.
-	var flagArray = new Array(cInCurves.Count);
-	for(i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
-	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+	var aSel = new Array(cInCurves.Count);
+	for(i = 0; i < cInCurves.Count; i++)
+		aSel[i] = false;	// init
+	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)
+		aSel[oSubcurveCluster.Elements(i)] = true;
 
 
 	// Create empty arrays to hold the new CurveList data.
@@ -314,15 +319,15 @@ function OpenCloseSubcurves_Update( in_ctxt )
 	
 	
 	// Loop through all Subcurves.
-	for(var numAllSubcurves = 0; numAllSubcurves < cInCurves.Count; numAllSubcurves++)
+	for(var allSubcurvesCnt = 0; allSubcurvesCnt < cInCurves.Count; allSubcurvesCnt++)
 	{
 		// Get input Subcurve.
-		var subCrv = cInCurves.item(numAllSubcurves);	// Type: NurbsCurve, ClassName: NurbsCurve
+		var subCrv = cInCurves.item(allSubcurvesCnt);	// Type: NurbsCurve, ClassName: NurbsCurve
 		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 
 		// Get Point data.
 		var vbArg0 = new VBArray(subCrvData[0]); var aPoints = vbArg0.toArray();
-		aAllNumPoints[numAllSubcurves] = aPoints.length/4;	// /4? x,y,z,weight
+		aAllNumPoints[allSubcurvesCnt] = aPoints.length/4;	// /4? x,y,z,weight
 
 		// Check if the first and last Point coincide.
 		var bFirstOnLast = false;
@@ -333,86 +338,86 @@ function OpenCloseSubcurves_Update( in_ctxt )
 
 		// Get Knot data.
 		var vbArg1 = new VBArray(subCrvData[1]); var aKnots = vbArg1.toArray();
-		aAllNumKnots[numAllSubcurves] = aKnots.length;
+		aAllNumKnots[allSubcurvesCnt] = aKnots.length;
 
 		// Get other data.
-		aAllIsClosed[numAllSubcurves] = subCrvData[2];
-		aAllDegree[numAllSubcurves] = subCrvData[3];
-		aAllParameterization[numAllSubcurves] = subCrvData[4];
+		aAllIsClosed[allSubcurvesCnt] = subCrvData[2];
+		aAllDegree[allSubcurvesCnt] = subCrvData[3];
+		aAllParameterization[allSubcurvesCnt] = subCrvData[4];
 
 
 // debug
 /*		LogMessage("");
 		LogMessage("Old Subcurve:");
-		LogMessage("numAllSubcurves: " + numAllSubcurves);
-		LogMessage("aAllPoints[" + numAllSubcurves + "]: " + aPoints.toString() );
-		LogMessage("aAllNumPoints[" + numAllSubcurves + "]: " + aAllNumPoints[numAllSubcurves]);
-		LogMessage("aAllKnots[" + numAllSubcurves + "]: " + aKnots.toString() );
-		LogMessage("aAllNumKnots[" + numAllSubcurves + "]: " + aAllNumKnots[numAllSubcurves] );
-		LogMessage("aAllIsClosed: " + aAllIsClosed[numAllSubcurves]);
-		LogMessage("aAllDegree[" + numAllSubcurves + "]: " + aAllDegree[numAllSubcurves] );
-		LogMessage("aAllParameterization[" + numAllSubcurves + "]: " + aAllParameterization[numAllSubcurves] );
+		LogMessage("allSubcurvesCnt: " + allSubcurvesCnt);
+		LogMessage("aAllPoints[" + allSubcurvesCnt + "]: " + aPoints.toString() );
+		LogMessage("aAllNumPoints[" + allSubcurvesCnt + "]: " + aAllNumPoints[allSubcurvesCnt]);
+		LogMessage("aAllKnots[" + allSubcurvesCnt + "]: " + aKnots.toString() );
+		LogMessage("aAllNumKnots[" + allSubcurvesCnt + "]: " + aAllNumKnots[allSubcurvesCnt] );
+		LogMessage("aAllIsClosed: " + aAllIsClosed[allSubcurvesCnt]);
+		LogMessage("aAllDegree[" + allSubcurvesCnt + "]: " + aAllDegree[allSubcurvesCnt] );
+		LogMessage("aAllParameterization[" + allSubcurvesCnt + "]: " + aAllParameterization[allSubcurvesCnt] );
 		LogMessage("");
 */
 
-		if(flagArray[numAllSubcurves])
+		if(aSel[allSubcurvesCnt])
 		{
 		// Subcurve was selected and will be opened/closed
 		// Only the Point and Knot data need to be changed, rest is already set.
 
 			// This Operator works as a toggle:
 			// Open Curves that were closed, and vice versa.
-			if(aAllIsClosed[numAllSubcurves] == true)
+			if(aAllIsClosed[allSubcurvesCnt] == true)
 			{
 			// OPEN the Subcurve		
-			// openWithGap: first and last Point of opened Curve will overlap or not?
-				var ret = openNurbsCurve(aPoints, aKnots, aAllDegree[numAllSubcurves], openWithGap);
+			// openingMode: first and last Point of opened Curve will overlap or not?
+				var ret = openNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], openingMode);
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
 
-				aAllIsClosed[numAllSubcurves] = false;
+				aAllIsClosed[allSubcurvesCnt] = false;
 				
 			} else
 			{
 			// CLOSE the Subcurve
-				var ret = closeNurbsCurve(aPoints, aKnots, aAllDegree[numAllSubcurves], openWithGap);
+				var ret = closeNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], closingMode);
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
-			
-				aAllIsClosed[numAllSubcurves] = true;
+
+				aAllIsClosed[allSubcurvesCnt] = true;
 				
 			}
 
-		aAllNumPoints[numAllSubcurves] = aPoints.length/4;
-		aAllNumKnots[numAllSubcurves] = aKnots.length;
+		aAllNumPoints[allSubcurvesCnt] = aPoints.length/4;
+		aAllNumKnots[allSubcurvesCnt] = aKnots.length;
 		
 		}
 
 		// Concatenate the Points and Knots arrays to get the complete CurveList data.
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllKnots = aAllKnots.concat(aKnots);
+logControlPointsArray("aAllPoints after closing: ", aAllPoints, 100);
+logKnotsArray("aAllKnots after closing: " + aAllKnots, 100);
 
 	}
 
 	// Debug
-/*	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves:      " + numAllSubcurves);
+	LogMessage("New CurveList:");
+	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
 	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	LogMessage("aAllKnots:            " + aAllKnots);
 	logKnotsArray("aAllKnots: " + aAllKnots, 100);
 	LogMessage("aAllKnots.length:     " + aAllKnots.length);
 	LogMessage("aAllNumKnots:         " + aAllNumKnots);
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
 	LogMessage("aAllDegree:           " + aAllDegree);
 	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
+
 
 	// overwrite this CurveList using Set
 	outCrvListGeom.Set(
-		numAllSubcurves,			// 0. number of Subcurves in the Curvelist
+		allSubcurvesCnt,			// 0. number of Subcurves in the Curvelist
 		aAllPoints, 		// 1. Array
 		aAllNumPoints, 		// 2. Array, number of Control Points per Subcurve
 		aAllKnots,			// 3. Array
@@ -464,59 +469,10 @@ function getKnotMult(aKnots, knotIdx)
 }
 
 
-function openNurbsCurve(aPoints, aKnots, degree, openWithGap)
-{
-logKnotsArray("aKnots before opening: ", aKnots, 100);
-	if(!openWithGap)
-	{
-		// Overlap after opening:
-		// -> Duplicate first Point to the end
-		for(var i = 0; i < 4; i++)	aPoints.push(aPoints[i]);
-	}
-
-	// Set first Knot to full multiplicity (Bezier).
-	var ret = getKnotMult(aKnots, 0);
-	var mult0 = ret.multiplicity;
-
-	for(var i = 0; i < degree - mult0; i++)
-		aKnots.unshift(aKnots[0]);
-
-	// Set length of Knot vector to K = P + degree - 1
-	aKnots.length = aPoints.length / 4 + degree - 1;	// /4? x,y,z,w
-	if(degree > 1)
-	{
-		// Set last Knot to full Mult:
-		// Look at Knot [length-degree],
-		// if this is the start index of a Knot (mult. 1,2 or 3), set it to full mult., otherwise
-		// take the following Knot, set it to full mult., reduce the previous Knot's mult. accordingy.
-		var lastKnotIdx = aKnots.length - degree;
-
-		var ret = getKnotMult( aKnots, lastKnotIdx);
-		var lastKnot = ret.knot;
-		var mult = ret.multiplicity;
-		var startIdx = ret.startIdx;
-
-		if(startIdx < lastKnotIdx)
-		{
-			lastKnot = aKnots[startIdx + mult]; // get following Knot
-		}
-			
-		for(var i = 1; i <= degree; i++)
-			aKnots[aKnots.length - i] = lastKnot;
-	}
-
-logKnotsArray("aKnots after opening: ", aKnots, 100);
-
-	return {aPoints:aPoints,
-			aKnots:aKnots};
-}
-
-
-// This functions mimics the factory CrvOpenClose Op exactly.
-function openNurbsCurveFactory(aPoints, aKnots, degree, openWithGap)
+function openNurbsCurve(aPoints, aKnots, degree, openingMode)
 {
 //logKnotsArray("aKnots before opening: ", aKnots, 100);
-	if(!openWithGap)
+	if(!openingMode)
 	{
 		// Overlap after opening:
 		// -> Duplicate first Point to the end
@@ -561,7 +517,56 @@ function openNurbsCurveFactory(aPoints, aKnots, degree, openWithGap)
 }
 
 
-function closeNurbsCurve(aPoints, aKnots, degree)
+// This functions mimics the factory CrvOpenClose Op exactly.
+function openNurbsCurveFactory(aPoints, aKnots, degree, openingMode)
+{
+//logKnotsArray("aKnots before opening: ", aKnots, 100);
+	if(!openingMode)
+	{
+		// Overlap after opening:
+		// -> Duplicate first Point to the end
+		for(var i = 0; i < 4; i++)	aPoints.push(aPoints[i]);
+	}
+
+	// Set first Knot to full multiplicity (Bezier).
+	var ret = getKnotMult(aKnots, 0);
+	var mult0 = ret.multiplicity;
+
+	for(var i = 0; i < degree - mult0; i++)
+		aKnots.unshift(aKnots[0]);
+
+	// Set length of Knot vector to K = P + degree - 1
+	aKnots.length = aPoints.length / 4 + degree - 1;	// /4? x,y,z,w
+	if(degree > 1)
+	{
+		// Set last Knot to full Mult:
+		// Look at Knot [length-degree],
+		// if this is the start index of a Knot (mult. 1,2 or 3), set it to full mult., otherwise
+		// take the following Knot, set it to full mult., reduce the previous Knot's mult. accordingy.
+		var lastKnotIdx = aKnots.length - degree;
+
+		var ret = getKnotMult( aKnots, lastKnotIdx);
+		var lastKnot = ret.knot;
+		var mult = ret.multiplicity;
+		var startIdx = ret.startIdx;
+
+		if(startIdx < lastKnotIdx)
+		{
+			lastKnot = aKnots[startIdx + mult]; // get following Knot
+		}
+			
+		for(var i = 1; i <= degree; i++)
+			aKnots[aKnots.length - i] = lastKnot;
+	}
+
+//logKnotsArray("aKnots after opening: ", aKnots, 100);
+
+	return {aPoints:aPoints,
+			aKnots:aKnots};
+}
+
+
+function closeNurbsCurve(aPoints, aKnots, degree, closingMode)
 {
 	if(aPoints.length > 8)
 	{
@@ -579,7 +584,7 @@ function closeNurbsCurve(aPoints, aKnots, degree)
 
 		if(bFirstOnLast)
 		{
-		// First and last Point were overlapping
+			// First and last Point were overlapping
 			// Remove last Point
 			aPoints = aPoints.slice(0, aPoints.length - 4);
 			
@@ -589,26 +594,82 @@ function closeNurbsCurve(aPoints, aKnots, degree)
 
 		} else
 		{
-		// First and last Point were apart
-			// Point array does not change!
-			
-			// Adapt Knot Vector length: on closed Curves: K = P + 1
-			// degree 1: one Knot more
-			// degree 2: same length
-			// degree 3: one Knot less
-			aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
-			
-			// Set first Knot(s)
-			// degree 1: [0,1,...]
-			// degree 2: [-1,0,1,...]
-			// degree 3: [-2,-1,0,1,...]
-			for(var i = degree - 2; i >= 0; i--)
-				aKnots[i] = aKnots[i + 1] - 1;
-			
-			// Set last Knot = 2nd last + 1
-			aKnots[aKnots.length - 1] = aKnots[aKnots.length - 2] + 1;
+			// First and last Point were apart
+		
+			if(closingMode)
+			{
+				// Standard close, Point array does not change.
+				
+				// Adapt Knot Vector length: on closed Curves: K = P + 1
+				// degree 1: one Knot more
+				// degree 2: same length
+				// degree 3: one Knot less
+				aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
+				
+				// Set first Knot(s)
+				// degree 1: [0,1,...]
+				// degree 2: [-1,0,1,...]
+				// degree 3: [-2,-1,0,1,...]
+				for(var i = degree - 2; i >= 0; i--)
+					aKnots[i] = aKnots[i + 1] - 1;
+				
+				// Set last Knot = 2nd last + 1
+				aKnots[aKnots.length - 1] = aKnots[aKnots.length - 2] + 1;				
+			} else
+			{
+				// Close with connecting line.
 
-		}				
+				// Begin
+				var vb = XSIMath.CreateVector3();
+				vb.X = aPoints[0];
+				vb.Y = aPoints[1];
+				vb.Z = aPoints[2];
+				// End
+				var ve = XSIMath.CreateVector3();
+				ve.X = aPoints[aPoints.length - 4];
+				ve.Y = aPoints[aPoints.length - 3];
+				ve.Z = aPoints[aPoints.length - 2];
+
+				var v = XSIMath.CreateVector3();				
+				v.Sub(ve, vb);
+
+				switch(degree)
+				{
+					case 1:
+						break;
+
+					case 2:
+						v.Scale(0.5, v);
+						ve.Sub(ve, v);
+						aPoints.push(ve.X);
+						aPoints.push(ve.Y);
+						aPoints.push(ve.Z);
+						aPoints.push(1); // weight
+						break;
+
+					default:
+						v.Scale(1/3, v);
+						// 2nd last Point
+						ve.Sub(ve, v);
+						aPoints.push(ve.X);
+						aPoints.push(ve.Y);
+						aPoints.push(ve.Z);
+						aPoints.push(1); // weight
+						// Last Point
+						vb.Add(vb, v);
+						aPoints.push(vb.X);
+						aPoints.push(vb.Y);
+						aPoints.push(vb.Z);
+						aPoints.push(1); // weight
+
+				}
+				
+				// Knots
+				aKnots.push( aKnots[aKnots.length - 1] + 1 );
+			
+			}
+
+		}
 
 	}
 //logControlPointsArray(aPoints);
@@ -623,10 +684,14 @@ function OpenCloseSubcurves_DefineLayout( in_ctxt )
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddGroup("When opening Subcurve:");
-	//oLayout.AddItem("openWithGap", "Open with gap");
-	var aRadioItems = ["Gap between first and last Point (factory)", true, "First and last Point overlap", false];
-	oLayout.AddEnumControl("openWithGap", aRadioItems, "Opening mode", siControlRadio);
+	//oLayout.AddGroup("Open");
+	//oLayout.AddItem("openingMode", "Open with gap");
+	var aRadioItems = ["Standard (gap)", true, "Overlap", false];
+	oLayout.AddEnumControl("openingMode", aRadioItems, "Open", siControlRadio);
+	//oLayout.EndGroup();
+	//oLayout.AddGroup("Close");
+	var aRadioItems = ["Standard", true, "Straight segment", false];
+	oLayout.AddEnumControl("closingMode", aRadioItems, "Close", siControlRadio);
 	//oLayout.EndGroup();
 	return true;
 }
@@ -644,11 +709,11 @@ function OpenCloseSubcurves_OnClosed( )
 }
 
 
-function OpenCloseSubcurves_openWithGap_OnChanged( )
+function OpenCloseSubcurves_openingMode_OnChanged( )
 {
-	Application.LogMessage("OpenCloseSubcurves_openWithGap_OnChanged called",siVerbose);
+	Application.LogMessage("OpenCloseSubcurves_openingMode_OnChanged called",siVerbose);
 	var oParam;
-	oParam = PPG.openWithGap;
+	oParam = PPG.openingMode;
 	var paramVal;
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);

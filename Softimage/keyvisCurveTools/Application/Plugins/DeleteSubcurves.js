@@ -1,6 +1,6 @@
 //______________________________________________________________________________
 // DeleteSubcurvesPlugin
-// 10/2009 by Eugen Sares
+// 2009/10 by Eugen Sares
 // last update: 2011/02/01
 //
 // Usage:
@@ -10,7 +10,7 @@
 
 function XSILoadPlugin( in_reg )
 {
-	in_reg.Author = "Eugen";
+	in_reg.Author = "Eugen Sares";
 	in_reg.Name = "DeleteSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
@@ -285,9 +285,11 @@ function DeleteSubcurves_Update( in_ctxt )
 
 
 	// Create boolean array which Subcurve to delete.
-	var flagArray = new Array(cInCurves.Count);
-	for(var i = 0; i < cInCurves.Count; i++) flagArray[i] = false;	// init
-	for(var i = 0; i < clusterCount; i++)  flagArray[oSubcurveCluster.Elements(i)] = true;
+	var aSel = new Array(cInCurves.Count);
+	for(var i = 0; i < cInCurves.Count; i++)
+		aSel[i] = false;	// init
+	for(var i = 0; i < clusterCount; i++)
+		aSel[oSubcurveCluster.Elements(i)] = true;
 
 
 	var numAllSubcurves = 0;
@@ -302,10 +304,10 @@ function DeleteSubcurves_Update( in_ctxt )
 	// Main loop
 	if(cInCurves.Count > clusterCount)
 	{
-	// When not all Subcurves have to be deleted:
+		// Not all Subcurves are deleted.
 		for(i = 0; i < cInCurves.Count; i++)
 		{
-			if(flagArray[i]) continue;
+			if(aSel[i]) continue;
 
 			// Get NurbsCurve data
 			var subcrv = cInCurves.item(i);	// get input Subcurve. Type: NurbsCurve, ClassName: NurbsCurve			
@@ -331,8 +333,8 @@ function DeleteSubcurves_Update( in_ctxt )
 
 	} else
 	{
-	// When all Subcurves are deleted, set the CurveList to the smallest possible.
-	// Same as: var oEmpty = SICreateCurve("emptyCurve", degree, 1);
+		// All Subcurves are deleted.
+		// Set the CurveList to same as SICreateCurve( [Name], [Degree], [CurveType] )
 		numAllSubcurves = 1;
 
 		switch(inCurve0Degree)
@@ -371,7 +373,7 @@ function DeleteSubcurves_Update( in_ctxt )
 	}
 
 
-	// overwrite the existing CurveList
+	// Set output CurveList.
 	outCrvListGeom.Set(
 		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
@@ -384,7 +386,7 @@ function DeleteSubcurves_Update( in_ctxt )
 		siSINurbs) ;		// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
 
 	
-	// Update Clusters
+	// Update Clusters - not possible due to SDK limitations.
 	// var oSubComp = oSubcurveCluster.CreateSubComponent();	// ERROR : 2009 - Access denied
 	// oSubComp.RemoveElement(...);
 	// SIRemoveFromCluster( oSubcurveCluster, oSubComp);

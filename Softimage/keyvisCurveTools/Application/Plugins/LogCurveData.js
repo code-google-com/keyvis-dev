@@ -78,7 +78,6 @@ function LogCurveData_Execute(  )
 			for(var i = 0; i < oComponentColl.Count; i++)	// var i makes i a local variable!
 			{
 				var subcrv = oComponentColl.Item(i);
-				LogMessage( "===============================================================" );
 				Logmessage("Subcurve: [" + subcrv.Index + "]");
 				LogCurveData(oComponentColl.Item(i));
 			}
@@ -90,10 +89,10 @@ function LogCurveData_Execute(  )
 			LogMessage("CurveList " + oObj.Name + " selected.");
 			var curves = oObj.ActivePrimitive.Geometry.Curves;
 			LogMessage("Number of Subcurves: " + curves.Count);
+			LogMessage("");
 			for(var i = 0; i < curves.Count; i++)
 			{
 				var subcrv = curves.Item(i);
-				LogMessage( "===============================================================" );
 				Logmessage("Subcurve: [" + subcrv.Index + "]");
 				LogCurveData(curves.Item(i));
 			}
@@ -140,40 +139,17 @@ function LogCurveData(oCrv)	// Arg: NurbsCurve
 	aPoints = vbCtrlPts.toArray();
 	LogMessage("Number of Control Points: " + aPoints.length/4);
 	logControlPointsArray(aPoints, dp);
-/*	for ( var i = 0; i <= vbCtrlPts.ubound(2); i++ )
-	{
-		var x = vbCtrlPts.getItem(0,i);
-		var y = vbCtrlPts.getItem(1,i);
-		var z = vbCtrlPts.getItem(2,i);
-		var w = vbCtrlPts.getItem(3,i);
-	   LogMessage( "[" + i + "]: x = " + Math.round(x*dp)/dp + "; y = " + Math.round(y*dp)/dp + "; z = " + Math.round(z*dp)/dp + "; w = " + Math.round(w*dp)/dp );
-	}
-*/
 
-	LogMessage( "---------------------------------------------------------------" );
 	aKnots = vbKnots.toArray();
 	LogMessage("Number of Knots: " + aKnots.length);
 
 	logKnotsArray(aKnots, dp);
-/*	var sKnotArray = "";
-	for ( var j = 0; j <= vbKnots.ubound(1); j++ )
-	{
-		var knotValue = Math.round(vbKnots.getItem(j)*dp)/dp;
-		if ( j == 0 ) sKnotArray = "Knot Vector: " + knotValue.toString(10);
-		else sKnotArray = sKnotArray + ", " + knotValue.toString(10);
-	}
-	
-	LogMessage( sKnotArray );
-*/
 
-	LogMessage( "---------------------------------------------------------------" );
 	if ( bClosed ) LogMessage( oCrv + " is closed." );
 	else LogMessage( oCrv + " is open." );
 
-	LogMessage( "---------------------------------------------------------------" );
 	LogMessage( "Degree of " + oCrv + " is " + lDegree + "." );
 
-	LogMessage( "---------------------------------------------------------------" );
 	switch( eParFactor )
 	{
 	   case siUniformParameterization :
@@ -189,7 +165,6 @@ function LogCurveData(oCrv)	// Arg: NurbsCurve
 		   LogMessage( oCrv + "'s knot parameterization is centripetal." );
 	}
 	
-	LogMessage( "---------------------------------------------------------------" );
 	LogMessage( "Curve Length: " + oCrv.Length);
 	LogMessage( "" );
 }
