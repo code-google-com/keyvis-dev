@@ -1,23 +1,23 @@
 //______________________________________________________________________________
-// MergeSubcurvesPlugin
-// 2010/10 by Eugen Sares
-// last update: 2011/03/03
+// BlendSubcurvesPlugin
+// 2011/03/03 by Eugen Sares
+// last updates: 2011/03/03
 //
 // Usage:
 // - Select at least 2 Curve Boundaries on a NurbsCurveList
-// - Model > Modify > Curve > MergeSubcurves
+// - Model > Modify > Curve > BlendSubcurves
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
 {
 	in_reg.Author = "Eugen Sares";
-	in_reg.Name = "MergeSubcurvesPlugin";
+	in_reg.Name = "BlendSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
 
-	in_reg.RegisterOperator("MergeSubcurves");
-	in_reg.RegisterCommand("ApplyMergeSubcurves","ApplyMergeSubcurves");
-	in_reg.RegisterMenu(siMenuTbModelModifyCurveID,"ApplyMergeSubcurves_Menu",false,false);
+	in_reg.RegisterOperator("BlendSubcurves");
+	in_reg.RegisterCommand("ApplyBlendSubcurves","ApplyBlendSubcurves");
+	in_reg.RegisterMenu(siMenuTbModelModifyCurveID,"ApplyBlendSubcurves_Menu",false,false);
 	//RegistrationInsertionPoint - do not remove this line
 
 	return true;
@@ -33,11 +33,11 @@ function XSIUnloadPlugin( in_reg )
 }
 
 
-function ApplyMergeSubcurves_Init( in_ctxt )
+function ApplyBlendSubcurves_Init( in_ctxt )
 {
 	var oCmd;
 	oCmd = in_ctxt.Source;
-	oCmd.Description = "Create an instance of MergeSubcurves operator";
+	oCmd.Description = "Create an instance of BlendSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
 
 	// TODO: You may want to add some arguments to this command so that the operator
@@ -54,10 +54,10 @@ function ApplyMergeSubcurves_Init( in_ctxt )
 
 //______________________________________________________________________________
 
-function ApplyMergeSubcurves_Execute( args )
+function ApplyBlendSubcurves_Execute( args )
 {
 
-	Application.LogMessage("ApplyMergeSubcurves_Execute called",siVerbose);
+	Application.LogMessage("ApplyBlendSubcurves_Execute called",siVerbose);
 
 	try
 	{
@@ -205,7 +205,7 @@ function ApplyMergeSubcurves_Execute( args )
 				
 				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
 				// Port names will be generated automatically!
-				var newOp = AddCustomOp("MergeSubcurves", oOutput, [oInput1, oInput2], "MergeSubcurves");
+				var newOp = AddCustomOp("BlendSubcurves", oOutput, [oInput1, oInput2], "BlendSubcurves");
 
 				var rtn = GetKeyboardState();
 				modifier = rtn(1);
@@ -236,7 +236,7 @@ function ApplyMergeSubcurves_Execute( args )
 				// apply Clean Op (fix for selection problem).
 				prepareCurveList(cCurveLists(i));
 
-				var newOp = AddCustomOp("MergeSubcurves", oOutput, [oInput1, oInput2], "MergeSubcurves");
+				var newOp = AddCustomOp("BlendSubcurves", oOutput, [oInput1, oInput2], "BlendSubcurves");
 
 				createdOperators.Add(newOp);
 				
@@ -320,7 +320,7 @@ function logCluster(oCluster)	// OK
 }
 
 
-function MergeSubcurves_Define( in_ctxt )
+function BlendSubcurves_Define( in_ctxt )
 {
 	var oCustomOperator;
 	var oPDef;
@@ -332,8 +332,8 @@ function MergeSubcurves_Define( in_ctxt )
 	//oCustomOperator.AddParameter(oPDef);
 	//oPDef = XSIFactory.CreateParamDef("modifytan",siInt4,siClassifUnknown,siPersistable | siKeyable,"Modify Tangent","",0,0,3,0,3);
 	//oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.3,0,1E+100,0,10);
-	oCustomOperator.AddParameter(oPDef);
+	//oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.3,0,1E+100,0,10);
+	//oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;
@@ -341,25 +341,25 @@ function MergeSubcurves_Define( in_ctxt )
 }
 
 
-function MergeSubcurves_Init( in_ctxt )
+function BlendSubcurves_Init( in_ctxt )
 {
-	Application.LogMessage("MergeSubcurves_Init called",siVerboseMsg);
+	Application.LogMessage("BlendSubcurves_Init called",siVerboseMsg);
 	return true;
 }
 
 
-function MergeSubcurves_Term( in_ctxt )
+function BlendSubcurves_Term( in_ctxt )
 {
-	Application.LogMessage("MergeSubcurves_Term called",siVerboseMsg);
+	Application.LogMessage("BlendSubcurves_Term called",siVerboseMsg);
 	return true;
 }
 
 
 //______________________________________________________________________________
 
-function MergeSubcurves_Update( in_ctxt )
+function BlendSubcurves_Update( in_ctxt )
 {
-	Application.LogMessage("MergeSubcurves_Update called",siVerboseMsg);
+	Application.LogMessage("BlendSubcurves_Update called",siVerboseMsg);
 
 
 	// Get Params.
@@ -367,13 +367,21 @@ function MergeSubcurves_Update( in_ctxt )
 	//var cont = in_ctxt.GetParameterValue("cont");
 	//var seam = in_ctxt.GetParameterValue("seam");
 	//var modifytan = in_ctxt.GetParameterValue("modifytan");
-	var mergeRadius = in_ctxt.GetParameterValue("mergeRadius");
+	//var mergeRadius = in_ctxt.GetParameterValue("mergeRadius");
 
 
 	// Get Port connections.
 	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
 	var cInCurves = in_ctxt.GetInputValue(0).Geometry.Curves; // Port 0: "Incrvlist"
-	var oMergeCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
+	var oBlendCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
+
+	// Number of selected Bnds must be even.
+	var blendClsCnt = oBlendCluster.Elements.Count;
+/*	if(blendClsCnt % 2 == 1)
+		blendClsCnt -= 1;
+*/
+	if(blendClsCnt < 2)
+		return;
 
 
 	// 1) PREPARE ARRAYS AND OBJECTS
@@ -414,32 +422,23 @@ function MergeSubcurves_Update( in_ctxt )
 	}
 	
 	// Mark all selected Boundaries.
-	for(var i = 0; i < oMergeCluster.Elements.Count; i++)
-		aBnds[ oMergeCluster.Elements(i) ].selected = true;
+	for(var i = 0; i < blendClsCnt; i++)
+		aBnds[ oBlendCluster.Elements(i) ].selected = true;
 
 
-	// aSubcurveUsed:
-	// Is a Subcurve used?
-	// A "used" Subcurve will be ignored when creating aMergedCrvs (see below).
-	//
-	// Idx	used
-	// ----------
-	// 0	false
-	// 1	false
-	// 2	true
-	// ...
+	// aSubcurveUsed
+	// A "used" Subcurve will be ignored when creating aBlendedCrvs (see below).
 
 	var aSubcurveUsed = new Array(cInCurves.Count);
 
-	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
+	// Init aBnds with Boundary positions.
+	for(var i = 0; i < cInCurves.Count; i++)
 	{
-		//aSubcurveUsed[subCrvIdx] = new Object();
-		//var subcurveInfo = aSubcurveUsed[subCrvIdx];
-		aSubcurveUsed[subCrv] = false;
+		aSubcurveUsed[i] = false;
 		
 		// Get Subcurve data.
-		var oSubCrv = cInCurves.item(subCrv);
-		VBdata = new VBArray(oSubCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
+		var subCrv = cInCurves.item(i);
+		VBdata = new VBArray(subCrv.Get2(siSINurbs)); var subCrvData = VBdata.toArray();
 		// Get Point data
 		var VBdata0 = new VBArray(subCrvData[0]); var aPoints = VBdata0.toArray();
 
@@ -448,19 +447,18 @@ function MergeSubcurves_Update( in_ctxt )
 		if(isClosed)
 		{
 		// Closed Subcurves will be ignored furthermore.
-			aBnds[subCrv * 2].selected = false;
-			aBnds[subCrv * 2 + 1].selected = false;
+			aBnds[i * 2].selected = false;
+			aBnds[i * 2 + 1].selected = false;
 
 		} else
 		{
-		// Init aBnds with Boundary positions
-			aBnds[subCrv * 2].x = aPoints[0];
-			aBnds[subCrv * 2].y = aPoints[1];
-			aBnds[subCrv * 2].z = aPoints[2];
+			aBnds[i * 2].x = aPoints[0];
+			aBnds[i * 2].y = aPoints[1];
+			aBnds[i * 2].z = aPoints[2];
 
-			aBnds[subCrv * 2 + 1].x = aPoints[aPoints.length - 4];
-			aBnds[subCrv * 2 + 1].y = aPoints[aPoints.length - 3];
-			aBnds[subCrv * 2 + 1].z = aPoints[aPoints.length - 2];
+			aBnds[i * 2 + 1].x = aPoints[aPoints.length - 4];
+			aBnds[i * 2 + 1].y = aPoints[aPoints.length - 3];
+			aBnds[i * 2 + 1].z = aPoints[aPoints.length - 2];
 
 		}
 		
@@ -492,8 +490,8 @@ function MergeSubcurves_Update( in_ctxt )
 
 	// 2) MAIN LOOP
 	
-	// aMergedCrvs:
-	// Array of Objects containing Subcurve merge arrays.
+	// aBlendedCrvs:
+	// Array of Objects containing Subcurve blend arrays.
 	// Example:
 	// Idx	aSubCrvs	aInvert					close
 	// ----------------------------------------------
@@ -502,37 +500,52 @@ function MergeSubcurves_Update( in_ctxt )
 	// 2	1			false					false
 	// ...
 
-	var aMergedCrvs = new Array();
-	var mergedCrvCnt = 0;	// number of "rows" in aMergedCrvs
+	var aBlendedCrvs = new Array();
+	var blendedCrvCnt = 0;	// number of "rows" in aBlendedCrvs
 
-	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
+
+	// Loop through all Boundaries, in pairs.
+	for(var i = 0; i < blendClsCnt; blendClsCnt += 2)
+	{
+		var bnd0 = oBlendCluster.Elements(i);
+		var subCrv0 = Math.round(bnd0 / 2);
+		var bnd1 = oBlendCluster.Elements(i + 2);
+		var subCrv1 = Math.round(bnd1 / 2);
+
+
+
+
+	}
+
+	// Loop through all input Subcurves.
+/*	for(var inCrvCnt = 0; inCrvCnt < cInCurves.Count; inCrvCnt++)
 	{
 		// If this Subcurve is used, skip it.
-		if(aSubcurveUsed[subCrv]) continue;
+		if(aSubcurveUsed[inCrvCnt]) continue;
 		
-		// Add a new "row" to aMergedCrvs.
-		aMergedCrvs[mergedCrvCnt] = new Object();
-		var oMergedCrv = aMergedCrvs[mergedCrvCnt];
-		mergedCrvCnt++;
+		// Add a new "row" to aBlendedCrvs.
+		aBlendedCrvs[blendedCrvCnt] = new Object();
+		var oBlendedCrv = aBlendedCrvs[blendedCrvCnt];
+		blendedCrvCnt++;
 		
-		// Define Properties for Object "oMergedCrv":
+		// Define Properties of Object "oBlendedCrv":
 		// Property "aSubCrvs":
-		// Array of indices which Subcurves to merge.
-		oMergedCrv.aSubCrvs = new Array();  // [subCrv];
-		var aSubCrvs = oMergedCrv.aSubCrvs;
-		aSubCrvs.push(subCrv);
+		// Array of indices which Subcurves to blend.
+		oBlendedCrv.aSubCrvs = new Array();  // [inCrvCnt];
+		var aSubCrvs = oBlendedCrv.aSubCrvs;
+		aSubCrvs.push(inCrvCnt);
 
 		// Mark this Subcurve as used
-		aSubcurveUsed[subCrv] = true;
+		aSubcurveUsed[inCrvCnt] = true;
 		
 		// Property "aInvert":
 		// Array of booleans indicating if a Subcurve must be reversed before merging.
-		oMergedCrv.aInvert = [false];
-		var aInvert = oMergedCrv.aInvert;
+		oBlendedCrv.aInvert = [false];
+		var aInvert = oBlendedCrv.aInvert;
 		
 		// Property "close":
 		// aSubCrvs will be a closed loop, because first and last Bnds merge.
-		oMergedCrv.close = false;
+		oBlendedCrv.close = false;
 
 
 		// BOUNDARY SEARCH LOOP
@@ -581,7 +594,7 @@ function MergeSubcurves_Update( in_ctxt )
 					if(foundBnd == lastBnd)
 					{
 						// Set close flag.
-						oMergedCrv.close = true;
+						oBlendedCrv.close = true;
 
 						// Deselect last Boundary.
 						oLastBnd.selected = false;
@@ -628,7 +641,7 @@ function MergeSubcurves_Update( in_ctxt )
 					if(foundBnd == firstBnd)
 					{
 						// Set close flag.
-						oMergedCrv.close = true;
+						oBlendedCrv.close = true;
 
 						// Deselect first Boundary.
 						aBnds[firstBnd].selected = false;
@@ -658,17 +671,18 @@ function MergeSubcurves_Update( in_ctxt )
 		} // end while
 
 	} 	// end for
+*/
 
 // Debug
 /*
 	LogMessage("-------------");
-	LogMessage("aMergedCrvs.length: " + aMergedCrvs.length);
-	LogMessage("mergedCrvCnt:" + mergedCrvCnt);
-	//LogMessage("aMergedCrvs:");
-	for(var i = 0; i < mergedCrvCnt; i++)
+	LogMessage("aBlendedCrvs.length: " + aBlendedCrvs.length);
+	LogMessage("blendedCrvCnt:" + blendedCrvCnt);
+	//LogMessage("aBlendedCrvs:");
+	for(var i = 0; i < blendedCrvCnt; i++)
 	{
-		LogMessage("aMergedCrvs[" + i + "].aSubCrvs: " + aMergedCrvs[i].aSubCrvs + "   close: " + aMergedCrvs[i].close);
-		LogMessage("aInvert: " + aMergedCrvs[i].aInvert);
+		LogMessage("aBlendedCrvs[" + i + "].aSubCrvs: " + aBlendedCrvs[i].aSubCrvs + "   close: " + aBlendedCrvs[i].close);
+		LogMessage("aInvert: " + aBlendedCrvs[i].aInvert);
 	}
 	LogMessage("-------------");
 
@@ -693,19 +707,20 @@ function MergeSubcurves_Update( in_ctxt )
 	var aMergedPoints = new Array();
 	var aMergedKnots = new Array();
 
-	// Loop through all "rows" in aMergedCrvs.
-	for(var allSubcurvesCnt = 0; allSubcurvesCnt < mergedCrvCnt; allSubcurvesCnt++)
+
+	// Loop through all "rows" in aBlendedCrvs.
+	for(var allSubcurvesCnt = 0; allSubcurvesCnt < blendedCrvCnt; allSubcurvesCnt++)
 	{
 		// Get Subcurve list to merge.
-		var aSubCrvs = aMergedCrvs[allSubcurvesCnt].aSubCrvs;
-		var aInvert = aMergedCrvs[allSubcurvesCnt].aInvert;
+		var aSubCrvs = aBlendedCrvs[allSubcurvesCnt].aSubCrvs;
+		var aInvert = aBlendedCrvs[allSubcurvesCnt].aInvert;
 
 		// Loop through all Subcurves.
 		for(var i = 0; i < aSubCrvs.length; i++)
 		{
 			// Get next Subcurve in array
-			var oSubCrv = cInCurves.item( aSubCrvs[i] );
-			VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
+			var subCrv = cInCurves.item( aSubCrvs[i] );
+			VBdata = new VBArray(subCrv.Get2(siSINurbs));
 			var aSubCrvData = VBdata.toArray();
 			
 			// Get Point data
@@ -720,7 +735,7 @@ function MergeSubcurves_Update( in_ctxt )
 			if(aInvert[i])
 			{
 				var ret = invertNurbsCurve(aPoints, aKnots, isClosed);
-				// Param "isClosed" doen not matter here, since closed Subcurves don't get merged anyway.
+				// Param "isClosed" is actually irrelevant here, since closed Subcurves don't get merged anyway.
 				//var aPointsInv = ret.aPointsInv;
 				//aPoints = aPointsInv;
 				//var aKnotsInv = ret.aKnotsInv;
@@ -750,11 +765,9 @@ function MergeSubcurves_Update( in_ctxt )
 				// POINTS
 				// Calc geom. average of last Point and first Point of next piece.
 				// SIVector3 ?
-				var len = aMergedPoints.length;
-				aMergedPoints[len - 4] = ( aMergedPoints[len - 4] + aPoints[0] ) / 2; // x
-				aMergedPoints[len - 3] = ( aMergedPoints[len - 3] + aPoints[1] ) / 2; // y
-				aMergedPoints[len - 2] = ( aMergedPoints[len - 2] + aPoints[2] ) / 2; // z
-				aMergedPoints[len - 1] = ( aMergedPoints[len - 1] + aPoints[3] ) / 2; // w?
+				aMergedPoints[aMergedPoints.length - 4] = ( aMergedPoints[aMergedPoints.length - 4] + aPoints[0] ) / 2;
+				aMergedPoints[aMergedPoints.length - 3] = ( aMergedPoints[aMergedPoints.length - 3] + aPoints[1] ) / 2;
+				aMergedPoints[aMergedPoints.length - 2] = ( aMergedPoints[aMergedPoints.length - 2] + aPoints[2] ) / 2;
 
 				// Discard first Point of next Curve piece.
 				aPoints = aPoints.slice(4);	// 4: x,y,z,w
@@ -763,6 +776,7 @@ function MergeSubcurves_Update( in_ctxt )
 				aMergedPoints = aMergedPoints.concat(aPoints);
 				
 				// KNOTS
+
 				// Let's simplify the NURBS math here and assume a Knot interval of 1.
 				var offset = aMergedKnots[aMergedKnots.length - 1] + 1;
 				
@@ -784,7 +798,7 @@ function MergeSubcurves_Update( in_ctxt )
 
 		} // end for i
 
-		if(aMergedCrvs[allSubcurvesCnt].close)
+		if(aBlendedCrvs[allSubcurvesCnt].close)
 		{
 		// Close the merged Subcurves.
 			var ret = closeNurbsCurve(aMergedPoints, aMergedKnots, degree);
@@ -809,7 +823,7 @@ function MergeSubcurves_Update( in_ctxt )
 
 	// Debug
 /*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
+	LogMessage("allSubcurvesCnt:      ");
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
@@ -891,7 +905,7 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 	}
 
 	// Do not check this here!! (like in InvertSubcurves)
-	// Only open Subcurves get inverted in MergeSubcurves.
+	// Only open Subcurves get inverted in BlendSubcurves.
 /*	if(isClosed) 
 	{
 		// Shift Point array right, so the former first Points is first again.
@@ -924,7 +938,7 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 
 }
 
-
+/*
 function findBoundary(x, y, z, mergeRadius, aBnds)
 {
 	var nearestBnd = -1;
@@ -959,9 +973,9 @@ function findBoundary(x, y, z, mergeRadius, aBnds)
 	// If no Boundary in radius was found, -1 is returned.
 	return nearestBnd;
 }
+*/
 
-
-function MergeSubcurves_DefineLayout( in_ctxt )
+function BlendSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
@@ -974,22 +988,22 @@ function MergeSubcurves_DefineLayout( in_ctxt )
 }
 
 
-function MergeSubcurves_OnInit( )
+function BlendSubcurves_OnInit( )
 {
-	Application.LogMessage("MergeSubcurves_OnInit called",siVerbose);
+	Application.LogMessage("BlendSubcurves_OnInit called",siVerbose);
 }
 
 
-function MergeSubcurves_OnClosed( )
+function BlendSubcurves_OnClosed( )
 {
-	Application.LogMessage("MergeSubcurves_OnClosed called",siVerbose);
+	Application.LogMessage("BlendSubcurves_OnClosed called",siVerbose);
 }
 
 
 /*
-function MergeSubcurves_cont_OnChanged( )
+function BlendSubcurves_cont_OnChanged( )
 {
-	Application.LogMessage("MergeSubcurves_cont_OnChanged called",siVerbose);
+	Application.LogMessage("BlendSubcurves_cont_OnChanged called",siVerbose);
 	var oParam;
 	oParam = PPG.cont;
 	var paramVal;
@@ -1000,9 +1014,9 @@ function MergeSubcurves_cont_OnChanged( )
 
 
 /*
-function MergeSubcurves_seam_OnChanged( )
+function BlendSubcurves_seam_OnChanged( )
 {
-	Application.LogMessage("MergeSubcurves_seam_OnChanged called",siVerbose);
+	Application.LogMessage("BlendSubcurves_seam_OnChanged called",siVerbose);
 	var oParam;
 	oParam = PPG.seam;
 	var paramVal;
@@ -1013,9 +1027,9 @@ function MergeSubcurves_seam_OnChanged( )
 
 
 /*
-function MergeSubcurves_modifytan_OnChanged( )
+function BlendSubcurves_modifytan_OnChanged( )
 {
-	Application.LogMessage("MergeSubcurves_modifytan_OnChanged called",siVerbose);
+	Application.LogMessage("BlendSubcurves_modifytan_OnChanged called",siVerbose);
 	var oParam;
 	oParam = PPG.modifytan;
 	var paramVal;
@@ -1024,23 +1038,23 @@ function MergeSubcurves_modifytan_OnChanged( )
 }
 */
 
-
-function MergeSubcurves_mergeRadius_OnChanged( )
+/*
+function BlendSubcurves_mergeRadius_OnChanged( )
 {
-	Application.LogMessage("MergeSubcurves_mergeRadius_OnChanged called",siVerbose);
+	Application.LogMessage("BlendSubcurves_mergeRadius_OnChanged called",siVerbose);
 	var oParam;
 	oParam = PPG.mergeRadius;
 	var paramVal;
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
+*/
 
-
-function ApplyMergeSubcurves_Menu_Init( in_ctxt )
+function ApplyBlendSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("Merge Subcurves","ApplyMergeSubcurves");
+	oMenu.AddCommandItem("Blend Subcurves","ApplyBlendSubcurves");
 	return true;
 }
 
