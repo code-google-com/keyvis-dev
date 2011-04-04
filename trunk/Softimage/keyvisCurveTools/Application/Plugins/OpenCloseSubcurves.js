@@ -380,7 +380,7 @@ function OpenCloseSubcurves_Update( in_ctxt )
 			} else
 			{
 			// CLOSE the Subcurve
-				var ret = closeNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], closingMode);
+				var ret = closeNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], closingMode, 10e-10);
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
 
@@ -396,13 +396,13 @@ function OpenCloseSubcurves_Update( in_ctxt )
 		// Concatenate the Points and Knots arrays to get the complete CurveList data.
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllKnots = aAllKnots.concat(aKnots);
-logControlPointsArray("aAllPoints after closing: ", aAllPoints, 100);
-logKnotsArray("aAllKnots after closing: " + aAllKnots, 100);
+//logControlPointsArray("aAllPoints after closing: ", aAllPoints, 100);
+//logKnotsArray("aAllKnots after closing: " + aAllKnots, 100);
 
 	}
 
 	// Debug
-	LogMessage("New CurveList:");
+/*	LogMessage("New CurveList:");
 	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
@@ -413,7 +413,7 @@ logKnotsArray("aAllKnots after closing: " + aAllKnots, 100);
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
 	LogMessage("aAllDegree:           " + aAllDegree);
 	LogMessage("aAllParameterization: " + aAllParameterization);
-
+*/
 
 	// overwrite this CurveList using Set
 	outCrvListGeom.Set(
@@ -510,8 +510,6 @@ function openNurbsCurve(aPoints, aKnots, degree, openingMode)
 			aKnots[aKnots.length - i] = lastKnot;
 	}
 
-//logKnotsArray("aKnots after opening: ", aKnots, 100);
-
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
@@ -520,7 +518,6 @@ function openNurbsCurve(aPoints, aKnots, degree, openingMode)
 // This functions mimics the factory CrvOpenClose Op exactly.
 function openNurbsCurveFactory(aPoints, aKnots, degree, openingMode)
 {
-//logKnotsArray("aKnots before opening: ", aKnots, 100);
 	if(!openingMode)
 	{
 		// Overlap after opening:
@@ -559,20 +556,18 @@ function openNurbsCurveFactory(aPoints, aKnots, degree, openingMode)
 			aKnots[aKnots.length - i] = lastKnot;
 	}
 
-//logKnotsArray("aKnots after opening: ", aKnots, 100);
-
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
 
 
-function closeNurbsCurve(aPoints, aKnots, degree, closingMode)
+function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 {
 	if(aPoints.length > 8)
 	{
 	// Curve has more than 2 Points, can be closed.
 	
-		var tol = 10e-10;
+		//var tol = 10e-10;
 	
 		// Check if the first and last Point coincide
 		if(	Math.abs(aPoints[0] - aPoints[aPoints.length - 4]) < tol &&
@@ -672,8 +667,7 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode)
 		}
 
 	}
-//logControlPointsArray(aPoints);
-//logKnotsArray(aKnots);
+
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
