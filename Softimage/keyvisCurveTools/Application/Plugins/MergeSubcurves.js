@@ -503,7 +503,7 @@ function MergeSubcurves_Update( in_ctxt )
 	// ...
 
 	var aMergedCrvs = new Array();
-	var mergedCrvCnt = 0;	// number of "rows" in aMergedCrvs
+	var mergedCrvsCnt = 0;	// number of "rows" in aMergedCrvs
 
 	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
@@ -511,9 +511,9 @@ function MergeSubcurves_Update( in_ctxt )
 		if(aSubcurveUsed[subCrv]) continue;
 		
 		// Add a new "row" to aMergedCrvs.
-		aMergedCrvs[mergedCrvCnt] = new Object();
-		var oMergedCrv = aMergedCrvs[mergedCrvCnt];
-		mergedCrvCnt++;
+		aMergedCrvs[mergedCrvsCnt] = new Object();
+		var oMergedCrv = aMergedCrvs[mergedCrvsCnt];
+		mergedCrvsCnt++;
 		
 		// Define Properties for Object "oMergedCrv":
 		// Property "aSubCrvs":
@@ -663,9 +663,9 @@ function MergeSubcurves_Update( in_ctxt )
 /*
 	LogMessage("-------------");
 	LogMessage("aMergedCrvs.length: " + aMergedCrvs.length);
-	LogMessage("mergedCrvCnt:" + mergedCrvCnt);
+	LogMessage("mergedCrvsCnt:" + mergedCrvsCnt);
 	//LogMessage("aMergedCrvs:");
-	for(var i = 0; i < mergedCrvCnt; i++)
+	for(var i = 0; i < mergedCrvsCnt; i++)
 	{
 		LogMessage("aMergedCrvs[" + i + "].aSubCrvs: " + aMergedCrvs[i].aSubCrvs + "   close: " + aMergedCrvs[i].close);
 		LogMessage("aInvert: " + aMergedCrvs[i].aInvert);
@@ -679,7 +679,7 @@ function MergeSubcurves_Update( in_ctxt )
 	// 3) MERGE LOOP
 
 	// Create arrays for complete CurveList data.
-	//var allSubcurvesCnt = 0;
+	//var allSubCrvsCnt = 0;
 	var aAllPoints = new Array();
 	var aAllNumPoints = new Array();
 	var aAllKnots = new Array();
@@ -694,11 +694,11 @@ function MergeSubcurves_Update( in_ctxt )
 	var aMergedKnots = new Array();
 
 	// Loop through all "rows" in aMergedCrvs.
-	for(var allSubcurvesCnt = 0; allSubcurvesCnt < mergedCrvCnt; allSubcurvesCnt++)
+	for(var allSubCrvsCnt = 0; allSubCrvsCnt < mergedCrvsCnt; allSubCrvsCnt++)
 	{
 		// Get Subcurve list to merge.
-		var aSubCrvs = aMergedCrvs[allSubcurvesCnt].aSubCrvs;
-		var aInvert = aMergedCrvs[allSubcurvesCnt].aInvert;
+		var aSubCrvs = aMergedCrvs[allSubCrvsCnt].aSubCrvs;
+		var aInvert = aMergedCrvs[allSubCrvsCnt].aInvert;
 
 		// Loop through all Subcurves.
 		for(var i = 0; i < aSubCrvs.length; i++)
@@ -784,7 +784,7 @@ function MergeSubcurves_Update( in_ctxt )
 
 		} // end for i
 
-		if(aMergedCrvs[allSubcurvesCnt].close)
+		if(aMergedCrvs[allSubCrvsCnt].close)
 		{
 		// Close the merged Subcurves.
 			var ret = closeNurbsCurve(aMergedPoints, aMergedKnots, degree);
@@ -797,19 +797,19 @@ function MergeSubcurves_Update( in_ctxt )
 
 		// Add merged Subcurve data to CurveList.
 		aAllPoints = aAllPoints.concat(aMergedPoints);
-		aAllNumPoints[allSubcurvesCnt] = aMergedPoints.length / 4;	//x,y,z,w
+		aAllNumPoints[allSubCrvsCnt] = aMergedPoints.length / 4;	//x,y,z,w
 		aAllKnots = aAllKnots.concat(aMergedKnots);
-		aAllNumKnots[allSubcurvesCnt] = aMergedKnots.length;
-		aAllIsClosed[allSubcurvesCnt] = isClosed; //aSubCrvData[2];
-		aAllDegree[allSubcurvesCnt] = degree; //aSubCrvData[3];
-		aAllParameterization[allSubcurvesCnt] = parameterization; //aSubCrvData[4];
+		aAllNumKnots[allSubCrvsCnt] = aMergedKnots.length;
+		aAllIsClosed[allSubCrvsCnt] = isClosed; //aSubCrvData[2];
+		aAllDegree[allSubCrvsCnt] = degree; //aSubCrvData[3];
+		aAllParameterization[allSubCrvsCnt] = parameterization; //aSubCrvData[4];
 
-	} // end for allSubcurvesCnt
+	} // end for allSubCrvsCnt
 
 
 	// Debug
 /*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
+	LogMessage("allSubCrvsCnt:      " + allSubCrvsCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
 	//LogMessage("aAllPoints:           " + aAllPoints);
 	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
@@ -825,7 +825,7 @@ function MergeSubcurves_Update( in_ctxt )
 
 	// Set output CurveList.
 	outCrvListGeom.Set(
-		allSubcurvesCnt,		// 0. number of Subcurves in the Curvelist
+		allSubCrvsCnt,		// 0. number of Subcurves in the Curvelist
 		aAllPoints, 			// 1. Array
 		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
 		aAllKnots,				// 3. Array

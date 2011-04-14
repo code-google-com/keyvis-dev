@@ -323,14 +323,14 @@ function SplitSubcurves_Update( in_ctxt )
 		// Get input Subcurve.
 		var oSubCrv = cInCurves.item(subCrv);
 		VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
-		var subCrvData = VBdata.toArray();
+		var aSubCrvData = VBdata.toArray();
 		
 		// Get Control Points array.
-		var VBdata0 = new VBArray(subCrvData[0]);
+		var VBdata0 = new VBArray(aSubCrvData[0]);
 		var aPoints = VBdata0.toArray();
 		
 		// Get KnotVector.
-		var VBdata1 = new VBArray(subCrvData[1]);
+		var VBdata1 = new VBArray(aSubCrvData[1]);
 		var aKnots = VBdata1.toArray();
 
 		// First Point in the KnotVector
@@ -404,22 +404,22 @@ function SplitSubcurves_Update( in_ctxt )
 		// Get input Subcurve.
 		var oSubCrv = cInCurves.item(subCrv);
 		VBdata = new VBArray(oSubCrv.Get2(siSINurbs));									
-		var subCrvData = VBdata.toArray();
+		var aSubCrvData = VBdata.toArray();
 
 		// Get Point data.
-		var vbArg0 = new VBArray(subCrvData[0]);
+		var vbArg0 = new VBArray(aSubCrvData[0]);
 		var aPoints = vbArg0.toArray();
 		var numPoints = aPoints.length/4;	// /4? x,y,z,weight
 
 		// Get Knot data.
-		var vbArg1 = new VBArray(subCrvData[1]);
+		var vbArg1 = new VBArray(aSubCrvData[1]);
 		var aKnots = vbArg1.toArray();
 		var numKnots = aKnots.length;
 
 		// Get other data.
-		var isClosed = subCrvData[2];
-		var degree = subCrvData[3];
-		var parameterization = subCrvData[4];
+		var isClosed = aSubCrvData[2];
+		var degree = aSubCrvData[3];
+		var parameterization = aSubCrvData[4];
 
 
 		// Get slice array for this Subcurve.
