@@ -133,12 +133,14 @@ function ApplyOffsetSubcurves_Execute(args)
 		{
 			cOutput.Add( cCurveLists(i) );
 		}
-*/		
+*/
+//LogMessage("ok1");
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
+//LogMessage("ok2");
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
-		
+	
 		var createdOperators = new ActiveXObject("XSI.Collection");
-		
+	
 		if(operationMode == siImmediateOperation)
 		{
 			// Loop through all selected/created Clusters and apply the Operator.
@@ -733,7 +735,6 @@ function getAnyNormal(v)
 function getMatrix4FromVector(v)
 {
 	// Create an (arbitrary) Matrix with vUp as Y.
-LogMessage("getMatrix4FromVector");
 	var v1 = getAnyNormal(v);
 	var v2 = XSIMath.CreateVector3();
 	var M = XSIMath.CreateMatrix4();
