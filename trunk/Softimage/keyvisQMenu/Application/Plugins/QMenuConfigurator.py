@@ -6,6 +6,14 @@
 
 # Code dependencies: none
 
+# Changes:
+# Added verbose error reporting when manually executing a switch item
+# Added Backface culling Switch Item to Views Menu set
+# Changed QMenu Init is evaluated after Softimage has finished starting up so that a race situation with not yet fully initialised custom QMenu preference is avoided
+# 2012: Using new check mark feature in QMenu Menu to indicate if QMenu is activated or not instead of differently named menu items
+# Docked View? check for mouse over viewManager in signature first, then get viewport (a,b,c,d?) then view type. if not vm, check signature for type (render tree, texture editor, ICE Tree?)
+# and find first open, visible type of this view and take that
+
 # = Bugs and TODOs= 
 #TODO: Try using a proper command for DisplayMenuSet and see if problem with modal PPGs persists
 #QMenu Bug: Find out why executing the QPop command to render a menu prevents modal dialogues from appearing (e.g. Info Selection, applying TopoOps in immed mode, CreateModelAndCOnvertToRef)
@@ -731,13 +739,13 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Email = "stefan@keyvis.at"
 	in_reg.URL = "http://www.keyvis.at"
 	in_reg.Major = 0
-	in_reg.Minor = 9
+	in_reg.Minor = 95
 
-	#Register the QMenu Configurator Custom Property
+	#=== Register the QMenu Configurator Custom Property ===
 	in_reg.RegisterProperty( "QMenuConfigurator" )
 	in_reg.RegisterProperty( "QMenuPreferences" )
 	
-	#Register Custom Commands
+	#=== Register Custom Commands ===
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
 	in_reg.RegisterCommand( "QMenuGetByName" , "QMenuGetByName" )
 	in_reg.RegisterCommand( "QMenuCreatePreferencesCustomProperty", "QMenuCreatePreferencesCustomProperty" )
@@ -753,22 +761,23 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterCommand( "Open QMenu Editor" , "OpenQMenuEditor" )
 	
 	
-	#Register Menus
+	#=== Register events ===
+	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
+	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
+		 																 #wrong menus are displayed based on selection that does not exist anymore in new scene)
+	#in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup ) #Not used anymore in favour of timer event below, see comment to function definition for details
+	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
+	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
+	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
+	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
+	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded) #Test event to center new objects
+	
+	#=== Register Menus ===
 	#in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
 	# siMenuMainApplicationID
 	in_reg.RegisterMenu( c.siMenuMainTopLevelID  , "QMenu" , False , True)
 	
-	#Register events
-	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
-	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
-		 																 #wrong menus are displayed based on selection that does not ecist anymore in new scene)
-	in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup )
-	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
-	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
-	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
-	#in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
-	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded)
-
+	
 	return True
 
 def XSIUnloadPlugin( in_reg ):
@@ -3926,7 +3935,8 @@ def DisplayMenuSet( MenuSetIndex ):
 	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
 	#Instead extensive scripting would be required.
 	Views = Application.Desktop.ActiveLayout.Views
-	oVM = Views.Find( "View Manager" )
+	#oVM = Views.Find( "View Manager" )
+	oVM = Views("vm")
 	"""
 	FloatingWindowUnderMouse = None
 	for View in Views:
@@ -4185,12 +4195,12 @@ def DisplayMenuSet( MenuSetIndex ):
 				
 				#Finally Render the Quad Menu using the string we just built and wait for user to pick an item
 				
-				CursorPos = win32gui.GetCursorPos()
-				WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
+				#CursorPos = win32gui.GetCursorPos()
+				#WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
 				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
 				
-				win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
+				#win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
 				#===========================================================================
 				#===========  Find the clicked menu item from the returned value ===========
 				#===========================================================================
@@ -4425,12 +4435,19 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , verbosity ):
 				Language = (oQMenu_MenuItem.Language)
 				if oQMenu_MenuItem.Switch == True:
 					try:
+						App.ExecuteScriptCode(Code, Language, "Switch_Init", [oContext] )		
+					except:
+						if verbosity == True:
+							raise
+						else:
+							Print("An Error occured executing the Switch_Init function of '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
+					try:
 						App.ExecuteScriptCode(Code, Language, "Switch_Execute", [oContext] )		
 					except:
 						if verbosity == True:
 							raise
 						else:
-							Print("An Error occured while QMenu executed the switch item '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
+							Print("An Error occured executing the Switch_Execute function of '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
 
 						
 				else:
@@ -4744,18 +4761,21 @@ def QMenuGetSelectionDetails(MaxScanDepth):
 		oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
 		
 		#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-		oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)	
+		oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)
+		#t2 = time.clock()
+		#TotalTime = t2 - t1
+		#Print("Time taken to assemble selection info: " + str(TotalTime));
+		"""
+		pass
+		"""
 
-	#t2 = time.clock()
-	#TotalTime = t2 - t1
-	#Print("Time taken to assemble selection info: " + str(TotalTime))
-#Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
 	Print ("Changed Object is: " + str(Object))
 	Print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
 	Print (Object.Type)
-	
+
+#Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
 	globalQMenuDisplayEventContainer = getGlobalObject("globalQMenu_DisplayEvents")
@@ -4764,30 +4784,22 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 
 		KeyPressed = in_ctxt.GetAttribute("KeyCode")
 		KeyMask = in_ctxt.GetAttribute("ShiftMask")
-
 		#Print ("Pressed Key is: " + str(KeyPressed))
 		#Print ("Mask Key is: " + str(KeyMask))
-		
 		Consumed = False #Event hasn't been consumed yet
 		
 		IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
 		#Print("Key Pressed: " + str(KeyPressed))
 		if KeyPressed not in IlligalKeyPressedValues:
-			
 			#CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
 			#Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
-			
 			QMenuConfigurator = App.QMenuGetConfiguratorCustomProperty()
 			#if CommandLoggingState == True: #Re-enable command logging
 				#Application.SetValue("preferences.scripting.cmdlog", True , "")
-			
-
-			#QMenuConfigurator = getQMenuConfiguratorCustomProperty()
-
 
 			if QMenuConfigurator != None:
 				if QMenuConfigurator.RecordViewSignature.Value == True:
-					ViewSignature = (getView(True))[0]
+					ViewSignature = (getView(False))[0] #getView not silent, seeing the view signatures could be useful at this point
 					QMenuConfigurator.ViewSignature.Value = ViewSignature
 					QMenuConfigurator.RecordViewSignature.Value = False
 					#Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
@@ -4838,8 +4850,14 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 			in_ctxt.SetAttribute("Consumed", Consumed)
 				#gc.collect()
 
+#Timer event that prevents a race condition between init code and custom preference that might not yet be installed when Softimage starts up.
+#The timer event code is executed once Softimage has stopped staring up (hence the custom preference is then already installed) and there is time
+#to execute the code.
+
 def QMenuExecution_OnEvent (in_ctxt):
 	Print("QMenu: QMenuExecution_OnEvent called",c.siVerbose)
+	InitQMenu()
+	"""
 	globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 	
 	if globalQMenu_LastUsedItem != None:	
@@ -4847,9 +4865,14 @@ def QMenuExecution_OnEvent (in_ctxt):
 			oItem = globalQMenu_LastUsedItem.item
 			bNonVerboseErrorReporting = False
 			QMenuExecuteMenuItem_Execute (oItem, bNonVerboseErrorReporting)
-			
+	"""
+
+#Legacy event that hosted the init code previously. We now use	the timer event above.
 def QMenuInitialize_OnEvent (in_ctxt):
 	Print ("QMenu: QMenu Startup event called",c.siVerbose)
+	
+	
+def InitQMenu():
 	initializeQMenuGlobals(True)
 	FirstStartup = False
 	#Load the QMenu Config File
@@ -4890,8 +4913,8 @@ def QMenuInitialize_OnEvent (in_ctxt):
 	
 	#App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("DoNothing = True", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
-	#App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
-	
+	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
+
 def QMenuDestroy_OnEvent (in_ctxt): 
 	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
 	if globalQMenu_ConfigStatus.Changed == True:
@@ -4918,18 +4941,36 @@ def QMenuDestroy_OnEvent (in_ctxt):
 
 def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
+	Version = Application.Version()
+	VersionList = Version.split(".")
+	VersionMain = VersionList[0]
 	
+
 	try:
 		enabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
 		oMenu.AddCallbackItem("Inspect QMenu Preferences","QMenuPreferencesMenuClicked")
 		oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
-		if enabled == False:
-			oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
+		
+		#MenuItem.Checked
+		
+		if VersionMain < 10:
+			if enabled == False:
+				oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
+			else:
+				oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
 		else:
-			oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
+			oMenuItem = oMenu.AddCallbackItem("QMenu Enabled","QMenuEnableClicked")
+			if enabled == False:
+				oMenuItem.Checked = False
+			else:
+				oMenuItem.Checked = True
+				
+			
 	except:
 		Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
 		oMenu.AddCallbackItem("QMenu Preferences not found!","QMenuPreferenceNotFoundClicked")
+	
+	
 	return True
 
 def QMenuPreferenceNotFoundClicked(in_ctxt):
@@ -4948,8 +4989,18 @@ def QMenuDisableClicked(in_ctxt):
 	Application.Preferences.SetPreferenceValue("QMenu.QMenuEnabled", False)
 	
 def QMenuEnableClicked(in_ctxt):
-	Application.SetValue("preferences.QMenu.QMenuEnabled", True, "")
-	Application.Preferences.SetPreferenceValue("QMenu.QMenuEnabled", True)
+	Version = Application.Version()
+	VersionList = Version.split(".")
+	VersionMain = VersionList[0]
+	QMenuEnabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
+	
+	Application.SetValue("preferences.QMenu.QMenuEnabled", not QMenuEnabled, "")
+	
+	if VersionMain >= 10:
+		MenuItem = in_ctxt.Source
+		MenuItem.Checked = not QMenuEnabled
+		#Application.Preferences.SetPreferenceValue("QMenu.QMenuEnabled", True)
+		
 
 #=========================================================================================================================	
 #=========================================== Helper functions ============================================================
@@ -5350,7 +5401,7 @@ def getView( Silent = False):
 	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
 	WindowSignature = getDS_ChildName(WinUnderMouse)
-	
+	#print WindowSignature
 	#WindowPlacement = win32gui.GetWindowPlacement(WinUnderMouse)
 	#Print ("WindowPlacement is " + str(WindowPlacement))
 	##WindowPos[0] = (WindowPos[0] + 4)
