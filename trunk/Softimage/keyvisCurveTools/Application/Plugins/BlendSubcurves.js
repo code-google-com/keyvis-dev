@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // BlendSubcurvesPlugin
 // 2011/03/03 by Eugen Sares
-// last updates: 2011/03/03
+// last updates: 2011/04/15
 //
 // Usage:
 // - Select at least 2 Curve Boundaries on a NurbsCurveList
@@ -71,78 +71,27 @@ function ApplyBlendSubcurves_Execute( args )
 		// Loop through all selected items.
 		for(var i = 0; i < cSel.Count; i++)
 		{
-			// Subcurves selected
-/*			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
-			{
-			}
-			
-			if( cSel(i).Type == "subcrvSubComponent" )
-			{
-				var oObject = cSel(i).SubComponent.Parent3DObject;
-				var aElements = cSel(i).SubComponent.ElementArray.toArray();
-				SetSelFilter("CurveBoundary");
-
-				var sSelection = oObject + ".crvbndry[";
-				for(var i = 0; i < aElements.length; i++)
-				{
-					sSelection += (aElements[i] * 2) + "," + (aElements[i] * 2 + 1);
-					if(i < aElements.length - 1)
-						sSelection += ","
-				}
-				sSelection += "]";
-				SelectGeometryComponents(sSelection);
-				//ToggleSelection(sSelection);
-
-				// Create array of selected Subcurve's Boundaries.
-				var aBnds = new Array();
-				for(var i = 0; i < aElements.length; i++)
-				{
-					aBnds.push(aElements[i] * 2);
-					aBnds.push(aElements[i] * 2 + 1);
-				}
-
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siBoundaryCluster, "Curve_Boundary_AUTO", [0] );
-				// WARNING : [object Error]
-				
-				//var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
-
-				var oSubComponent = cSel(i).SubComponent;
-				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
-
-				cCrvBndryClusters.Add( oCluster );
-				cCurveLists.Add( oObject );
-
-			}
-*/
 			// Curve Boundary Cluster selected.
 			if( cSel(i).Type == "crvbndry" && ClassName(cSel(i)) == "Cluster")
 			{
-				cCrvBndryClusters.Add(cSel(i));
-				cCurveLists.Add( cSel(i).Parent3DObject );
+				if(cSel(i).Elements.Count > 1)
+				{
+					cCrvBndryClusters.Add(cSel(i));
+					cCurveLists.Add( cSel(i).Parent3DObject );
+				}
 				
 			}
 
 			// Curve Boundaries selected.
 			if( cSel(i).Type == "crvbndrySubComponent" )
 			{
-				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var oSubComponent = cSel(i).SubComponent;
-				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
-
-				cCrvBndryClusters.Add( oCluster );
-				cCurveLists.Add( oObject );
-			}
-
-			// CurveLists selected.
-			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-/*				5G
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var aElements = ret.aElements;
-*/
+				if(oSubComponent.ElementArray.toArray().length > 1)
+				{
+					var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+					cCrvBndryClusters.Add( oCluster );
+					cCurveLists.Add( cSel(i).SubComponent.Parent3DObject );
+				}
 			}
 
 		}
@@ -150,18 +99,25 @@ function ApplyBlendSubcurves_Execute( args )
 		// If nothing usable was selected, start a Pick Session.
 		if(cCrvBndryClusters.Count == 0)
 		{
-			var components, button;	// useless, but needed in JScript.
-			// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
-			var rtn = PickElement( "CurveBoundary", "CurveBoundary", "CurveBoundary", components, button, 0 );
-			button = rtn.Value( "ButtonPressed" );
-			if(!button) throw "Argument must be Curve Boundaries.";
-			element = rtn.Value( "PickedElement" );
-			//var modifier = rtn.Value( "ModifierPressed" );
-			var oObject = element.SubComponent.Parent3DObject;
-			//var aElements = element.SubComponent.ElementArray.toArray();
-			SelectGeometryComponents(element);
+			DeselectAllUsingFilter("CurveBoundary");
 
-			var oSubComponent = cSel(0).SubComponent;
+			do{
+				var components, button;	// useless, but needed in JScript.
+				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(button == 0)
+					throw "Argument must be Curve Boundaries.";
+
+				var modifier = rtn.Value( "ModifierPressed" );
+				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
+
+				AddToSelection(element);
+				var cSel = Selection;
+				var oSubComponent = cSel(0).SubComponent;
+				var oObject = oSubComponent.Parent3DObject;
+				var aElements = oSubComponent.ElementArray.toArray();
+			} while (aElements.length < 2);
+
 			var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
 			// oObject.ActivePrimitive.Geometry.AddCluster(...) is not working here...
 
@@ -170,20 +126,15 @@ function ApplyBlendSubcurves_Execute( args )
 
 		}
 
-// Debug
-/*		for(var i = 0; i < cCrvBndryClusters.Count; i++)
-		{
-			LogMessage("cCrvBndryClusters(" + i + "): " + cCrvBndryClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
 
-		DeselectAllUsingFilter("CurveBoundary");
+		//DeselectAllUsingFilter("CurveBoundary");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
-		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);	
-		// If this is not working: has the pref been written? Turn on Immed once.
+		if(constructionModeAutoUpdate)
+			SetValue("context.constructionmode", siConstructionModeModeling);
+	
+		// If this is not working: has the pref been written? Turn on Immed once if not.
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
 		
@@ -258,25 +209,6 @@ function ApplyBlendSubcurves_Execute( args )
 
 //______________________________________________________________________________
 
-// Unused here.
-/*
-function pickElements(selFilter, errorMsg)
-{
-
-	var components, button;	// useless, but needed in JScript.
-	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
-	var rtn = PickElement( selFilter, selFilter, selFilter, components, button, 0 );
-	button = rtn.Value( "ButtonPressed" );
-	if(!button) throw errorMsg;
-	element = rtn.Value( "PickedElement" );
-	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	var oObject = element.SubComponent.Parent3DObject;
-	var aElements = element.SubComponent.ElementArray.toArray();
-	return {oObject: oObject, aElements: aElements};
-	
-}
-*/
 
 function prepareCurveList(oCrvList)
 {
@@ -326,14 +258,8 @@ function BlendSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 
-	//oPDef = XSIFactory.CreateParamDef("cont",siInt4,siClassifUnknown,siPersistable | siKeyable,"Continuity","",0,0,2,0,3);
-	//oCustomOperator.AddParameter(oPDef);
-	//oPDef = XSIFactory.CreateParamDef("seam",siInt4,siClassifUnknown,siPersistable | siKeyable,"Seam Mode","",0,0,3,0,3);
-	//oCustomOperator.AddParameter(oPDef);
-	//oPDef = XSIFactory.CreateParamDef("modifytan",siInt4,siClassifUnknown,siPersistable | siKeyable,"Modify Tangent","",0,0,3,0,3);
-	//oCustomOperator.AddParameter(oPDef);
-	//oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.3,0,1E+100,0,10);
-	//oCustomOperator.AddParameter(oPDef);
+	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Continuity","",0,0,2,0,3);
+	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;
@@ -364,10 +290,7 @@ function BlendSubcurves_Update( in_ctxt )
 
 	// Get Params.
 	//var input0 = in_ctxt.GetInputValue(0);
-	//var cont = in_ctxt.GetParameterValue("cont");
-	//var seam = in_ctxt.GetParameterValue("seam");
-	//var modifytan = in_ctxt.GetParameterValue("modifytan");
-	//var mergeRadius = in_ctxt.GetParameterValue("mergeRadius");
+	var blendStyle = in_ctxt.GetParameterValue("blendStyle");
 
 
 	// Get Port connections.
@@ -376,6 +299,9 @@ function BlendSubcurves_Update( in_ctxt )
 	var oBlendCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
 
 	var blendClsCnt = oBlendCluster.Elements.Count;
+	// Only consider Boundary pairs.
+	if(blendClsCnt % 2 == 1)
+		blendClsCnt -= 1;
 	if(blendClsCnt < 2)
 		return;
 
@@ -387,30 +313,31 @@ function BlendSubcurves_Update( in_ctxt )
 	//var aNewSubcurves = new Array();
 
 	var aNewSubCrvs = new Array();
-	// Array of Objects containing a) Arrays of Subcrv indices (blending sequence) and b) open/close flag.
-	// Some example:
-
-	// Idx	aSubCrvs	close?
-	// -----------------------
+	// Example:
+	// Idx	aSubCrvs	aInvert		close?
+	// -----------------------------------
 	
 	// init:
-	// 0	[0]			false
-	// 1	[1]			false
-	// 2	[2]			false
-	// 3	[3]			false
+	// 0	[0]			[f]			f
+	// 1	[1]			[f]			f
+	// 2	[2]			[f]			f
+	// 3	[3]			[f]			f
 	
 	// after sorting:
-	// 0	[]			false
-	// 1	[0,1,-2]	true
-	// 2	[]			false
-	// 3	[3]			true
+	// 0	[]			[f]			-
+	// 1	[0,1,2]		[f, f, t]	t
+	// 2	[]			[f]			-
+	// 3	[3]			[t]			f
 
 
+	// Helper arrays to indicate where a SubCrv has been sorted into aNewSubCrvs.
+	// Index
 	var aSubCrvNewIdx = new Array(cInCurves.Count);
-	var aSubCrvAtBegin = new Array(cInCurves.Count); // left: false, right: true
-	// Remember where a Subcurve is to be found in aNewSubCrvs.
+	// Side. false = left, true = right
+	var aSubCrvAtBegin = new Array(cInCurves.Count);
 
 
+	// Initialize aNewSubCrvs.
 	for(var i = 0; i < cInCurves.Count; i++)
 	{
 		// Add "row" to aNewSubCrvs.
@@ -440,7 +367,6 @@ function BlendSubcurves_Update( in_ctxt )
 	// Loop through all Boundaries.
 	for(var i = 0; i < blendClsCnt; i += 2)
 	{
-//LogMessage("i: " + i);
 		// Take a Boundary pair and sort aNewSubCrvs accordingly.
 		// Note: the elements in the Boundary Cluster are sorted as they were selected.
 
@@ -464,23 +390,18 @@ function BlendSubcurves_Update( in_ctxt )
 		if(aSubCrvData[2] == true)
 			continue;
 
-
 		var bnd0AtBegin = true;
 		if(selBnd0 % 2 == 1)
 			bnd0AtBegin = false;
 
 		var subCrv0NewIdx = aSubCrvNewIdx[subCrv0];
-
 		var bnd1AtBegin = true;
 		if(selBnd1 % 2 == 1)
 			bnd1AtBegin = false;
 
 		var subCrv1NewIdx = aSubCrvNewIdx[subCrv1];
-
-
 		var oNewSubCrv0 = aNewSubCrvs[subCrv0NewIdx];
 		var aSubCrvs0 = oNewSubCrv0.aSubCrvs;
-
 		var aInvert0 = oNewSubCrv0.aInvert;
 
 		// Both Boundaries on same new Subcurve idx? -> close Curve.
@@ -494,11 +415,10 @@ function BlendSubcurves_Update( in_ctxt )
 		// Concat Arrays.
 		var oNewSubCrv1 = aNewSubCrvs[subCrv1NewIdx];
 		var aSubCrvs1 = oNewSubCrv1.aSubCrvs;
-//LogMessage("aSubCrvs1: " + aSubCrvs1);
 		var aInvert1 = oNewSubCrv1.aInvert;
 
-		// If a new Subcurve array has only one slice yet,
-		// the selected Bnd defines the side where the array gets blended,
+		// If a new Subcurve array has only one SubCrv yet,
+		// the blend side is taken from the side of the selected Boundary,
 		// otherwise it can be taken from aSubCrvAtBegin.
 		if(aSubCrvs0.length > 1)
 			var bnd0AtBegin = aSubCrvAtBegin[subCrv0];
@@ -509,15 +429,12 @@ function BlendSubcurves_Update( in_ctxt )
 
 		if(!bnd0AtBegin && bnd1AtBegin)
 		{
-//LogMessage("opt 0");
 			// arr0 concat arr1
 			var aSubCrvs = aSubCrvs0.concat(aSubCrvs1); // note: concat creates new object!
 			aNewSubCrvs[subCrv0NewIdx].aSubCrvs = aSubCrvs;
 			var aInvert = aInvert0.concat(aInvert1);
 			aNewSubCrvs[subCrv0NewIdx].aInvert = aInvert;
-			aSubCrvs1.length = 0;
-//LogMessage("_aSubCrvs1: " + aNewSubCrvs[subCrv1NewIdx].aSubCrvs);
-//LogMessage("_aNewSubCrvs[subCrv0NewIdx].aSubCrvs: " + aNewSubCrvs[subCrv0NewIdx].aSubCrvs);		
+			aSubCrvs1.length = 0;		
 			aInvert1.length = 0;
 
 			aSubCrvNewIdx[subCrv1] = subCrv0NewIdx;
@@ -525,7 +442,6 @@ function BlendSubcurves_Update( in_ctxt )
 
 		} else if(bnd0AtBegin && !bnd1AtBegin)
 		{
-//LogMessage("opt 1");
 			// arr1 concat arr0
 			var aSubCrvs = aSubCrvs1.concat(aSubCrvs0);
 			aNewSubCrvs[subCrv1NewIdx].aSubCrvs = aSubCrvs;
@@ -539,7 +455,6 @@ function BlendSubcurves_Update( in_ctxt )
 
 		} else if(bnd0AtBegin && bnd1AtBegin)
 		{
-//LogMessage("opt 2");
 			// -arr0 concat arr1
 			aSubCrvs0.reverse();
 			aInvert0.reverse();
@@ -559,7 +474,6 @@ function BlendSubcurves_Update( in_ctxt )
 		
 		} else
 		{
-//LogMessage("opt 3");
 			// arr1 concat -arr0
 			aSubCrvs0.reverse();
 			aInvert0.reverse();
@@ -624,18 +538,10 @@ return true;
 	{
 		// Get Subcurve list to blend.
 		var aSubCrvs = aNewSubCrvs[subCrvsCnt].aSubCrvs;
-//LogMessage("allSubCrvsCnt: " + allSubCrvsCnt);
-//LogMessage("aSubCrvs.length: " + aSubCrvs.length);
 		if(aSubCrvs.length == 0)
-		{
-//LogMessage("continue");
 			continue;
-		}
-
 
 		var aInvert = aNewSubCrvs[subCrvsCnt].aInvert;
-//LogMessage("aSubCrvs: " + aSubCrvs);
-//LogMessage("aInvert: " + aInvert);
 
 		// Loop through all Subcurves.
 		for(var i = 0; i < aSubCrvs.length; i++)
@@ -677,7 +583,7 @@ return true;
 
 			} else
 			{
-				var ret = blendNurbsCurves(aBlendedPoints, aPoints, aBlendedKnots, aKnots, degree, true); // true: linear blend
+				var ret = blendNurbsCurves(aBlendedPoints, aPoints, aBlendedKnots, aKnots, degree, blendStyle); // true: linear blend
 				aBlendedPoints = ret.aPoints;
 				aBlendedKnots = ret.aKnots;
 		
@@ -685,13 +591,13 @@ return true;
 
 		} // end for i
 
+
+		// Close the merged Subcurves?
 		if(aNewSubCrvs[subCrvsCnt].close)
 		{
-		// Close the merged Subcurves.
-			var ret = closeNurbsCurve(aBlendedPoints, aBlendedKnots, degree, false, 10e-10); // closingMode: false
+			var ret = closeNurbsCurve(aBlendedPoints, aBlendedKnots, degree, blendStyle, 10e-12); // closingMode: false = 
 			aBlendedPoints = ret.aPoints;
 			aBlendedKnots = ret.aKnots;
-
 			var isClosed = true;
 
 		}
@@ -711,7 +617,7 @@ return true;
 
 
 	// Debug
-	LogMessage("");
+/*	LogMessage("");
 	LogMessage("New CurveList:");
 	LogMessage("allSubCrvsCnt:      " + allSubCrvsCnt);
 	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
@@ -725,7 +631,7 @@ return true;
 	LogMessage("aAllIsClosed:         " + aAllIsClosed);
 	LogMessage("aAllDegree:           " + aAllDegree);
 	LogMessage("aAllParameterization: " + aAllParameterization);
-
+*/
 
 	// Set output CurveList.
 	outCrvListGeom.Set(
@@ -739,33 +645,17 @@ return true;
 		aAllParameterization, 	// 7. Array
 		0) ;					// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
 
-	//output = in_ctxt.OutputTarget;
-	
-	// ToDo:
-	// Select unmerged Curve Boundaries.
-/*	if(in_ctxt.UserData == undefined)
-	{
-		var oCrvList = in_ctxt.Source.Parent3DObject;
-		ToggleSelection( oCrvList + ".subcrv[" + aNewSubcurves + "]" );
-		in_ctxt.UserData = true;
-	}
-*/
 	return true;
 }
 
 //______________________________________________________________________________
 
 
-function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
+function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendStyle)
 {
 	// This function blends only open Subcurves!
 	// Curve 1 is appended to Curve 0.
-//logControlPointsArray("aPoints0 in blend:", aPoints0, 100);
-//logKnotsArray("aKnots0 in blend:", aKnots0, 100);
-//logControlPointsArray("aPoints1 in blend:", aPoints1, 100);
-//logKnotsArray("aKnots1 in blend:", aKnots1, 100);
-
-	if(bStyle == true)
+	if(blendStyle == 0)
 	{
 		// Linear blend
 
@@ -786,19 +676,7 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 
 		switch(degree)
 		{
-			case 1:
-				break;
-
-			case 2:
-				v.Scale(0.5, v);
-				ve.Sub(ve, v);
-				aPoints0.push(ve.X);
-				aPoints0.push(ve.Y);
-				aPoints0.push(ve.Z);
-				aPoints0.push(1); // weight
-				break;
-
-			default:
+			case 3:
 				v.Scale(1/3, v);
 				// 2nd last Point
 				ve.Sub(ve, v);
@@ -812,16 +690,23 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 				aPoints0.push(vb.Y);
 				aPoints0.push(vb.Z);
 				aPoints0.push(1); // weight
+				break;
+
+			case 2:
+				v.Scale(0.5, v);
+				ve.Sub(ve, v);
+				aPoints0.push(ve.X);
+				aPoints0.push(ve.Y);
+				aPoints0.push(ve.Z);
+				aPoints0.push(1); // weight
+				break;
 
 		}
 
 		aPoints0 = aPoints0.concat(aPoints1);
 
 		// Knots
-//logKnotsArray("aKnots0: ", aKnots0, 100);
-//logKnotsArray("aKnots1: ", aKnots0, 100);
 		var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + 1;
-//LogMessage("offset: " + offset);
 		for(var i = 0; i < aKnots1.length; i++)
 			aKnots1[i] += offset;
 
@@ -832,8 +717,29 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 		// Curved blend
 		
 		// Points
-		
-		// Knots
+		aPoints0 = aPoints0.concat(aPoints1);
+
+		switch(degree)
+		{
+			case 1:
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + 1;
+				for(var i = 0; i < aKnots1.length; i++)
+				aKnots1[i] += offset;
+				break;
+
+			default:
+				aKnots0 = aKnots0.slice( 0, -(degree - 1) );
+				aKnots1 = aKnots1.slice( degree - 1 );
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + degree;
+				for(var i = 0; i < degree - 1; i++)
+					aKnots0.push( aKnots0[aKnots0.length - 1] + 1);
+
+				for(var i = 0; i < aKnots1.length; i++)
+					aKnots1[i] += offset;
+			
+		}
+
+		aKnots0 = aKnots0.concat(aKnots1);
 
 	}
 //logControlPointsArray("aPoints0 after blend:", aPoints0, 100);
@@ -875,7 +781,7 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 		{
 			// First and last Point were apart
 		
-			if(closingMode)
+			if(closingMode == 1)
 			{
 				// Standard close, Point array does not change.
 				
@@ -896,7 +802,7 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 				aKnots[aKnots.length - 1] = aKnots[aKnots.length - 2] + 1;				
 			} else
 			{
-				// Close with connecting line.
+				// Close with connecting line = linear blend.
 
 				// Begin
 				var vb = XSIMath.CreateVector3();
@@ -973,7 +879,7 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 
 	// Do not check this here!! (like in InvertSubcurves)
 	// Only open Subcurves get inverted in BlendSubcurves.
-/*	if(isClosed) 
+/*	if(isClosed)
 	{
 		// Shift Point array right, so the former first Points is first again.
 		// original:	0,1,2,3,4
@@ -1005,52 +911,19 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 
 }
 
-/*
-function findBoundary(x, y, z, mergeRadius, aBnds)
-{
-	var nearestBnd = -1;
-	var nearestDist = -1;
-	
-	// Loop through all Boundaries
-	for(var i = 0; i < aBnds.length; i++)
-	{
-		// Deselected Bnds are ignored.
-		var bnd = aBnds[i]; // object
-		if(!bnd.selected) continue;
-
-		// Calculate distance/diagonal.
-		var dx = x - bnd.x;
-		var dy = y - bnd.y;
-		var dz = z - bnd.z;
-		var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);	// Math.pow(xxx, 2);
-
-		if(dist < mergeRadius)
-		{
-			if(dist < nearestDist || nearestDist == -1)
-			{
-				nearestDist = dist;
-				nearestBnd = i;
-
-			}
-
-		}
-		
-	}
-
-	// If no Boundary in radius was found, -1 is returned.
-	return nearestBnd;
-}
-*/
 
 function BlendSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddItem("cont");
-	//oLayout.AddItem("seam");
-	//oLayout.AddItem("modifytan");
-	oLayout.AddItem("mergeRadius");
+
+	//oLayout.AddItem("blendStyle");
+	oLayout.AddGroup("Degree 2 and 3");
+	var aRadioItems = ["linear", 0, "curved", 1];
+	oLayout.AddEnumControl("blendStyle", aRadioItems, "Blending style", siControlRadio);
+	oLayout.EndGroup();
+
 	return true;
 }
 
@@ -1068,54 +941,17 @@ function BlendSubcurves_OnClosed( )
 
 
 /*
-function BlendSubcurves_cont_OnChanged( )
+function BlendSubcurves_blendStyle_OnChanged( )
 {
-	Application.LogMessage("BlendSubcurves_cont_OnChanged called",siVerbose);
+	Application.LogMessage("BlendSubcurves_blendStyle_OnChanged called",siVerbose);
 	var oParam;
-	oParam = PPG.cont;
+	oParam = PPG.blendStyle;
 	var paramVal;
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
 */
 
-
-/*
-function BlendSubcurves_seam_OnChanged( )
-{
-	Application.LogMessage("BlendSubcurves_seam_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.seam;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
-
-
-/*
-function BlendSubcurves_modifytan_OnChanged( )
-{
-	Application.LogMessage("BlendSubcurves_modifytan_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.modifytan;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
-
-/*
-function BlendSubcurves_mergeRadius_OnChanged( )
-{
-	Application.LogMessage("BlendSubcurves_mergeRadius_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.mergeRadius;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
 
 function ApplyBlendSubcurves_Menu_Init( in_ctxt )
 {
