@@ -678,15 +678,15 @@ function OpenCloseSubcurves_DefineLayout( in_ctxt )
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddGroup("Open");
+	oLayout.AddGroup("Opening Method");
 	//oLayout.AddItem("openingMode", "Open with gap");
-	var aRadioItems = ["Standard (gap)", true, "Overlap", false];
-	oLayout.AddEnumControl("openingMode", aRadioItems, "Open", siControlRadio);
-	//oLayout.EndGroup();
-	//oLayout.AddGroup("Close");
-	var aRadioItems = ["Standard", true, "Straight segment", false];
-	oLayout.AddEnumControl("closingMode", aRadioItems, "Close", siControlRadio);
-	//oLayout.EndGroup();
+	var aRadioItems = ["With gap (standard)", true, "Coincide first and last Point", false];
+	oLayout.AddEnumControl("openingMode", aRadioItems, " ", siControlRadio);
+	oLayout.EndGroup();
+	oLayout.AddGroup("Closing Method");
+	var aRadioItems = ["Curved (standard)", true, "Linear", false];
+	oLayout.AddEnumControl("closingMode", aRadioItems, " ", siControlRadio);
+	oLayout.EndGroup();
 	return true;
 }
 
