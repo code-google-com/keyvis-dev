@@ -114,26 +114,13 @@ function ApplySplitSubcurves_Execute( args )
 
 		}
 
-/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
 		DeselectAllUsingFilter("Knot");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
 		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
 
-
-		// Create Output Objects string
-/*		var cOutput = new ActiveXObject("XSI.Collection");
-		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			cOutput.Add( cCurveLists(i) );
-		}
-*/		
+	
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
 		
@@ -194,10 +181,6 @@ function ApplySplitSubcurves_Execute( args )
 				
 			}
 
-			/*
-			if(createdOperators.Count != 0 && bAutoinspect && Application.Interactive)
-				AutoInspect(createdOperators); // Multi-PPG
-			*/
 		}
 
 		return true;
@@ -215,16 +198,12 @@ function ApplySplitSubcurves_Execute( args )
 function pickElements(selFilter, errorMsg)
 {
 
-	var subcurves, button;	// useless, but needed in JScript.
-	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
+	var subcurves, button;
 	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
 	button = rtn.Value( "ButtonPressed" );
 	if(!button) throw errorMsg;
 	element = rtn.Value( "PickedElement" );
 	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	// element.Type: subcrvSubComponent
-	// ClassName(element): CollectionItem
 
 	var oObject = element.SubComponent.Parent3DObject;
 	var elementIndices = element.SubComponent.ElementArray.toArray();
@@ -273,7 +252,7 @@ function SplitSubcurves_Update( in_ctxt )
 	var cInCurves = inCrvListGeom.Curves;
 
 
-	// 1) Create Arrays.
+	// 1) PREPARE ARRAYS.
 
 	// for CurveList data
 	var allSubcurvesCnt = 0;
@@ -353,9 +332,6 @@ function SplitSubcurves_Update( in_ctxt )
 	}
 
 
-	// 2) Prepare aAllSubCrvSlices: copy Knots in Cluster to aAllSubCrvSlices.
-	// Note: oKnotCluster is NOT sorted by index!
-
 	// Initialize.
 	for(var i = 0; i < cInCurves.Count; i++)
 		aAllSubCrvSlices[i] = new Array();
@@ -392,7 +368,7 @@ function SplitSubcurves_Update( in_ctxt )
 	}
 
 
-	// 3) Create Subcurves according to aAllSubCrvSlices.
+	// 2) CREATE SLICES.
 	
 	// Loop through all Subcurves.
 	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
@@ -678,16 +654,16 @@ function getKnotMult(aKnots, knotIdx)
 			startIdx:startIdx};
 }
 
-
+/*
 function SplitSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddItem("xxx"); 
+	//oLayout.AddItem("xxx");
 	return true;
 }
-
+*/
 
 function ApplySplitSubcurves_Menu_Init( in_ctxt )
 {

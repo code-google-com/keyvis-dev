@@ -174,7 +174,7 @@ function AttachCurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 1;
+	oCustomOperator.Debug = 0;
 	return true;
 }
 
@@ -366,9 +366,8 @@ function AttachCurves_DefineLayout( in_ctxt )
 	oLayout.AddItem("updateWithInputTransforms", "Update with input transforms");
 	oLayout.AddItem("updateWithObjectTransform", "Update with object transform");
 	oLayout.EndGroup();
-	var text = "\nNote: Clusters/Cluster Properties are ignored\ndue to SDK limitations.";
-	oLayout.AddStaticText( text );
-
+	//var text = "\nNote: Clusters/Cluster Properties are ignored\ndue to SDK limitations.";
+	//oLayout.AddStaticText( text );
 	//oLayout.EndRow();
 	return true;
 }

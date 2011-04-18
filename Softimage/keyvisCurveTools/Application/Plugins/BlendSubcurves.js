@@ -899,9 +899,9 @@ function BlendSubcurves_DefineLayout( in_ctxt )
 	oLayout.Clear();
 
 	//oLayout.AddItem("blendStyle");
-	oLayout.AddGroup("Degree 2 and 3");
-	var aRadioItems = ["linear", 0, "curved", 1];
-	oLayout.AddEnumControl("blendStyle", aRadioItems, "Blending style", siControlRadio);
+	oLayout.AddGroup("Blend Style (Degree 2 and 3)");
+	var aRadioItems = ["Linear", 0, "Curved", 1];
+	oLayout.AddEnumControl("blendStyle", aRadioItems, " ", siControlRadio);
 	oLayout.EndGroup();
 
 	return true;

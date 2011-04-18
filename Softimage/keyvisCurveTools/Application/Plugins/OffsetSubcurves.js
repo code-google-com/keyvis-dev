@@ -58,8 +58,6 @@ function ApplyOffsetSubcurves_Execute(args)
 
 	try
 	{
-		//var app = Application;
-
 		var cSel = Selection;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
@@ -69,6 +67,24 @@ function ApplyOffsetSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
+			if( cSel(i).Type == "crvlist")
+			{
+LogMessage("crvlist");
+				//SetSelFilter("SubCurve");
+				//SelectAllUsingFilter("SubCurve");
+				var oObject = cSel(i);
+LogMessage("ok");
+				//var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
+				//var elementIndices = cSel(i).SubComponent.ComponentCollection;
+				var oReturn = oObject.ActivePrimitive.Geometry.CreateSubComponent( siSubCurveCluster, [0]);
+LogMessage("ok");
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+LogMessage("ok");
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+
+			}
+
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
@@ -85,18 +101,6 @@ function ApplyOffsetSubcurves_Execute(args)
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 			}
-			
-/*			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("SubCurve");
-				
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
-*/
 			
 		}
 

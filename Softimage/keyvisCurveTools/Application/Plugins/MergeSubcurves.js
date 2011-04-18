@@ -293,7 +293,7 @@ function MergeSubcurves_Update( in_ctxt )
 	var oMergeCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
 
 
-	// 1) PREPARE ARRAYS AND OBJECTS
+	// 1) PREPARE ARRAYS AND OBJECTS.
 
 	// Array to store the indices of the merged Curve Boundaries, for later selection.
 	var aNewSubcurves = new Array();
@@ -407,7 +407,7 @@ function MergeSubcurves_Update( in_ctxt )
 */
 
 
-	// 2) MAIN LOOP
+	// 2) SEARCH LOOP
 	
 	// aMergedCrvs:
 	// Array of Objects containing Subcurve merge arrays.
