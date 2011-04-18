@@ -645,9 +645,9 @@ class QMenuCommandPlaceholder:
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QMenuContext:
  # Declare list of exported functions:
-	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts'] #'getSelectionClassNames'
+	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts' ]
+	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['Type']
 	
@@ -668,6 +668,7 @@ class QMenuContext:
 		self.MenuContexts = None
 		self.Menus = None
 		self.DispalyContexts = None
+		self.CurrentView = None
 
 
 	def storeQMenuObject ( self, oObj ):
@@ -727,6 +728,9 @@ class QMenuContext:
 
 	def storeDisplayContexts (self, oDispalyContexts):
 		self.DispalyContexts = oDispalyContexts
+		
+	def storeCurrentXSIView (self, oXSIView):
+		self.CurrentXSIView = oXSIView
 		
 		
 #=========================================================================================================================				
@@ -1103,8 +1107,8 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oCodeEditor.SetAttribute(c.siUIHeight, Height)
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
-	oCodeEditor.SetAttribute(c.siUIFolding, True ) #Code folding Broken since XSI7.0
-	oCodeEditor.SetAttribute(c.siUIKeywordFile, getDefaultConfigFilePath ("Python.keywords")) #Code color coding broken since XSI7.0
+	oCodeEditor.SetAttribute("Folding", True ) #Code folding Broken since XSI7.0
+	oCodeEditor.SetAttribute("KeywordFile", getDefaultConfigFilePath ("Python.keywords")) #Code color coding broken since XSI7.0
 	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF) #Comment coloring broken since XSI7.0
 	oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad ) #File Loading menu item broken since XSI7.0
 	oLayout.EndGroup()
@@ -3921,37 +3925,46 @@ def RefreshDisplayEvents():
 #This is the main function that creates the string describing the Menu to render
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQMenu_MenuSet_Execute called", c.siVerbose)
-	ViewSignature = (getView(True))[0] #get the short/nice view signature
-	#WindowPos = ViewSignature[2]
-	
-	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
-	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
-	#In which case the wrong view would be affected.
-	
+	ViewSignature = (getView(True))[0] #Get the short/nice view signature silently (without printing it)
+
+	Print (ViewSignature)
 	#Test code to find floating window the user is currently working in.
 	#This would be useful to e.g. get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
 	#However, defining popup menus for Rendertree is a bit futile because it's native menues are pretty complete already,
 	#and for Tex Editor there would first need to be proper commands for all the UV operations available(atm most of the logic seems 
 	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
 	#Instead extensive scripting would be required.
+	
 	Views = Application.Desktop.ActiveLayout.Views
 	#oVM = Views.Find( "View Manager" )
 	oVM = Views("vm")
+	oXSIView = None
 	"""
 	FloatingWindowUnderMouse = None
 	for View in Views:
-		if View.Visible == True:
-			if View.Rectangle == WindowPos:
-				FloatingWindowUnderMouse = View
-				Print ("Window under mouse is: " + str(FloatingWindowUnderMouse))
-				
+	if View.Visible == True:
+		if View.Rectangle == WindowPos:
+			FloatingWindowUnderMouse = View
+			Print ("Window under mouse is: " + str(FloatingWindowUnderMouse))
+			
 	#oView = oVM.Views( Application.GetViewportUnderMouse() );
 	#oView = oVM.GetAttributeValue("focusedviewport")
 	"""
 	
-	#Activate the 3D view currently under the mouse so viewport operations triggered affect that view and not the one that was active before the menu was opened from 
-	oView = oVM.GetAttributeValue("viewportundermouse")
-	oVM.SetAttributeValue("focusedviewport",oView)
+	#======= Handle cases in which the mouse cursor is over the view manager (any of the four main 3D view areas) =======
+	
+	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
+	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
+	#In which case the wrong view would be affected.
+	if ViewSignature.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
+		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
+		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
+		print ViewportUnderMouse
+		#Activate the 3D view currently under the mouse so viewport operations triggered affect that view and not the one that was active before the menu was opened from 
+		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
+		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
+		#print ("View under mouse is: ")
+		#print oXSIView
 
 	t0 = time.clock() #Record time before we start getting the first 4 menus
 
@@ -3962,9 +3975,9 @@ def DisplayMenuSet( MenuSetIndex ):
 		oCurrentView = None
 		for oView in globalQMenu_ViewSignatures.Items:
 			#if oView.Signature == ViewSignature:
-			if oView.Signature.find(ViewSignature) > -1:
+			if ViewSignature.find(oView.Signature) > -1:
 				oCurrentView = oView
-				break  #Lets take the first matching view signature we found (there should not be duplicates anyway)
+				break  #Lets take the first matching view signature we find (there should not be duplicates anyway)
 		
 		oMenuSet = None
 		if oCurrentView != None:
@@ -3976,7 +3989,8 @@ def DisplayMenuSet( MenuSetIndex ):
 		if oMenuSet != None:
 
 			oContext = PrepareContextObject(None) #Lets fill our generic context object with all the data we have at hand for this session.
-				#so that only the little remaining data needs to be filled in on every menu or menu item object we iterate over.
+				#so that only little remaining required data needs to be filled in on every menu or menu item object we iterate over -> faster.
+			oContext.storeCurrentXSIView (oXSIView)
 			
 			oAMenu = None; #AMenuItemList = list()
 			oBMenu = None; #BMenuItemList = list()
@@ -4799,7 +4813,7 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 
 			if QMenuConfigurator != None:
 				if QMenuConfigurator.RecordViewSignature.Value == True:
-					ViewSignature = (getView(False))[0] #getView not silent, seeing the view signatures could be useful at this point
+					ViewSignature = (getView(False))[0] #Get the nice version of the View's signature non-silently, seeing the view signatures could be useful when recording it
 					QMenuConfigurator.ViewSignature.Value = ViewSignature
 					QMenuConfigurator.RecordViewSignature.Value = False
 					#Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
