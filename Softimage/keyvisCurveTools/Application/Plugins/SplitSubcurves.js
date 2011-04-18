@@ -41,10 +41,6 @@ function ApplySplitSubcurves_Init( in_ctxt )
 	oCmd = in_ctxt.Source;
 	oCmd.Description = "Create an instance of SplitSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
-
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful.
 	
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
@@ -301,7 +297,7 @@ function SplitSubcurves_Update( in_ctxt )
 	var aLastKnots = new Array();
 	var aKnotsOnSubCrv = new Array();
 
-	// Explanation
+	// Explanation 
 	// Example CurveList, one open and one closed Subcurve
 	// Knots 3 and 12 were selected (one on each Subcurve):
 

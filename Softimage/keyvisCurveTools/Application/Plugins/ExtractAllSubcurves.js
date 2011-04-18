@@ -7,7 +7,7 @@
 
 function XSILoadPlugin( in_reg )
 {
-	in_reg.Author = "Eugen";
+	in_reg.Author = "Eugen Sares";
 	in_reg.Name = "ExtractAllSubcurvesPlugin";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;

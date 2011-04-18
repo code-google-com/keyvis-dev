@@ -235,12 +235,8 @@ function DeleteSubcurves_Define( in_ctxt )
 	var oCustomOperator;
 	//var oPDef;
 	oCustomOperator = in_ctxt.Source;
-/*
-	oPDef = XSIFactory.CreateParamDef2("DeleteTheseSubcurves",siString,"",null,null);
-	oCustomOperator.AddParameter(oPDef);
-*/
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 1;
+	oCustomOperator.Debug = 0;
 	return true;
 }
 

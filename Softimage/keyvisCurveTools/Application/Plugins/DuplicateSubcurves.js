@@ -268,10 +268,6 @@ function DuplicateSubcurves_Define( in_ctxt )
 	var oCustomOperator;
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
-/*
-	oPDef = XSIFactory.CreateParamDef2("DeleteTheseSubcurves",siString,"",null,null);
-	oCustomOperator.AddParameter(oPDef);
-*/
 	oPDef = XSIFactory.CreateParamDef("offsetX",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset X","",0,null,null,-100,100);
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("offsetY",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Y","",0,null,null,-100,100);
@@ -282,12 +278,9 @@ function DuplicateSubcurves_Define( in_ctxt )
 	//oCustomOperator.AddParameter(oPDef);
 	//oPDef = XSIFactory.CreateParamDef("distribution",siInt4,siClassifUnknown,siPersistable | siKeyable,"Incremental/Total","",1,null,null,0,10);
 	//oCustomOperator.AddParameter(oPDef);
-	
-// ToDo: "updateSelectionOnEval" instead of OperatorContext.UserData
-// to store if new Subcurves were selected once
 
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
+	oCustomOperator.Debug = 0;
 
 	return true;
 }

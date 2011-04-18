@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // OffsetSubcurvesPlugin
 // 2009/11 by Eugen Sares
-// last update: 2011/02/18
+// last update: 2011/04/18
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -252,11 +252,11 @@ function OffsetSubcurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("closeEnd",siBool,siClassifUnknown,siPersistable | siKeyable,"Close end","",true,null,null,null,null);
 	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("curvePlane",siUByte,siClassifUnknown,siPersistable | siKeyable,"Curve Plane","",0,null,null,null,null);
-	oCustomOperator.AddParameter(oPDef);
+	//oPDef = XSIFactory.CreateParamDef("curvePlane",siUByte,siClassifUnknown,siPersistable | siKeyable,"Curve Plane","",0,null,null,null,null);
+	//oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
+	oCustomOperator.Debug = 0;
 
 	return true;
 }
@@ -293,7 +293,7 @@ function OffsetSubcurves_Update( in_ctxt )
 	var center = in_ctxt.GetParameterValue("center");
 	var closeStart = in_ctxt.GetParameterValue("closeStart");
 	var closeEnd = in_ctxt.GetParameterValue("closeEnd");
-	var curvePlane = in_ctxt.GetParameterValue("curvePlane");
+	//var curvePlane = in_ctxt.GetParameterValue("curvePlane");
 	
 	var tol = 10E-10; // as Param?
 
@@ -361,77 +361,61 @@ function OffsetSubcurves_Update( in_ctxt )
 		var vPrevPPn = XSIMath.CreateVector3();
 		var vLast = XSIMath.CreateVector3();
 		var vUp = XSIMath.CreateVector3();
-		var vUp1 = XSIMath.CreateVector3();
-		var vUp2 = XSIMath.CreateVector3();
 		
-		switch(curvePlane)
+		// Find next non-0 vector.
+		//var found = false;
+		var len = aPoints.length;
+		for(var i = 4; i < len; i += 4)
 		{
-		case 1: // XY
-			vUp.Set(0,0,1);
-			break;
-		case 2: // YZ
-			vUp.Set(1,0,0);
-			break;
-		case 3: // XZ
-			vUp.Set(0,1,0);
-			break;
-		default:
-			// Find next non-0 vector.
-			//var found = false;
-			var len = aPoints.length;
-			for(var i = 4; i < len; i += 4)
+			vP.Set( aPoints[i], aPoints[i + 1], aPoints[i + 2] );
+			vPrevPP.Set( aPoints[i - 4], aPoints[i - 3], aPoints[i - 2] );
+			vPrevPP.Sub(vP, vPrevPP);
+			if(vPrevPP.X != 0 || vPrevPP.Y != 0 || vPrevPP.Z != 0)
 			{
-				vP.Set( aPoints[i], aPoints[i + 1], aPoints[i + 2] );
-				vPrevPP.Set( aPoints[i - 4], aPoints[i - 3], aPoints[i - 2] );
-				vPrevPP.Sub(vP, vPrevPP);
-				if(vPrevPP.X != 0 || vPrevPP.Y != 0 || vPrevPP.Z != 0)
-				{
-					//found = true;
-					break;
-				}
-
+				//found = true;
+				break;
 			}
 
-			if(i == len)
+		}
+
+		if(i == len)
+		{
+			// No non-zero vector Point->Point found, assume y as up.
+			vUp.Set(0,1,0);
+
+		} else
+		{
+			// Non-zero vector found.
+			if(len == 8)
 			{
-				// No non-zero vector Point->Point found, assume y as up.
-				vUp.Set(0,1,0);
+				vUp = getAnyNormal(vPrevPP);
 
 			} else
 			{
-				// Non-zero vector found.
-				if(len == 8)
-				{
-					vUp = getAnyNormal(vPrevPP);
+				// Find next non-0 vector.
+				vLast.Copy(vPrevPP);
 
-				} else
+				for(; i < len - 4; i += 4)
 				{
-					// Find next non-0 vector.
-					vLast.Copy(vPrevPP);
-
-					for(; i < len - 4; i += 4)
-					{
-						vP.Set( aPoints[i], aPoints[i + 1], aPoints[i + 2] );
-						vNextPP.Set( aPoints[i + 4], aPoints[i + 5], aPoints[i + 6] );
-						vNextPP.Sub(vP, vNextPP);
-						vUp.Cross(vLast, vNextPP);
-						vUp.Normalize(vUp);
-						if(vUp.X != 0 || vUp.Y != 0 || vUp.Z != 0)
-							break;
-						
-					}
+					vP.Set( aPoints[i], aPoints[i + 1], aPoints[i + 2] );
+					vNextPP.Set( aPoints[i + 4], aPoints[i + 5], aPoints[i + 6] );
+					vNextPP.Sub(vP, vNextPP);
+					vUp.Cross(vLast, vNextPP);
+					vUp.Normalize(vUp);
+					if(vUp.X != 0 || vUp.Y != 0 || vUp.Z != 0)
+						break;
 				
-					if(i == len)
-					{
-						// No other non-0 vector found.
-						vLast.Normalize(vLast);
-						//vUp.Set(vLast.Z, vLast.X, vLast.Y);
-					}
-
 				}
-			
-			}
+				
+				if(i == len)
+				{
+					// No other non-0 vector found.
+					vLast.Normalize(vLast);
+					//vUp.Set(vLast.Z, vLast.X, vLast.Y);
+				}
 
+			}
+			
 		}
 
 		var MUp = getMatrix4FromVector(vUp);
@@ -461,7 +445,6 @@ function OffsetSubcurves_Update( in_ctxt )
 			{
 				var vP = XSIMath.CreateVector3();
 				vP.Set( aPoints[i], aPoints[i + 1], aPoints[i + 2] );
-				vP = pointToPlane(vP, MUp);
 				aVP.push(vP);
 
 			}
@@ -540,7 +523,8 @@ function OffsetSubcurves_Update( in_ctxt )
 			}
 
 			
-			// MAIN LOOP: offset all Points.
+	// MAIN LOOP: offset all Points.
+
 			for(var i = 0; i < len; i++)
 			{
 				vP.Copy(aVP[i]);
@@ -604,7 +588,7 @@ function OffsetSubcurves_Update( in_ctxt )
 			}
 
 
-			// Connect starts and ends.
+	// Connect starts and ends.
 			if(!isClosed)
 			{
 				if(closeStart && !closeEnd)
@@ -717,6 +701,7 @@ function OffsetSubcurves_Update( in_ctxt )
 
 function getAnyNormal(v)
 {
+//logVector3("getAnyNormal: ", v, 100);
 	var vN = XSIMath.CreateVector3();
 
 	if(v.X == 0 && v.Y == 1 && v.Z == 0)
@@ -753,36 +738,10 @@ function getMatrix4FromVector(v)
 }
 
 
-function pointToPlane(v, M)
-{
-	// Project Point on Curve Plane.
-/*	if(vUp.X)
-		v.X = 0;
-	else if(vUp.Y)
-		v.Y = 0;
-	else
-		v.Z = 0;
-*/
-	var MInv = XSIMath.CreateMatrix4();
-	MInv.Invert(M);
-	v.MulByMatrix4(v, MInv);
-	v.Y = 0; // project Point to XZ
-	v.MulByMatrix4(v, M);
-
-	return v;
-
-}
-
-
 function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 {
 	// This function blends only open Subcurves!
 	// Curve 1 is appended to Curve 0.
-//logControlPointsArray("aPoints0 in blend:", aPoints0, 100);
-//logKnotsArray("aKnots0 in blend:", aKnots0, 100);
-//logControlPointsArray("aPoints1 in blend:", aPoints1, 100);
-//logKnotsArray("aKnots1 in blend:", aKnots1, 100);
-
 	if(bStyle == true)
 	{
 		// Linear blend
@@ -836,10 +795,7 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 		aPoints0 = aPoints0.concat(aPoints1);
 
 		// Knots
-//logKnotsArray("aKnots0: ", aKnots0, 100);
-//logKnotsArray("aKnots1: ", aKnots0, 100);
 		var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + 1;
-//LogMessage("offset: " + offset);
 		for(var i = 0; i < aKnots1.length; i++)
 			aKnots1[i] += offset;
 
@@ -850,13 +806,32 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, bStyle)
 		// Curved blend
 		
 		// Points
-		
+		aPoints0 = aPoints0.concat(aPoints1);
+
 		// Knots
+		switch(degree)
+		{
+			case 1:
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + 1;
+				for(var i = 0; i < aKnots1.length; i++)
+				aKnots1[i] += offset;
+				break;
+
+			default:
+				aKnots0 = aKnots0.slice( 0, -(degree - 1) );
+				aKnots1 = aKnots1.slice( degree - 1 );
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + degree;
+				for(var i = 0; i < degree - 1; i++)
+					aKnots0.push( aKnots0[aKnots0.length - 1] + 1);
+
+				for(var i = 0; i < aKnots1.length; i++)
+					aKnots1[i] += offset;
+			
+		}
+
+		aKnots0 = aKnots0.concat(aKnots1);
 
 	}
-//logControlPointsArray("aPoints0 after blend:", aPoints0, 100);
-//logKnotsArray("aKnots0 after blend:", aKnots0, 100);
-		
 
 	return {aPoints:aPoints0,
 			aKnots:aKnots0};
@@ -969,8 +944,7 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode)
 		}
 
 	}
-//logControlPointsArray(aPoints);
-//logKnotsArray(aKnots);
+
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
@@ -1022,40 +996,20 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 }
 
 
-// Function to remove empty items from a JScript Array
-// e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays
-/*function removeUndefinedElementsFromArray(dirtyArr)
-{
-	var arr = new Array();
-	for(var i = 0; i < dirtyArr.length; i++)
-	{
-		if(dirtyArr[i] != undefined) arr.push( dirtyArr[i] );
-	}
-	return arr;
-}
-*/
-
 function OffsetSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddRow();
-	//oLayout.AddItem("duplicates", "Duplicates");
-// ToDo: Radio Button for param "distribution"
-	//oLayout.AddGroup("Translation", true);
 	oLayout.AddItem("offset", "Offset");
 	oLayout.AddItem("center", "Center");
-	
 	oLayout.AddGroup("On open Curves", true);
 	oLayout.AddItem("closeStart", "Connect at start");
 	oLayout.AddItem("closeEnd", "Connect at end");
 	oLayout.EndGroup();
-	
-	var aRadioItems = ["Automatic", 0, "XY", 1, "XZ", 2, "YZ", 3];
-	oLayout.AddEnumControl("curvePlane", aRadioItems, "Curve Plane", siControlRadio);
-	//oLayout.EndGroup();
-	//oLayout.EndRow();
+	//var aRadioItems = ["Automatic", 0, "XY", 1, "XZ", 2, "YZ", 3];
+	//oLayout.AddEnumControl("curvePlane", aRadioItems, "Curve Plane", siControlRadio);
+
 	return true;
 }
 

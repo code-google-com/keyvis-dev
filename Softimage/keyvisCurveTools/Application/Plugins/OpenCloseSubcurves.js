@@ -257,7 +257,7 @@ function OpenCloseSubcurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 1;
+	oCustomOperator.Debug = 0;
 	return true;
 }
 
