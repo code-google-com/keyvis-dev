@@ -99,8 +99,29 @@ function ApplyBlendSubcurves_Execute( args )
 		// If nothing usable was selected, start a Pick Session.
 		if(cCrvBndryClusters.Count == 0)
 		{
+<<<<<<< .mine
+			do{
+				var components, button;	// useless, but needed in JScript.
+				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(button == 0)
+					throw "Argument must be Curve Boundaries.";
+=======
 			DeselectAllUsingFilter("CurveBoundary");
+>>>>>>> .r142
 
+<<<<<<< .mine
+				var modifier = rtn.Value( "ModifierPressed" );
+				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
+
+				AddToSelection(element);
+				var cSel = Selection;
+				var oSubComponent = cSel(0).SubComponent;
+				var oObject = oSubComponent.Parent3DObject;
+				var aElements = oSubComponent.ElementArray.toArray();
+			} while (aElements.length < 2);
+
+=======
 			do{
 				var components, button;	// useless, but needed in JScript.
 				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
@@ -118,6 +139,7 @@ function ApplyBlendSubcurves_Execute( args )
 				var aElements = oSubComponent.ElementArray.toArray();
 			} while (aElements.length < 2);
 
+>>>>>>> .r142
 			var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
 			// oObject.ActivePrimitive.Geometry.AddCluster(...) is not working here...
 
@@ -126,8 +148,15 @@ function ApplyBlendSubcurves_Execute( args )
 
 		}
 
-
+<<<<<<< .mine
 		//DeselectAllUsingFilter("CurveBoundary");
+=======
+>>>>>>> .r142
+
+<<<<<<< .mine
+=======
+		//DeselectAllUsingFilter("CurveBoundary");
+>>>>>>> .r142
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
@@ -258,8 +287,13 @@ function BlendSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 
+<<<<<<< .mine
+	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Continuity","",1,0,2,0,3);
+	oCustomOperator.AddParameter(oPDef);
+=======
 	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Continuity","",0,0,2,0,3);
 	oCustomOperator.AddParameter(oPDef);
+>>>>>>> .r142
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;
@@ -330,11 +364,19 @@ function BlendSubcurves_Update( in_ctxt )
 	// 3	[3]			[t]			f
 
 
+<<<<<<< .mine
+	// Helper arrays to indicate where a SubCrv has been sorted into aNewSubCrvs.
+	// Index
+	var aSubCrvHasIdx = new Array(cInCurves.Count);
+	// Side. false = left, true = right
+	var aSubCrvAtBegin = new Array(cInCurves.Count);
+=======
 	// Helper arrays to indicate where a SubCrv has been sorted into aNewSubCrvs.
 	// Index
 	var aSubCrvNewIdx = new Array(cInCurves.Count);
 	// Side. false = left, true = right
 	var aSubCrvAtBegin = new Array(cInCurves.Count);
+>>>>>>> .r142
 
 
 	// Initialize aNewSubCrvs.
@@ -356,7 +398,7 @@ function BlendSubcurves_Update( in_ctxt )
 		aInvert.push(false);
 
 		// For quickly finding SubCrvs in aNewSubCrvs.
-		aSubCrvNewIdx[i] = i; // new SubCrv index, "row"
+		aSubCrvHasIdx[i] = i; // new SubCrv index, "row"
 		aSubCrvAtBegin[i] = true; // begin or end
 		
 	}
@@ -373,7 +415,7 @@ function BlendSubcurves_Update( in_ctxt )
 		var selBnd0 = oBlendCluster.Elements(i);
 		var subCrv0 = Math.floor(selBnd0 / 2);
 
-		// Check if SubCrv is closed. Skip Bnd pair if yes.
+		// Is Bnd on a closed SubCrv? Skip if yes.
 		var subCrv = cInCurves.item(subCrv0);
 		VBdata = new VBArray(subCrv.Get2(siSINurbs));
 		var aSubCrvData = VBdata.toArray();
@@ -383,7 +425,7 @@ function BlendSubcurves_Update( in_ctxt )
 		var selBnd1 = oBlendCluster.Elements(i + 1);
 		var subCrv1 = Math.floor(selBnd1 / 2);
 
-		// Check if SubCrv is closed. Skip Bnd pair if yes.
+		// Is Bnd on a closed SubCrv? Skip if yes.
 		var subCrv = cInCurves.item(subCrv1);
 		VBdata = new VBArray(subCrv.Get2(siSINurbs));
 		var aSubCrvData = VBdata.toArray();
@@ -394,12 +436,20 @@ function BlendSubcurves_Update( in_ctxt )
 		if(selBnd0 % 2 == 1)
 			bnd0AtBegin = false;
 
+<<<<<<< .mine
+		var subCrv0NewIdx = aSubCrvHasIdx[subCrv0];
+=======
 		var subCrv0NewIdx = aSubCrvNewIdx[subCrv0];
+>>>>>>> .r142
 		var bnd1AtBegin = true;
 		if(selBnd1 % 2 == 1)
 			bnd1AtBegin = false;
 
+<<<<<<< .mine
+		var subCrv1NewIdx = aSubCrvHasIdx[subCrv1];
+=======
 		var subCrv1NewIdx = aSubCrvNewIdx[subCrv1];
+>>>>>>> .r142
 		var oNewSubCrv0 = aNewSubCrvs[subCrv0NewIdx];
 		var aSubCrvs0 = oNewSubCrv0.aSubCrvs;
 		var aInvert0 = oNewSubCrv0.aInvert;
@@ -431,27 +481,19 @@ function BlendSubcurves_Update( in_ctxt )
 		{
 			// arr0 concat arr1
 			var aSubCrvs = aSubCrvs0.concat(aSubCrvs1); // note: concat creates new object!
-			aNewSubCrvs[subCrv0NewIdx].aSubCrvs = aSubCrvs;
 			var aInvert = aInvert0.concat(aInvert1);
+<<<<<<< .mine
+=======
 			aNewSubCrvs[subCrv0NewIdx].aInvert = aInvert;
 			aSubCrvs1.length = 0;		
 			aInvert1.length = 0;
-
-			aSubCrvNewIdx[subCrv1] = subCrv0NewIdx;
-			aSubCrvAtBegin[subCrv1] = false;
+>>>>>>> .r142
 
 		} else if(bnd0AtBegin && !bnd1AtBegin)
 		{
 			// arr1 concat arr0
 			var aSubCrvs = aSubCrvs1.concat(aSubCrvs0);
-			aNewSubCrvs[subCrv1NewIdx].aSubCrvs = aSubCrvs;
 			var aInvert = aInvert1.concat(aInvert0);
-			aNewSubCrvs[subCrv1NewIdx].aInvert = aInvert;
-			aSubCrvs0.length = 0;
-			aInvert0.length = 0;
-
-			aSubCrvNewIdx[subCrv0] = subCrv1NewIdx;
-			aSubCrvAtBegin[subCrv0] = false;
 
 		} else if(bnd0AtBegin && bnd1AtBegin)
 		{
@@ -462,56 +504,54 @@ function BlendSubcurves_Update( in_ctxt )
 				aInvert0[j] = !aInvert0[j];
 
 			var aSubCrvs = aSubCrvs0.concat(aSubCrvs1);
-			aNewSubCrvs[subCrv0NewIdx].aSubCrvs = aSubCrvs;
 			var aInvert = aInvert0.concat(aInvert1);
-			aNewSubCrvs[subCrv0NewIdx].aInvert = aInvert;
-			aSubCrvs1.length = 0;
-			aInvert1.length = 0;
-
-			subCrv1 = aSubCrvs[aSubCrvs.length - 1];
-			aSubCrvNewIdx[subCrv1] = subCrv0NewIdx;
-			aSubCrvAtBegin[subCrv1] = false;
 		
 		} else
 		{
 			// arr1 concat -arr0
-			aSubCrvs0.reverse();
-			aInvert0.reverse();
-			for(var j = 0; j < aInvert0.length; j++)
-				aInvert0[j] = !aInvert0[j];
+			aSubCrvs1.reverse();
+			aInvert1.reverse();
+			for(var j = 0; j < aInvert1.length; j++)
+				aInvert1[j] = !aInvert1[j];
 
-			var aSubCrvs = aSubCrvs1.concat(aSubCrvs0);
-			aNewSubCrvs[subCrv1NewIdx].aSubCrvs = aSubCrvs;
-			var aInvert = aInvert1.concat(aInvert0);
-			aNewSubCrvs[subCrv1NewIdx].aInvert = aInvert;
-			aSubCrvs0.length = 0;
-			aInvert0.length = 0;
-
-			subCrv0 = aSubCrvs[aSubCrvs.length - 1];
-			aSubCrvNewIdx[subCrv0] = subCrv1NewIdx;
-			aSubCrvAtBegin[subCrv0] = false;
+			var aSubCrvs = aSubCrvs0.concat(aSubCrvs1);
+			var aInvert = aInvert0.concat(aInvert1);
 
 		}
 
-	}
+		aNewSubCrvs[subCrv0NewIdx].aSubCrvs = aSubCrvs;
+		aNewSubCrvs[subCrv0NewIdx].aInvert = aInvert;
+		aSubCrvs1.length = 0;
+		aInvert1.length = 0;
 
+		// Update aSubCrvHasIdx and aSubCrvAtBegin.
+		for(var j = 0; j < aSubCrvs.length; j++)
+		{
+			aSubCrvHasIdx[ aSubCrvs[j] ] = subCrv0NewIdx;
+		}
+
+		aSubCrvAtBegin[ aSubCrvs[0] ] = true;
+		aSubCrvAtBegin[ aSubCrvs[aSubCrvs.length - 1] ] = false;
+
+	}
+	
 
 // Debug sort algorithm
-/*	LogMessage("-------------");
-	LogMessage("aNewSubCrvs:");
+/*	LogMessage("aNewSubCrvs:");
 	LogMessage("length: " + aNewSubCrvs.length);
 	//LogMessage("blendedCrvCnt:" + blendedCrvCnt);
-	for(var i = 0; i < aNewSubCrvs.length; i++)
+	for(var j = 0; j < aNewSubCrvs.length; j++)
 	{
-		LogMessage("aNewSubCrvs[" + i + "].aSubCrvs: " + aNewSubCrvs[i].aSubCrvs);
-		LogMessage("aNewSubCrvs[" + i + "].aInvert " + aNewSubCrvs[i].aInvert);
-		LogMessage("aNewSubCrvs[" + i + "].close " + aNewSubCrvs[i].close);
+		LogMessage("aNewSubCrvs[" + j + "].aSubCrvs: " + aNewSubCrvs[j].aSubCrvs);
+		LogMessage("aNewSubCrvs[" + j + "].aInvert " + aNewSubCrvs[j].aInvert);
+		LogMessage("aNewSubCrvs[" + j + "].close " + aNewSubCrvs[j].close);
 		LogMessage("");
 	}
-	LogMessage("-------------");
-
-return true;
+	LogMessage("aSubCrvHasIdx: " + aSubCrvHasIdx);
+	LogMessage("aSubCrvAtBegin: " + aSubCrvAtBegin);
 */
+//return true;
+
 
 
 	// 3) BLEND LOOP
@@ -717,8 +757,37 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendSty
 		// Curved blend
 		
 		// Points
+<<<<<<< .mine
 		aPoints0 = aPoints0.concat(aPoints1);
 
+		// Knots
+=======
+		aPoints0 = aPoints0.concat(aPoints1);
+>>>>>>> .r142
+		switch(degree)
+		{
+			case 1:
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + 1;
+				for(var i = 0; i < aKnots1.length; i++)
+				aKnots1[i] += offset;
+				break;
+
+<<<<<<< .mine
+			default:
+				aKnots0 = aKnots0.slice( 0, -(degree - 1) );
+				aKnots1 = aKnots1.slice( degree - 1 );
+				var offset = aKnots0[aKnots0.length - 1] - aKnots1[0] + degree;
+				for(var i = 0; i < degree - 1; i++)
+					aKnots0.push( aKnots0[aKnots0.length - 1] + 1);
+
+				for(var i = 0; i < aKnots1.length; i++)
+					aKnots1[i] += offset;
+			
+		}
+
+		aKnots0 = aKnots0.concat(aKnots1);
+
+=======
 		switch(degree)
 		{
 			case 1:
@@ -741,10 +810,8 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendSty
 
 		aKnots0 = aKnots0.concat(aKnots1);
 
+>>>>>>> .r142
 	}
-//logControlPointsArray("aPoints0 after blend:", aPoints0, 100);
-//logKnotsArray("aKnots0 after blend:", aKnots0, 100);
-		
 
 	return {aPoints:aPoints0,
 			aKnots:aKnots0};

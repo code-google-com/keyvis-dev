@@ -71,78 +71,28 @@ function ApplyMergeSubcurves_Execute( args )
 		// Loop through all selected items.
 		for(var i = 0; i < cSel.Count; i++)
 		{
-			// Subcurves selected
-/*			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
-			{
-			}
-			
-			if( cSel(i).Type == "subcrvSubComponent" )
-			{
-				var oObject = cSel(i).SubComponent.Parent3DObject;
-				var aElements = cSel(i).SubComponent.ElementArray.toArray();
-				SetSelFilter("CurveBoundary");
-
-				var sSelection = oObject + ".crvbndry[";
-				for(var i = 0; i < aElements.length; i++)
-				{
-					sSelection += (aElements[i] * 2) + "," + (aElements[i] * 2 + 1);
-					if(i < aElements.length - 1)
-						sSelection += ","
-				}
-				sSelection += "]";
-				SelectGeometryComponents(sSelection);
-				//ToggleSelection(sSelection);
-
-				// Create array of selected Subcurve's Boundaries.
-				var aBnds = new Array();
-				for(var i = 0; i < aElements.length; i++)
-				{
-					aBnds.push(aElements[i] * 2);
-					aBnds.push(aElements[i] * 2 + 1);
-				}
-
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siBoundaryCluster, "Curve_Boundary_AUTO", [0] );
-				// WARNING : [object Error]
-				
-				//var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
-
-				var oSubComponent = cSel(i).SubComponent;
-				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
-
-				cCrvBndryClusters.Add( oCluster );
-				cCurveLists.Add( oObject );
-
-			}
-*/
 			// Curve Boundary Cluster selected.
 			if( cSel(i).Type == "crvbndry" && ClassName(cSel(i)) == "Cluster")
 			{
-				cCrvBndryClusters.Add(cSel(i));
-				cCurveLists.Add( cSel(i).Parent3DObject );
+				if(cSel(i).Elements.Count > 1)
+				{
+					cCrvBndryClusters.Add(cSel(i));
+					cCurveLists.Add( cSel(i).Parent3DObject );
+				}
 				
 			}
 
 			// Curve Boundaries selected.
 			if( cSel(i).Type == "crvbndrySubComponent" )
 			{
-				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var oSubComponent = cSel(i).SubComponent;
-				var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+				if(oSubComponent.ElementArray.toArray().length > 1)
+				{
+					var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
+					cCrvBndryClusters.Add( oCluster );
+					cCurveLists.Add( cSel(i).SubComponent.Parent3DObject );
+				}
 
-				cCrvBndryClusters.Add( oCluster );
-				cCurveLists.Add( oObject );
-			}
-
-			// CurveLists selected.
-			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-/*				5G
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var aElements = ret.aElements;
-*/
 			}
 
 		}
@@ -150,18 +100,23 @@ function ApplyMergeSubcurves_Execute( args )
 		// If nothing usable was selected, start a Pick Session.
 		if(cCrvBndryClusters.Count == 0)
 		{
-			var components, button;	// useless, but needed in JScript.
-			// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
-			var rtn = PickElement( "CurveBoundary", "CurveBoundary", "CurveBoundary", components, button, 0 );
-			button = rtn.Value( "ButtonPressed" );
-			if(!button) throw "Argument must be Curve Boundaries.";
-			element = rtn.Value( "PickedElement" );
-			//var modifier = rtn.Value( "ModifierPressed" );
-			var oObject = element.SubComponent.Parent3DObject;
-			//var aElements = element.SubComponent.ElementArray.toArray();
-			SelectGeometryComponents(element);
+			do{
+				var components, button;	// useless, but needed in JScript.
+				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(button == 0)
+					throw "Argument must be Curve Boundaries.";
 
-			var oSubComponent = cSel(0).SubComponent;
+				var modifier = rtn.Value( "ModifierPressed" );
+				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
+
+				AddToSelection(element);
+				var cSel = Selection;
+				var oSubComponent = cSel(0).SubComponent;
+				var oObject = oSubComponent.Parent3DObject;
+				var aElements = oSubComponent.ElementArray.toArray();
+			} while (aElements.length < 2);
+
 			var oCluster = oSubComponent.CreateCluster("Curve_Boundary_AUTO");
 			// oObject.ActivePrimitive.Geometry.AddCluster(...) is not working here...
 
@@ -170,15 +125,8 @@ function ApplyMergeSubcurves_Execute( args )
 
 		}
 
-// Debug
-/*		for(var i = 0; i < cCrvBndryClusters.Count; i++)
-		{
-			LogMessage("cCrvBndryClusters(" + i + "): " + cCrvBndryClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
+		//DeselectAllUsingFilter("CurveBoundary");
 
-		DeselectAllUsingFilter("CurveBoundary");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
@@ -258,25 +206,6 @@ function ApplyMergeSubcurves_Execute( args )
 
 //______________________________________________________________________________
 
-// Unused here.
-/*
-function pickElements(selFilter, errorMsg)
-{
-
-	var components, button;	// useless, but needed in JScript.
-	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
-	var rtn = PickElement( selFilter, selFilter, selFilter, components, button, 0 );
-	button = rtn.Value( "ButtonPressed" );
-	if(!button) throw errorMsg;
-	element = rtn.Value( "PickedElement" );
-	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	var oObject = element.SubComponent.Parent3DObject;
-	var aElements = element.SubComponent.ElementArray.toArray();
-	return {oObject: oObject, aElements: aElements};
-	
-}
-*/
 
 function prepareCurveList(oCrvList)
 {
@@ -305,18 +234,6 @@ function prepareCurveList(oCrvList)
 		
 	}
 
-}
-
-
-function logCluster(oCluster)	// OK
-{
-	LogMessage("Cluster.Name: " + oCluster.Name);
-	LogMessage("Cluster.Type: " + oCluster.Type);
-	for(var i = 0; i < oCluster.Elements.Count; i++)
-	{
-		oElement = oCluster.Elements(i);
-		LogMessage("i = " + i + ": " + oElement);
-	}
 }
 
 
@@ -1078,4 +995,16 @@ function logKnotsArray(logString, aKnots, dp)
 	
 	LogMessage( sKnotArray );
 	
+}
+
+
+function logCluster(oCluster)
+{
+	LogMessage("Cluster.Name: " + oCluster.Name);
+	LogMessage("Cluster.Type: " + oCluster.Type);
+	for(var i = 0; i < oCluster.Elements.Count; i++)
+	{
+		oElement = oCluster.Elements(i);
+		LogMessage("i = " + i + ": " + oElement);
+	}
 }

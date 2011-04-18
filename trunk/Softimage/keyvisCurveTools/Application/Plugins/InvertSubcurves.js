@@ -211,16 +211,8 @@ function InvertSubcurves_Define( in_ctxt )
 	var oCustomOperator;
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
-	
-/*	oPDef = XSIFactory.CreateParamDef("offsetX",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset X","",0,null,null,null,null);
-	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("offsetY",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Y","",0,null,null,null,null);
-	oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("offsetZ",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset Z","",1,null,null,null,null);
-	oCustomOperator.AddParameter(oPDef);
-*/
 	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 0;	// When the value is not zero Softimage will log extra information about the operator's evaluation.
+	oCustomOperator.Debug = 0;
 
 	return true;
 }
