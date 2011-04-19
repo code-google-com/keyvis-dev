@@ -69,17 +69,9 @@ function ApplyOffsetSubcurves_Execute(args)
 		{
 			if( cSel(i).Type == "crvlist")
 			{
-LogMessage("crvlist");
-				//SetSelFilter("SubCurve");
-				//SelectAllUsingFilter("SubCurve");
+				// Object selected? Offset all Subcurves.
 				var oObject = cSel(i);
-LogMessage("ok");
-				//var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
-				//var elementIndices = cSel(i).SubComponent.ComponentCollection;
-				var oReturn = oObject.ActivePrimitive.Geometry.CreateSubComponent( siSubCurveCluster, [0]);
-LogMessage("ok");
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
-LogMessage("ok");
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
@@ -118,31 +110,14 @@ LogMessage("ok");
 
 		}
 
-/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
 		DeselectAllUsingFilter("SubCurve");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
 		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
 
-
-		// Create Output Objects string
-/*		var cOutput = new ActiveXObject("XSI.Collection");
-		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			cOutput.Add( cCurveLists(i) );
-		}
-*/
-//LogMessage("ok1");
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
-//LogMessage("ok2");
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
-	
 		var createdOperators = new ActiveXObject("XSI.Collection");
 	
 		if(operationMode == siImmediateOperation)
@@ -227,10 +202,6 @@ function pickElements(selFilter)
 	if(!button) throw "Argument must be Subcurves.";
 	element = rtn.Value( "PickedElement" );
 	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	// element.Type: subcrvSubComponent
-	// ClassName(element): CollectionItem
-
 	var oObject = element.SubComponent.Parent3DObject;
 	var elementIndices = element.SubComponent.ElementArray.toArray();
 
@@ -248,7 +219,7 @@ function OffsetSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 	// ScriptName, Type, [Classification], [Capabilities], [Name], [Description], [DefaultValue], [Min], [Max], [SuggestedMin], [SuggestedMax]
-	oPDef = XSIFactory.CreateParamDef("offset",siFloat,siClassifUnknown,siPersistable | siKeyable,"Offset","",0.3,null,null,-10,10);
+	oPDef = XSIFactory.CreateParamDef("offset",siFloat,siClassifUnknown,siAnimatable,"Offset","",0.33,null,null,-10,10);
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("center",siBool,siClassifUnknown,siPersistable | siKeyable,"Center","",false,null,null,null,null);
 	oCustomOperator.AddParameter(oPDef);
@@ -593,6 +564,7 @@ function OffsetSubcurves_Update( in_ctxt )
 
 
 	// Connect starts and ends.
+
 			if(!isClosed)
 			{
 				if(closeStart && !closeEnd)
@@ -670,31 +642,17 @@ function OffsetSubcurves_Update( in_ctxt )
 	} // end for subCrv
 
 
-	// Debug
-/*	LogMessage("Setting CurveList -");
-	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
-	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	logKnotsArray("aAllKnots: " + aAllKnots, 100);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
-
 	// Set output CurveList.
 	outCrvListGeom.Set(
-		allSubcurvesCnt,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots, 				// 3. Array
-		aAllNumKnots, 			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubcurvesCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 	return true;
 }

@@ -2,10 +2,6 @@
 // MergeSubcurvesPlugin
 // 2010/10 by Eugen Sares
 // last update: 2011/03/03
-//
-// Usage:
-// - Select at least 2 Curve Boundaries on a NurbsCurveList
-// - Model > Modify > Curve > MergeSubcurves
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -39,10 +35,6 @@ function ApplyMergeSubcurves_Init( in_ctxt )
 	oCmd = in_ctxt.Source;
 	oCmd.Description = "Create an instance of MergeSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
-
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
 	
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
@@ -102,14 +94,13 @@ function ApplyMergeSubcurves_Execute( args )
 		{
 			do{
 				var components, button;	// useless, but needed in JScript.
-				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
+				var rtn = PickElement( "CurveBoundary", "Curve Boundaries.", "Curve Boundaries.", components, button, 0 );
 				button = rtn.Value( "ButtonPressed" );
 				if(button == 0)
 					throw "Argument must be Curve Boundaries.";
 
 				var modifier = rtn.Value( "ModifierPressed" );
 				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
-
 				AddToSelection(element);
 				var cSel = Selection;
 				var oSubComponent = cSel(0).SubComponent;
@@ -249,7 +240,7 @@ function MergeSubcurves_Define( in_ctxt )
 	//oCustomOperator.AddParameter(oPDef);
 	//oPDef = XSIFactory.CreateParamDef("modifytan",siInt4,siClassifUnknown,siPersistable | siKeyable,"Modify Tangent","",0,0,3,0,3);
 	//oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.3,0,1E+100,0,10);
+	oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.33,0,1E+100,0,10);
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
@@ -457,7 +448,7 @@ function MergeSubcurves_Update( in_ctxt )
 		// if yes, find closest Boundary inside the WeldRadius,
 		// if any, add the found Subcurve to array "aSubCrvs" before,
 		// continue until no more Boundaries are found to the left,
-		// then do the same with the right side of the array.
+		// then repeat on the right array side.
 		while(true)
 		{
 			// Get first Boundary index of first Subcurve in aSubCrvs.
@@ -637,11 +628,6 @@ function MergeSubcurves_Update( in_ctxt )
 			if(aInvert[i])
 			{
 				var ret = invertNurbsCurve(aPoints, aKnots, isClosed);
-				// Param "isClosed" doen not matter here, since closed Subcurves don't get merged anyway.
-				//var aPointsInv = ret.aPointsInv;
-				//aPoints = aPointsInv;
-				//var aKnotsInv = ret.aKnotsInv;
-				//aKnots = aKnotsInv;
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
 
@@ -724,33 +710,16 @@ function MergeSubcurves_Update( in_ctxt )
 	} // end for allSubCrvsCnt
 
 
-	// Debug
-/*	LogMessage("New CurveList:");
-	LogMessage("allSubCrvsCnt:      " + allSubCrvsCnt);
-	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	//LogMessage("aAllPoints:           " + aAllPoints);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	//LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	//LogMessage("aAllKnots:            " + aAllKnots);
-	logKnotsArray("aAllKnots: " + aAllKnots, 100);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
-
-	// Set output CurveList.
 	outCrvListGeom.Set(
-		allSubCrvsCnt,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots,				// 3. Array
-		aAllNumKnots,			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		0) ;					// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubCrvsCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 	//output = in_ctxt.OutputTarget;
 	
@@ -890,7 +859,7 @@ function MergeSubcurves_DefineLayout( in_ctxt )
 	return true;
 }
 
-
+/*
 function MergeSubcurves_OnInit( )
 {
 	Application.LogMessage("MergeSubcurves_OnInit called",siVerbose);
@@ -903,45 +872,6 @@ function MergeSubcurves_OnClosed( )
 }
 
 
-/*
-function MergeSubcurves_cont_OnChanged( )
-{
-	Application.LogMessage("MergeSubcurves_cont_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.cont;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
-
-
-/*
-function MergeSubcurves_seam_OnChanged( )
-{
-	Application.LogMessage("MergeSubcurves_seam_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.seam;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
-
-
-/*
-function MergeSubcurves_modifytan_OnChanged( )
-{
-	Application.LogMessage("MergeSubcurves_modifytan_OnChanged called",siVerbose);
-	var oParam;
-	oParam = PPG.modifytan;
-	var paramVal;
-	paramVal = oParam.Value;
-	Application.LogMessage("New value: " + paramVal,siVerbose);
-}
-*/
-
-
 function MergeSubcurves_mergeRadius_OnChanged( )
 {
 	Application.LogMessage("MergeSubcurves_mergeRadius_OnChanged called",siVerbose);
@@ -951,7 +881,7 @@ function MergeSubcurves_mergeRadius_OnChanged( )
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
-
+*/
 
 function ApplyMergeSubcurves_Menu_Init( in_ctxt )
 {
@@ -961,7 +891,7 @@ function ApplyMergeSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-
+/*
 function logControlPointsArray(logString, aPoints, dp)
 {
 	LogMessage(logString);
@@ -989,7 +919,7 @@ function logKnotsArray(logString, aKnots, dp)
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
-		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		if ( j == 0 ) sKnotArray = sKnotArray + knotValue;
 		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
@@ -1008,3 +938,4 @@ function logCluster(oCluster)
 		LogMessage("i = " + i + ": " + oElement);
 	}
 }
+*/

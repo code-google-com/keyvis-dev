@@ -2,10 +2,6 @@
 // SplitSubcurvesPlugin
 // 2010/05 by Eugen Sares
 // last update: 2011/03/03
-//
-// Usage:
-// - Select Knot(s) on a NurbsCurve(List)
-// - Model > Modify > Curve > SplitSubcurve
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -23,7 +19,6 @@ function XSILoadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function XSIUnloadPlugin( in_reg )
 {
@@ -33,7 +28,6 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
 
 function ApplySplitSubcurves_Init( in_ctxt )
 {
@@ -86,18 +80,6 @@ function ApplySplitSubcurves_Execute( args )
 				cCurveLists.Add( oObject );
 			}
 			
-/*			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("Knot");
-				
-				var ret = pickElements("Knot", "Argument must be Knots.");
-				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
-*/
-			
 		}
 
 		// If nothing usable was selected, start a Pick Session.
@@ -140,7 +122,6 @@ function ApplySplitSubcurves_Execute( args )
 				// This factory Op also solves the selection problem in Custom Topo Ops.
 				SetCurveKnotMultiplicity(cKnotClusters(i), 3, siPersistentOperation);
 				
-				//AddCustomOp( Type, OutputObjs, [InputObjs], [Name], [ConstructionMode] )
 				// Port names will be generated automatically!
 				var newOp = AddCustomOp("SplitSubcurves", oOutput, [oInput1, oInput2], "SplitSubcurves");
 
@@ -155,7 +136,6 @@ function ApplySplitSubcurves_Execute( args )
 					InspectObj(newOp, "", "", siModal, true);
 				*/
 
-				// FreezeModeling( [InputObjs], [Time], [PropagationType] )
 				FreezeModeling(cCurveLists(i), null, siUnspecified);
 				
 				createdOperators.Add(newOp);
@@ -218,9 +198,8 @@ function SplitSubcurves_Define( in_ctxt )
 	var oCustomOperator;
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
-
-	oCustomOperator.AlwaysEvaluate = false;
-	oCustomOperator.Debug = 0;
+	//oCustomOperator.AlwaysEvaluate = false;
+	//oCustomOperator.Debug = 0;
 	return true;
 }
 
@@ -490,34 +469,20 @@ function SplitSubcurves_Update( in_ctxt )
 
 		}
 
-	} // end for subCrv
+	}
 
-
-	// Debug
-/*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt: " + allSubcurvesCnt);
-	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	logKnotsArray("aAllKnots: ", aAllKnots, 100);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
 
 	// Set output CurveList.
 	outCrvListGeom.Set(
-		allSubcurvesCnt,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots,				// 3. Array
-		aAllNumKnots,			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubcurvesCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 	return true;
 }
@@ -654,16 +619,15 @@ function getKnotMult(aKnots, knotIdx)
 			startIdx:startIdx};
 }
 
-/*
+
 function SplitSubcurves_DefineLayout( in_ctxt )
 {
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	//oLayout.AddItem("xxx");
 	return true;
 }
-*/
+
 
 function ApplySplitSubcurves_Menu_Init( in_ctxt )
 {
@@ -673,7 +637,7 @@ function ApplySplitSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-
+/*
 function logControlPointsArray(logString, aPoints, dp)
 {
 	LogMessage(logString);
@@ -700,7 +664,7 @@ function logKnotsArray(logString, aKnots, dp)
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
-		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		if ( j == 0 ) sKnotArray = sKnotArray + knotValue;
 		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
@@ -719,3 +683,4 @@ function logCluster(oCluster)
 		LogMessage("i = " + i + ": " + oElement);
 	}
 }
+*/

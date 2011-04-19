@@ -2,7 +2,6 @@
 // ExtractAllSubcurvesPlugin
 // 11/2009 by Eugen Sares
 // last revision: 08.11.2010
-//
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -20,8 +19,6 @@ function XSILoadPlugin( in_reg )
 }
 
 
-//______________________________________________________________________________
-
 function XSIUnloadPlugin( in_reg )
 {
 	var strPluginName;
@@ -30,8 +27,6 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-
-//______________________________________________________________________________
 
 function ExtractAllSubcurves_Init( in_ctxt )
 {
@@ -46,6 +41,7 @@ function ExtractAllSubcurves_Init( in_ctxt )
 
 
 //______________________________________________________________________________
+
 function ExtractAllSubcurves_Execute(  )
 {
 
@@ -94,7 +90,7 @@ function ExtractAllSubcurves_Execute(  )
 	  }
 	  else 
 	  { 
-		  LogMessage("Select a Nurbs CurveList first.");
+		  LogMessage("Select a NurbsCurveList first.");
 	  }
 	  
 	}
@@ -112,6 +108,3 @@ function ExtractAllSubcurves_Menu_Init( in_ctxt )
 	oMenu.AddCommandItem("Extract All Subcurves","ExtractAllSubcurves");
 	return true;
 }
-
-
-//______________________________________________________________________________

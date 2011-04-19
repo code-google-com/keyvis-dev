@@ -2,17 +2,6 @@
 // OpenCloseSubcurvesPlugin
 // 2010/04 by Eugen Sares
 // last update: 2011/02/20
-//
-// Usage:
-// - Select Subcurves
-// - Model > Modify > Curve > Open/Close Subcurve
-// The open/closed status of the of the selected Subcurves will be toggled.
-// 
-// Info: this Op has the parameter "openingMode".
-// When checked, the last Segment (between the next to last and first Point) will be deleted when opening.
-// (same as in the factory OpenClose).
-// When unchecked, the last Segment will remain.
-//
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -47,10 +36,6 @@ function ApplyOpenCloseSubcurves_Init( in_ctxt )	// called after _Execute
 	oCmd.Description = "Create an instance of OpenCloseSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
 
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
-
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
@@ -76,6 +61,16 @@ function ApplyOpenCloseSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
+			if( cSel(i).Type == "crvlist")
+			{
+				// Object selected? Offset all Subcurves.
+				var oObject = cSel(i);
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+
+			}
+
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
@@ -93,18 +88,6 @@ function ApplyOpenCloseSubcurves_Execute(args)
 				cCurveLists.Add( oObject );
 			}
 			
-/*			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("SubCurve");
-				
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
-*/
-			
 		}
 
 		// If nothing usable was selected, start a Pick Session.
@@ -121,26 +104,12 @@ function ApplyOpenCloseSubcurves_Execute(args)
 
 		}
 
-/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
 		DeselectAllUsingFilter("SubCurve");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
 		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
-
-
-		// Create Output Objects string
-/*		var cOutput = new ActiveXObject("XSI.Collection");
-		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			cOutput.Add( cCurveLists(i) );
-		}
-*/		
+		
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
 		
@@ -346,20 +315,6 @@ function OpenCloseSubcurves_Update( in_ctxt )
 		aAllParameterization[allSubcurvesCnt] = subCrvData[4];
 
 
-// debug
-/*		LogMessage("");
-		LogMessage("Old Subcurve:");
-		LogMessage("allSubcurvesCnt: " + allSubcurvesCnt);
-		LogMessage("aAllPoints[" + allSubcurvesCnt + "]: " + aPoints.toString() );
-		LogMessage("aAllNumPoints[" + allSubcurvesCnt + "]: " + aAllNumPoints[allSubcurvesCnt]);
-		LogMessage("aAllKnots[" + allSubcurvesCnt + "]: " + aKnots.toString() );
-		LogMessage("aAllNumKnots[" + allSubcurvesCnt + "]: " + aAllNumKnots[allSubcurvesCnt] );
-		LogMessage("aAllIsClosed: " + aAllIsClosed[allSubcurvesCnt]);
-		LogMessage("aAllDegree[" + allSubcurvesCnt + "]: " + aAllDegree[allSubcurvesCnt] );
-		LogMessage("aAllParameterization[" + allSubcurvesCnt + "]: " + aAllParameterization[allSubcurvesCnt] );
-		LogMessage("");
-*/
-
 		if(aSel[allSubcurvesCnt])
 		{
 		// Subcurve was selected and will be opened/closed
@@ -396,36 +351,20 @@ function OpenCloseSubcurves_Update( in_ctxt )
 		// Concatenate the Points and Knots arrays to get the complete CurveList data.
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllKnots = aAllKnots.concat(aKnots);
-//logControlPointsArray("aAllPoints after closing: ", aAllPoints, 100);
-//logKnotsArray("aAllKnots after closing: " + aAllKnots, 100);
 
 	}
 
-	// Debug
-/*	LogMessage("New CurveList:");
-	LogMessage("allSubcurvesCnt:      " + allSubcurvesCnt);
-	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	logKnotsArray("aAllKnots: " + aAllKnots, 100);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
 
-	// overwrite this CurveList using Set
 	outCrvListGeom.Set(
-		allSubcurvesCnt,			// 0. number of Subcurves in the Curvelist
-		aAllPoints, 		// 1. Array
-		aAllNumPoints, 		// 2. Array, number of Control Points per Subcurve
-		aAllKnots,			// 3. Array
-		aAllNumKnots,		// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		0) ;				// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubcurvesCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 		
 	return true;
 
@@ -434,11 +373,12 @@ function OpenCloseSubcurves_Update( in_ctxt )
 
 //______________________________________________________________________________
 
-// [0,0,0,1,2,3,3,4,5,5,5]
-//  0,1,2,3,4,5,6,7,8,9,10
-// Example: knotIdx 9 returns startIdx 8, mult. 3
 function getKnotMult(aKnots, knotIdx)
 {
+	//  0,1,2,3,4,5,6,7,8,9,10
+	// [0,0,0,1,2,3,3,4,5,5,5]
+	// Example: knotIdx 9 returns startIdx 8, mult. 3
+
 	var multiplicity = 0;
 	var startIdx = knotIdx;
 
@@ -471,7 +411,6 @@ function getKnotMult(aKnots, knotIdx)
 
 function openNurbsCurve(aPoints, aKnots, degree, openingMode)
 {
-//logKnotsArray("aKnots before opening: ", aKnots, 100);
 	if(!openingMode)
 	{
 		// Overlap after opening:
@@ -678,19 +617,21 @@ function OpenCloseSubcurves_DefineLayout( in_ctxt )
 	var oLayout,oItem;
 	oLayout = in_ctxt.Source;
 	oLayout.Clear();
-	oLayout.AddGroup("Opening Method");
+	oLayout.AddGroup("When opening, keep last Segment?");
 	//oLayout.AddItem("openingMode", "Open with gap");
-	var aRadioItems = ["With gap (standard)", true, "Coincide first and last Point", false];
-	oLayout.AddEnumControl("openingMode", aRadioItems, " ", siControlRadio);
+	var aRadioItems = ["No (standard)", true, "Yes", false];
+	var oOpeningMode = oLayout.AddEnumControl("openingMode", aRadioItems, "", siControlRadio);
+	oOpeningMode.SetAttribute(siUINoLabel, true);
 	oLayout.EndGroup();
-	oLayout.AddGroup("Closing Method");
+	oLayout.AddGroup("When closing, make last Segment");
 	var aRadioItems = ["Curved (standard)", true, "Linear", false];
-	oLayout.AddEnumControl("closingMode", aRadioItems, " ", siControlRadio);
+	var oClosingMode = oLayout.AddEnumControl("closingMode", aRadioItems, "", siControlRadio);
+	oClosingMode.SetAttribute(siUINoLabel, true);
 	oLayout.EndGroup();
 	return true;
 }
 
-
+/*
 function OpenCloseSubcurves_OnInit( )
 {
 	Application.LogMessage("OpenCloseSubcurves_OnInit called",siVerbose);
@@ -712,7 +653,7 @@ function OpenCloseSubcurves_openingMode_OnChanged( )
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
-
+*/
 
 function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 {
@@ -722,7 +663,7 @@ function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-
+/*
 function logControlPointsArray(logString, aPoints, dp)
 {
 	LogMessage(logString);
@@ -749,10 +690,11 @@ function logKnotsArray(logString, aKnots, dp)
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
-		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		if ( j == 0 ) sKnotArray = sKnotArray + knotValue;//.toString(10);
 		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
 	LogMessage( sKnotArray );
 	
 }
+*/

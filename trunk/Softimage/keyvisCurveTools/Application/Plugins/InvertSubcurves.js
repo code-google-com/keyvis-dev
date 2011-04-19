@@ -36,10 +36,6 @@ function ApplyInvertSubcurves_Init( in_ctxt )
 	oCmd.Description = "Create an instance of InvertSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
 
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
-
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
@@ -63,6 +59,16 @@ function ApplyInvertSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
+			if( cSel(i).Type == "crvlist")
+			{
+				// Object selected? Offset all Subcurves.
+				var oObject = cSel(i);
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+
+			}
+
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
@@ -309,17 +315,16 @@ function InvertSubcurves_Update( in_ctxt )
 	}
 
 
-	// Set output CurveList
 	outCrvListGeom.Set(
-		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots, 				// 3. Array
-		aAllNumKnots, 			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		numAllSubcurves,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 
 	return true;

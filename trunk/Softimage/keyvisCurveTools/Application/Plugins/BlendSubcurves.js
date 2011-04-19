@@ -1,11 +1,7 @@
 //______________________________________________________________________________
 // BlendSubcurvesPlugin
 // 2011/03/03 by Eugen Sares
-// last updates: 2011/04/15
-//
-// Usage:
-// - Select at least 2 Curve Boundaries on a NurbsCurveList
-// - Model > Modify > Curve > BlendSubcurves
+// last updates: 2011/04/18
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -101,14 +97,13 @@ function ApplyBlendSubcurves_Execute( args )
 		{
 			do{
 				var components, button;	// useless, but needed in JScript.
-				var rtn = PickElement( "CurveBoundary", "Select 2 Curve Boundaries.", "Select 2 Curve Boundaries.", components, button, 0 );
+				var rtn = PickElement( "CurveBoundary", "Curve Boundaries.", "Curve Boundaries.", components, button, 0 );
 				button = rtn.Value( "ButtonPressed" );
 				if(button == 0)
-					throw "Argument must be Curve Boundaries.";
-
+					throw "Cancelled.";
+					
 				var modifier = rtn.Value( "ModifierPressed" );
 				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
-
 				AddToSelection(element);
 				var cSel = Selection;
 				var oSubComponent = cSel(0).SubComponent;
@@ -125,7 +120,6 @@ function ApplyBlendSubcurves_Execute( args )
 		}
 
 		//DeselectAllUsingFilter("CurveBoundary");
-
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
@@ -304,7 +298,7 @@ function BlendSubcurves_Update( in_ctxt )
 		return;
 
 
-	// 1) PREPARE ARRAYS AND OBJECTS
+	// 1) PREPARE ARRAYS AND OBJECTS.
 
 	// Experimental:
 	// Array to store the indices of the merged Curve Boundaries, for later selection.
@@ -467,11 +461,8 @@ function BlendSubcurves_Update( in_ctxt )
 		aInvert1.length = 0;
 
 		// Update aSubCrvHasIdx and aSubCrvAtBegin.
-		for(var j = 0; j < aSubCrvs.length; j++)
-		{
-			aSubCrvHasIdx[ aSubCrvs[j] ] = subCrv0NewIdx;
-		}
-
+		aSubCrvHasIdx[ aSubCrvs[0] ] = subCrv0NewIdx;
+		aSubCrvHasIdx[ aSubCrvs[aSubCrvs.length - 1] ] = subCrv0NewIdx;
 		aSubCrvAtBegin[ aSubCrvs[0] ] = true;
 		aSubCrvAtBegin[ aSubCrvs[aSubCrvs.length - 1] ] = false;
 
@@ -598,34 +589,16 @@ function BlendSubcurves_Update( in_ctxt )
 	} // end for allSubCrvsCnt
 
 
-	// Debug
-/*	LogMessage("");
-	LogMessage("New CurveList:");
-	LogMessage("allSubCrvsCnt:      " + allSubCrvsCnt);
-	logControlPointsArray("aAllPoints: ", aAllPoints, 100);
-	//LogMessage("aAllPoints:           " + aAllPoints);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	//LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	//LogMessage("aAllKnots:            " + aAllKnots);
-	logKnotsArray("aAllKnots: " + aAllKnots, 100);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
-
-	// Set output CurveList.
 	outCrvListGeom.Set(
-		allSubCrvsCnt,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots,				// 3. Array
-		aAllNumKnots,			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		0) ;					// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubCrvsCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 	return true;
 }
@@ -901,13 +874,14 @@ function BlendSubcurves_DefineLayout( in_ctxt )
 	//oLayout.AddItem("blendStyle");
 	oLayout.AddGroup("Blend Style (Degree 2 and 3)");
 	var aRadioItems = ["Linear", 0, "Curved", 1];
-	oLayout.AddEnumControl("blendStyle", aRadioItems, " ", siControlRadio);
+	var oBlendStyle = oLayout.AddEnumControl("blendStyle", aRadioItems, " ", siControlRadio);
+	oBlendStyle.SetAttribute(siUINoLabel, true);
 	oLayout.EndGroup();
 
 	return true;
 }
 
-
+/*
 function BlendSubcurves_OnInit( )
 {
 	Application.LogMessage("BlendSubcurves_OnInit called",siVerbose);
@@ -920,7 +894,7 @@ function BlendSubcurves_OnClosed( )
 }
 
 
-/*
+
 function BlendSubcurves_blendStyle_OnChanged( )
 {
 	Application.LogMessage("BlendSubcurves_blendStyle_OnChanged called",siVerbose);
@@ -941,7 +915,7 @@ function ApplyBlendSubcurves_Menu_Init( in_ctxt )
 	return true;
 }
 
-
+/*
 function logControlPointsArray(logString, aPoints, dp)
 {
 	LogMessage(logString);
@@ -969,10 +943,11 @@ function logKnotsArray(logString, aKnots, dp)
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
-		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		if ( j == 0 ) sKnotArray = sKnotArray + knotValue;
 		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
 	LogMessage( sKnotArray );
 	
 }
+*/
