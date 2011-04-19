@@ -3925,9 +3925,10 @@ def RefreshDisplayEvents():
 #This is the main function that creates the string describing the Menu to render
 def DisplayMenuSet( MenuSetIndex ):
 	#Print("DisplayQMenu_MenuSet_Execute called", c.siVerbose)
-	ViewSignature = (getView(True))[0] #Get the short/nice view signature silently (without printing it)
-
-	Print (ViewSignature)
+	ViewSignatures = (getView(True)) #Get the short/nice view signature silently (without printing it)
+	ViewSignature = ViewSignatures[0]
+	oXSIView = ViewSignatures[2]
+	#Print (ViewSignature)
 	#Test code to find floating window the user is currently working in.
 	#This would be useful to e.g. get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
 	#However, defining popup menus for Rendertree is a bit futile because it's native menues are pretty complete already,
@@ -3935,22 +3936,9 @@ def DisplayMenuSet( MenuSetIndex ):
 	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
 	#Instead extensive scripting would be required.
 	
-	Views = Application.Desktop.ActiveLayout.Views
-	#oVM = Views.Find( "View Manager" )
-	oVM = Views("vm")
-	oXSIView = None
-	"""
-	FloatingWindowUnderMouse = None
-	for View in Views:
-	if View.Visible == True:
-		if View.Rectangle == WindowPos:
-			FloatingWindowUnderMouse = View
-			Print ("Window under mouse is: " + str(FloatingWindowUnderMouse))
-			
-	#oView = oVM.Views( Application.GetViewportUnderMouse() );
-	#oView = oVM.GetAttributeValue("focusedviewport")
-	"""
 	
+	
+	"""
 	#======= Handle cases in which the mouse cursor is over the view manager (any of the four main 3D view areas) =======
 	
 	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
@@ -3959,13 +3947,14 @@ def DisplayMenuSet( MenuSetIndex ):
 	if ViewSignature.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
 		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
 		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
-		print ViewportUnderMouse
+		#print ViewportUnderMouse
 		#Activate the 3D view currently under the mouse so viewport operations triggered affect that view and not the one that was active before the menu was opened from 
 		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
 		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
 		#print ("View under mouse is: ")
 		#print oXSIView
-
+	"""
+	
 	t0 = time.clock() #Record time before we start getting the first 4 menus
 
 	globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
@@ -4957,16 +4946,23 @@ def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
 	Version = Application.Version()
 	VersionList = Version.split(".")
-	VersionMain = VersionList[0]
+	VersionMain = int(VersionList[0])
+	#print VersionMain
+	#print type(VersionMain)
 	
-
+	enabled = False
+	continyou = True
 	try:
 		enabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
+	except:
+		continyou = False
+		Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
+		oMenu.AddCallbackItem("QMenu Preferences not found!","QMenuPreferenceNotFoundClicked")
+	
+	if continyou == True:
 		oMenu.AddCallbackItem("Inspect QMenu Preferences","QMenuPreferencesMenuClicked")
 		oMenu.AddCallbackItem("Open QMenu Editor","QMenuConfiguratorMenuClicked")
-		
-		#MenuItem.Checked
-		
+
 		if VersionMain < 10:
 			if enabled == False:
 				oMenu.AddCallbackItem("Enable QMenu","QMenuEnableClicked")
@@ -4977,14 +4973,7 @@ def QMenu_Init( in_ctxt ):
 			if enabled == False:
 				oMenuItem.Checked = False
 			else:
-				oMenuItem.Checked = True
-				
-			
-	except:
-		Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
-		oMenu.AddCallbackItem("QMenu Preferences not found!","QMenuPreferenceNotFoundClicked")
-	
-	
+				oMenuItem.Checked = True	
 	return True
 
 def QMenuPreferenceNotFoundClicked(in_ctxt):
@@ -5005,7 +4994,7 @@ def QMenuDisableClicked(in_ctxt):
 def QMenuEnableClicked(in_ctxt):
 	Version = Application.Version()
 	VersionList = Version.split(".")
-	VersionMain = VersionList[0]
+	VersionMain = int(VersionList[0])
 	QMenuEnabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
 	
 	Application.SetValue("preferences.QMenu.QMenuEnabled", not QMenuEnabled, "")
@@ -5415,7 +5404,8 @@ def getView( Silent = False):
 	
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
 	WindowSignature = getDS_ChildName(WinUnderMouse)
-	#print WindowSignature
+	oXSIView = None
+	
 	#WindowPlacement = win32gui.GetWindowPlacement(WinUnderMouse)
 	#Print ("WindowPlacement is " + str(WindowPlacement))
 	##WindowPos[0] = (WindowPos[0] + 4)
@@ -5435,6 +5425,28 @@ def getView( Silent = False):
 		if not char.isdigit():
 			WindowSignatureShort = (WindowSignatureShort + char)
 			
+	
+	#The following is a workaround for a Softimage limitation: it does not name ICE Trees properly, they are reported as named "Render Tree" by win32com.
+	#So we figure out if we find Render Tree in the signature and check if the view is docked in the View manager. If so, we replace "Render Tree" with "ICE Tree".
+	if WindowSignatureShort.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
+		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
+		
+		Views = Application.Desktop.ActiveLayout.Views
+		oVM = Views("vm")
+		#print "1"
+		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
+		#print "2"
+		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
+		#print "3"
+		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
+		if oXSIView != None:
+			#print oXSIView.Type
+			if oXSIView.Type == "ICE Tree":
+				#print "Yo"
+				WindowSignatureShort = WindowSignatureShort.replace("RenderTree", "ICETree")
+				WindowSignature = WindowSignature.replace("RenderTree", "ICETree")
+	
+	#Yuk, lets carry on...
 	if Silent != True:
 		Print ("Picked Window has the following short QMenu View Signature: " + str(WindowSignatureShort), c.siVerbose)
 		Print ("Picked Window has the following long QMenu View Signature: " + str(WindowSignature), c.siVerbose)
@@ -5442,6 +5454,7 @@ def getView( Silent = False):
 	Signatures = list()
 	Signatures.append (WindowSignatureShort)
 	Signatures.append (WindowSignature)
+	Signatures.append (oXSIView)
 	#Signatures.append (WindowPos)
 	#Print(Signatures)
 	return Signatures
