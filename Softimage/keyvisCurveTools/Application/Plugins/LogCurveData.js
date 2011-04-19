@@ -3,6 +3,7 @@
 // 2010/03/30 by Eugen Sares
 // last update: 2010/12/21
 //______________________________________________________________________________
+
 function XSILoadPlugin( in_reg )
 {
 	in_reg.Author = "Gene";
@@ -17,7 +18,7 @@ function XSILoadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
+
 function XSIUnloadPlugin( in_reg )
 {
 	var strPluginName;
@@ -26,7 +27,7 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-//______________________________________________________________________________
+
 function LogCurveData_Init( in_ctxt )
 {
 	var oCmd;
@@ -38,17 +39,11 @@ function LogCurveData_Init( in_ctxt )
 }
 
 //______________________________________________________________________________
+
 function LogCurveData_Execute(  )
 {
 
 	Application.LogMessage("LogCurveData_Execute called",siVerbose);
-	// 
-//______________________________________________________________________________
-// LogCurveData Command
-// 2010/01 by Eugen Sares
-// last update: 2011/03/03
-//
-//______________________________________________________________________________
 
 	LogMessage( "===============================================================" );
 	LogMessage( "NURBSCURVE INFO" );
@@ -170,8 +165,6 @@ function LogCurveData(oCrv)	// Arg: NurbsCurve
 }
 
 
-//______________________________________________________________________________
-
 function logControlPointsArray(aPoints, dp)
 {
 	for ( var i = 0; i < aPoints.length; i += 4 )
@@ -186,8 +179,6 @@ function logControlPointsArray(aPoints, dp)
 	LogMessage("");
 }
 
-
-//______________________________________________________________________________
 
 function logKnotsArray(aKnots, dp)
 {
@@ -205,8 +196,6 @@ function logKnotsArray(aKnots, dp)
 }
 
 
-//______________________________________________________________________________
-
 function LogCurveData_Menu_Init( in_ctxt )
 {
 	var oMenu;
@@ -214,5 +203,3 @@ function LogCurveData_Menu_Init( in_ctxt )
 	oMenu.AddCommandItem("Log Curve Data","LogCurveData");
 	return true;
 }
-
-//______________________________________________________________________________

@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // DuplicateSubcurvesPlugin
 // 2009/11 by Eugen Sares
-// last update: 2011/02/18
+// last update: 2011/04/19
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -69,6 +69,16 @@ function ApplyDuplicateSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
+			if( cSel(i).Type == "crvlist")
+			{
+				// Object selected? Offset all Subcurves.
+				var oObject = cSel(i);
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
+				cSubcurveClusters.Add( oCluster );
+				cCurveLists.Add( oObject );
+
+			}
+
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
@@ -86,18 +96,6 @@ function ApplyDuplicateSubcurves_Execute(args)
 				cCurveLists.Add( oObject );
 			}
 			
-/*			if( cSel(i).Type == "crvlist")
-			{
-				// Problem: PickElement does not bother if CurveLists is already selected.
-				// Otherwise, we could iterate through all selected CurveLists and start a pick session for each.
-				SetSelFilter("SubCurve");
-				
-				var ret = pickElements("SubCurve");
-				var oObject = ret.oObject;
-				var elementIndices = ret.elementIndices;
-			}
-*/
-			
 		}
 
 		// If nothing usable was selected, start a Pick Session.
@@ -114,26 +112,12 @@ function ApplyDuplicateSubcurves_Execute(args)
 
 		}
 
-/*		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			LogMessage("cSubcurveClusters(" + i + "): " + cSubcurveClusters(i));
-			LogMessage("cCurveLists(" + i + "): " + cCurveLists(i));
-		}
-*/
 		DeselectAllUsingFilter("SubCurve");
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
 		if(constructionModeAutoUpdate) SetValue("context.constructionmode", siConstructionModeModeling);
-
-
-		// Create Output Objects string
-/*		var cOutput = new ActiveXObject("XSI.Collection");
-		for(var i = 0; i < cSubcurveClusters.Count; i++)
-		{
-			cOutput.Add( cCurveLists(i) );
-		}
-*/		
+	
 		var operationMode = Preferences.GetPreferenceValue( "xsiprivate_unclassified.OperationMode" );
 		var bAutoinspect = Preferences.GetPreferenceValue("Interaction.autoinspect");
 		
@@ -195,27 +179,6 @@ function ApplyDuplicateSubcurves_Execute(args)
 				var oInput2 = cSubcurveClusters(i);
 				
 				var newOp = AddCustomOp("DuplicateSubcurves", oOutput1, [oInput1, oInput2], "DuplicateSubcurves");
-				// var newOp = AddCustomOp("DuplicateSubcurves", [oOutput1, oOutput2], [oInput1, oInput2], "DuplicateSubcurves");
-
-/*				// Method 2: adding Ports/Groups manually.
-
-				var newOp = XSIFactory.CreateObject("DuplicateSubcurves");
-
-				// Geometry Port Group
-				//var oPortGroup0 = newOp.AddPortGroup("Group_0"); // crvlist in/out
-				// Cluster Port Group
-				//var oPortGroup1 = newOp.AddPortGroup("Group_1"); // crvlist.cls.Subcurve in/out
-
-				newOp.AddOutputPort(cCurveLists(i).ActivePrimitive); //, "", oPortGroup0.Index);
-
-				// Connecting an Output Port to a Cluster does not work yet - ignored.
-				newOp.AddOutputPort(cSubcurveClusters(i)); //, "", oPortGroup1.Index);
-
-				newOp.AddInputPort(cCurveLists(i).ActivePrimitive); //, "", oPortGroup0.Index);
-				newOp.AddInputPort(cSubcurveClusters(i)); //, "", oPortGroup1.Index);
-
-				newOp.Connect();
-*/
 				createdOperators.Add(newOp);
 				
 			}
@@ -245,13 +208,10 @@ function pickElements(selFilter)
 	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
 	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
 	button = rtn.Value( "ButtonPressed" );
-	if(!button) throw "Argument must be Subcurves.";
+	if(button == 0)
+		throw "Cancelled.";
 	element = rtn.Value( "PickedElement" );
 	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	// element.Type: subcrvSubComponent
-	// ClassName(element): CollectionItem
-
 	var oObject = element.SubComponent.Parent3DObject;
 	var elementIndices = element.SubComponent.ElementArray.toArray();
 
@@ -325,23 +285,9 @@ function DuplicateSubcurves_Update( in_ctxt )
 	var cInCurves = inCrvListGeom.Curves;
 	var oSubcurveCluster = in_ctxt.GetInputValue(1);
 	
-	// Get output Port connections.
-	// OutputTarget (OperatorContext):
-	// In the case of a multi-output operator the operator is called once per output,
-	// and this property will return the currently evaluating target.
-	// In this case it may be necessary to also call OperatorContext.OutputPort
-	// to determine the name of the current output port, in order to know which output
-	// is being evaluated.
-	
 	// Note: Clusters as output target are unsupported (ignored).
 	var oOutTarget = in_ctxt.OutputTarget;
-/*LogMessage("in_ctxt.OutputTarget: " + oOutTarget);
-	var oOutPort = in_ctxt.OutputPort;
-LogMessage("in_ctxt.OutputPort: " + oOutPort);
-return;
-*/
 	var outCrvListGeom = oOutTarget.Geometry;
-		
 
 	// Get complete data description of input CurveList.
 	var VBdata = inCrvListGeom.Get2( siSINurbs ); var data = VBdata.toArray();
@@ -350,6 +296,7 @@ return;
 	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
 	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
 	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
+	// Bug: Knot array has undefined elements.
 	aAllKnots = removeUndefinedElementsFromArray(aAllKnots);
 	var VBdata4 = new VBArray(data[4]); var aAllNumKnots = VBdata4.toArray();
 	var VBdata5 = new VBArray(data[5]); var aAllIsClosed = VBdata5.toArray();
@@ -368,8 +315,6 @@ return;
 	for(var i = 0; i < oSubcurveCluster.Elements.Count; i++)
 		aSel[oSubcurveCluster.Elements(i)] = true;
 
-
-	// Main loop: add Subcurves to duplicate.
 
 	for(var subCrvIdx = 0; subCrvIdx < cInCurves.Count; subCrvIdx++)
 	{
@@ -408,38 +353,24 @@ return;
 			aAllDegree[numAllSubcurves] = aSubCrvData[3];
 			aAllParameterization[numAllSubcurves] = aSubCrvData[4];
 
-			// For later selection: store the index of this duplicated Subcurve.
+			// Store the index of this duplicated Subcurve, so it can be selected later.
 			aNewSubcurves = aNewSubcurves.concat(numAllSubcurves);
 			numAllSubcurves++;
 
 		}
 	}
 
-	// Debug info
-/*	LogMessage("New CurveList:");
-	LogMessage("numAllSubcurves:      " + numAllSubcurves);
-	LogMessage("aAllPoints:           " + aAllPoints);
-	LogMessage("aAllPoints.length/4:  " + aAllPoints.length/4);
-	LogMessage("aAllNumPoints:        " + aAllNumPoints);
-	LogMessage("aAllKnots:            " + aAllKnots);
-	LogMessage("aAllKnots.length:     " + aAllKnots.length);
-	LogMessage("aAllNumKnots:         " + aAllNumKnots);
-	LogMessage("aAllIsClosed:         " + aAllIsClosed);
-	LogMessage("aAllDegree:           " + aAllDegree);
-	LogMessage("aAllParameterization: " + aAllParameterization);
-*/
 
-	// Set output CurveList.
 	outCrvListGeom.Set(
-		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots, 				// 3. Array
-		aAllNumKnots, 			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		numAllSubcurves,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 
 	// Add new Subcurves to input Clusters - not yet possible!
@@ -447,15 +378,13 @@ return;
 	// oSubComp.RemoveElement(...);
 	// SIRemoveFromCluster( oSubcurveCluster, oSubComp);
 	
-	// Select newly created Subcurves, but only when the Op was newly created!
+	// Experimental:
+	// Select duplicated Subcurves, but only when the Op was evaluated for the first time.
 	if(numAllSubcurves > oldCount && in_ctxt.UserData == undefined)
 	{
 		var oCrvList = in_ctxt.Source.Parent3DObject;
 		var selString = oCrvList + ".subcrv[" + oldCount + "-LAST]";
-		//var selString = oCrvList + ".subcrv[" + aNewSubcurves + "]" );
 		SelectGeometryComponents(selString);
-//		ToggleSelection(selString);
-
 		in_ctxt.UserData = true;
 	}
 
@@ -466,7 +395,6 @@ return;
 //______________________________________________________________________________
 
 // Function to remove empty items from a JScript Array
-// e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays
 function removeUndefinedElementsFromArray(dirtyArr)
 {
 	var arr = new Array();
@@ -485,12 +413,11 @@ function DuplicateSubcurves_DefineLayout( in_ctxt )
 	oLayout.Clear();
 	//oLayout.AddRow();
 	//oLayout.AddItem("duplicates", "Duplicates");
-// ToDo: Radio Button for param "distribution"
-	//oLayout.AddGroup("Translation", true);
-	oLayout.AddItem("offsetX", "Offset X");
-	oLayout.AddItem("offsetY", "Offset Y");
-	oLayout.AddItem("offsetZ", "Offset Z");
-	//oLayout.EndGroup();
+	oLayout.AddGroup("Translate", true);
+	oLayout.AddItem("offsetX", "X");
+	oLayout.AddItem("offsetY", "Y");
+	oLayout.AddItem("offsetZ", "Z");
+	oLayout.EndGroup();
 	//oLayout.EndRow();
 	return true;
 }
@@ -516,7 +443,7 @@ function ApplyDuplicateSubcurves_Menu_Init( in_ctxt )
 }
 */
 
-
+/*
 function logCluster(oCluster)
 {
 	LogMessage("Cluster.Name: " + oCluster.Name);
@@ -527,3 +454,4 @@ function logCluster(oCluster)
 		LogMessage("i = " + i + ": " + oElement);
 	}
 }
+*/

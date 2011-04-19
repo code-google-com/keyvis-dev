@@ -3,7 +3,7 @@
 // 11/2010 by Eugen Sares
 // last update: 03.02.2011
 //
-// Credits to Guillaume Laforge for the C++ sourcecode!
+// Thanks to Guillaume Laforge for the C++ sourcecode!!
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -39,10 +39,6 @@ function ApplyAttachCurves_Init( in_ctxt )
 	oCmd = in_ctxt.Source;
 	oCmd.Description = "Create an instance of AttachCurves operator";
 	oCmd.SetFlag(siNoLogging,false);
-
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
 	
 	var oArgs = oCmd.Arguments;
 	oArgs.AddWithHandler("args", "Collection");
@@ -280,7 +276,7 @@ function AttachCurves_Update( in_ctxt )
 	// Get inCrvList0Geom (NurbsCurveList)
 	var VBdata = inCrvList0Geom.Get2( siSINurbs ); var data = VBdata.toArray();
 
-	var numAllSubcurves = data[0];
+	var allSubcurvesCnt = data[0];
 	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
 	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
 	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
@@ -290,17 +286,17 @@ function AttachCurves_Update( in_ctxt )
 	var VBdata6 = new VBArray(data[6]); var aAllDegree = VBdata6.toArray();
 	var VBdata7 = new VBArray(data[7]); var aAllParameterization = VBdata7.toArray();
 
-	// Set output CurveList
+
 	outCrvList0Geom.Set(
-		numAllSubcurves,		// 0. number of Subcurves in the Curvelist
-		aAllPoints, 			// 1. Array
-		aAllNumPoints, 			// 2. Array, number of Control Points per Subcurve
-		aAllKnots, 				// 3. Array
-		aAllNumKnots, 			// 4. Array
-		aAllIsClosed, 			// 5. Array
-		aAllDegree, 			// 6. Array
-		aAllParameterization, 	// 7. Array
-		siSINurbs) ;			// 8. NurbsFormat: 0 = siSINurbs, 1 = siIGESNurbs
+		allSubcurvesCnt,
+		aAllPoints,
+		aAllNumPoints,
+		aAllKnots,
+		aAllNumKnots,
+		aAllIsClosed,
+		aAllDegree,
+		aAllParameterization,
+		siSINurbs);
 
 	return true;
 }
@@ -318,37 +314,6 @@ function removeUndefinedElementsFromArray(dirtyArr)
 	}
 	
 	return arr;
-}
-
-
-// Function to remove empty items from a JScript Array
-// e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays
-function cleanArray(dirtyArr)
-{
-	var arr = new Array();
-	for(var i = 0; i < dirtyArr.length; i++)
-	{
-		if(dirtyArr[i] != undefined) arr.push( dirtyArr[i] );
-	}
-	return arr;
-}
-
-
-function logControlPointsArray(logString, aPoints, dp)
-{
-	LogMessage(logString);
-	
-	for ( var i = 0; i < aPoints.length; i += 4 )
-	{
-		var x = aPoints[i];
-		var y = aPoints[i + 1];
-		var z = aPoints[i + 2];
-		var w = aPoints[i + 3]; 
-		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp + "; y = " + Math.round(y*dp)/dp + "; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
-
-	}
-	
-	//LogMessage("");
 }
 
 
@@ -372,7 +337,7 @@ function AttachCurves_DefineLayout( in_ctxt )
 	return true;
 }
 
-
+/*
 function AttachCurves_OnInit( )
 {
 	Application.LogMessage("AttachCurves_OnInit called",siVerbose);
@@ -405,7 +370,7 @@ function AttachCurves_updateWithObjectTransform_OnChanged( )
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
 }
-
+*/
 
 function AttachCurves_HideUnhide_OnClicked( )
 {
@@ -454,3 +419,20 @@ function ApplyAttachCurves_Menu_Init( in_ctxt )
 	return true;
 }
 
+/*
+function logControlPointsArray(logString, aPoints, dp)
+{
+	LogMessage(logString);
+	
+	for ( var i = 0; i < aPoints.length; i += 4 )
+	{
+		var x = aPoints[i];
+		var y = aPoints[i + 1];
+		var z = aPoints[i + 2];
+		var w = aPoints[i + 3]; 
+		LogMessage( "[" + i/4 + "]: x = " + Math.round(x*dp)/dp + "; y = " + Math.round(y*dp)/dp + "; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
+
+	}
+
+}
+*/
