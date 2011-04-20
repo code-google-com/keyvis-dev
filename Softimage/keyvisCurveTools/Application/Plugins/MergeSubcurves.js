@@ -92,12 +92,13 @@ function ApplyMergeSubcurves_Execute( args )
 		// If nothing usable was selected, start a Pick Session.
 		if(cCrvBndryClusters.Count == 0)
 		{
+			SetSelFilter(siBoundaryFilter);
 			do{
 				var components, button;	// useless, but needed in JScript.
 				var rtn = PickElement( "CurveBoundary", "Curve Boundaries.", "Curve Boundaries.", components, button, 0 );
 				button = rtn.Value( "ButtonPressed" );
 				if(button == 0)
-					throw "Argument must be Curve Boundaries.";
+					throw "Cancelled.";
 
 				var modifier = rtn.Value( "ModifierPressed" );
 				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
@@ -112,7 +113,7 @@ function ApplyMergeSubcurves_Execute( args )
 			// oObject.ActivePrimitive.Geometry.AddCluster(...) is not working here...
 
 			cCrvBndryClusters.Add(oCluster);
-			cCurveLists.Add( oObject );
+			cCurveLists.Add(oObject);
 
 		}
 

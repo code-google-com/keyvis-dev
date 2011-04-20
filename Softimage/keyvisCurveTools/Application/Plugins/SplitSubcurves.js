@@ -76,8 +76,8 @@ function ApplySplitSubcurves_Execute( args )
 				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
 				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", elementIndices );
 
-				cKnotClusters.Add( oCluster );
-				cCurveLists.Add( oObject );
+				cKnotClusters.Add(oCluster);
+				cCurveLists.Add(oObject);
 			}
 			
 		}
@@ -85,15 +85,27 @@ function ApplySplitSubcurves_Execute( args )
 		// If nothing usable was selected, start a Pick Session.
 		if(cKnotClusters.Count == 0)
 		{
-			var ret = pickElements("Knot");
-			var oObject = ret.oObject;
-			var elementIndices = ret.elementIndices;
-			
-			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", elementIndices );
+			SetSelFilter(siKnotFilter);
+			do{
+				var components, button;	// useless, but needed in JScript.
+				var rtn = PickElement( "Knot", "Knots", "Knots", components, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(button == 0)
+					throw "Cancelled.";
 
+				var modifier = rtn.Value( "ModifierPressed" );
+				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
+				AddToSelection(element);
+				var cSel = Selection;
+				var oSubComponent = cSel(0).SubComponent;
+				var oObject = oSubComponent.Parent3DObject;
+				var aElements = oSubComponent.ElementArray.toArray();
+			} while (aElements.length < 1);
+
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", aElements );
 			cKnotClusters.Add(oCluster);
-			cCurveLists.Add( oObject );
-
+			cCurveLists.Add(oObject);
+			
 		}
 
 		DeselectAllUsingFilter("Knot");
@@ -174,23 +186,6 @@ function ApplySplitSubcurves_Execute( args )
 }
 
 //______________________________________________________________________________
-
-function pickElements(selFilter, errorMsg)
-{
-
-	var subcurves, button;
-	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
-	button = rtn.Value( "ButtonPressed" );
-	if(!button) throw errorMsg;
-	element = rtn.Value( "PickedElement" );
-	//var modifier = rtn.Value( "ModifierPressed" );
-
-	var oObject = element.SubComponent.Parent3DObject;
-	var elementIndices = element.SubComponent.ElementArray.toArray();
-
-	return {oObject: oObject, elementIndices: elementIndices};
-	
-}
 
 
 function SplitSubcurves_Define( in_ctxt )
