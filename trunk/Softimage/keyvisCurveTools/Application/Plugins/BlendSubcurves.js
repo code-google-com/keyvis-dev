@@ -67,7 +67,6 @@ function ApplyBlendSubcurves_Execute( args )
 		// Loop through all selected items.
 		for(var i = 0; i < cSel.Count; i++)
 		{
-			// Curve Boundary Cluster selected.
 			if( cSel(i).Type == "crvbndry" && ClassName(cSel(i)) == "Cluster")
 			{
 				if(cSel(i).Elements.Count > 1)
@@ -78,7 +77,6 @@ function ApplyBlendSubcurves_Execute( args )
 				
 			}
 
-			// Curve Boundaries selected.
 			if( cSel(i).Type == "crvbndrySubComponent" )
 			{
 				var oSubComponent = cSel(i).SubComponent;
@@ -250,7 +248,7 @@ function BlendSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 
-	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Continuity","",1,0,2,0,3);
+	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Blend Style","",1,0,2,0,3);
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
