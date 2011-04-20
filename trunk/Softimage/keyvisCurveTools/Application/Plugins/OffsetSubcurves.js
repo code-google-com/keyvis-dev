@@ -67,7 +67,7 @@ function ApplyOffsetSubcurves_Execute(args)
 			{
 				// Object selected? Offset all Subcurves.
 				var oObject = cSel(i);
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, aElements*/ );
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
@@ -83,8 +83,8 @@ function ApplyOffsetSubcurves_Execute(args)
 			if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
-				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+				var aElements = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
 
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
@@ -95,12 +95,24 @@ function ApplyOffsetSubcurves_Execute(args)
 		// If nothing usable was selected, start a Pick Session.
 		if(cSubcurveClusters.Count == 0)
 		{
-			var ret = pickElements("SubCurve");
-			var oObject = ret.oObject;
-			var elementIndices = ret.elementIndices;
-			
-			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
+			SetSelFilter("SubCurve");
+			do{
+				var components, button;	// useless, but needed in JScript.
+				var rtn = PickElement( "SubCurve", "Subcurve", "Subcurve", components, button, 0 );
+				button = rtn.Value( "ButtonPressed" );
+				if(button == 0)
+					throw "Cancelled.";
 
+				var modifier = rtn.Value( "ModifierPressed" );
+				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
+				AddToSelection(element);
+				var cSel = Selection;
+				var oSubComponent = cSel(0).SubComponent;
+				var oObject = oSubComponent.Parent3DObject;
+				var aElements = oSubComponent.ElementArray.toArray();
+			} while (aElements.length < 1);
+		
+			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
 			cSubcurveClusters.Add(oCluster);
 			cCurveLists.Add( oObject );
 
@@ -188,27 +200,6 @@ function ApplyOffsetSubcurves_Execute(args)
 
 
 //______________________________________________________________________________
-
-function pickElements(selFilter)
-{
-
-	var subcurves, button;	// useless, but needed in JScript.
-	// Tip: PickElement() automatically manages to select a CurveList first, then a Subcurve!
-	var rtn = PickElement( selFilter, selFilter, selFilter, subcurves, button, 0 );
-	button = rtn.Value( "ButtonPressed" );
-	if(!button) throw "Argument must be Subcurves.";
-	element = rtn.Value( "PickedElement" );
-	//var modifier = rtn.Value( "ModifierPressed" );
-	
-	// element.Type: subcrvSubComponent
-	// ClassName(element): CollectionItem
-
-	var oObject = element.SubComponent.Parent3DObject;
-	var elementIndices = element.SubComponent.ElementArray.toArray();
-
-	return {oObject: oObject, elementIndices: elementIndices};
-	
-}
 
 
 // Use this callback to build a set of parameters that will appear in the property page.

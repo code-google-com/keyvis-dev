@@ -69,16 +69,16 @@ function ApplyDuplicateSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
-			if( cSel(i).Type == "crvlist")
+/*			if( cSel(i).Type == "crvlist")
 			{
 				// Object selected? Offset all Subcurves.
 				var oObject = cSel(i);
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO");
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
 			}
-
+*/
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
