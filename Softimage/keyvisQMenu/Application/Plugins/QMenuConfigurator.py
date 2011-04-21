@@ -5405,6 +5405,7 @@ def getView( Silent = False):
 	WinUnderMouse = win32gui.WindowFromPoint (CursorPos)
 	WindowSignature = getDS_ChildName(WinUnderMouse)
 	oXSIView = None
+	Views = Application.Desktop.ActiveLayout.Views
 	
 	#WindowPlacement = win32gui.GetWindowPlacement(WinUnderMouse)
 	#Print ("WindowPlacement is " + str(WindowPlacement))
@@ -5425,13 +5426,11 @@ def getView( Silent = False):
 		if not char.isdigit():
 			WindowSignatureShort = (WindowSignatureShort + char)
 			
-	
-	#The following is a workaround for a Softimage limitation: it does not name ICE Trees properly, they are reported as named "Render Tree" by win32com.
-	#So we figure out if we find Render Tree in the signature and check if the view is docked in the View manager. If so, we replace "Render Tree" with "ICE Tree".
+	#The following is a workaround for a Softimage limitation: it does not name ICE Trees properly, win32com sees them as "Render Tree".
+	#So we figure out if we find Render Tree in the signature and check if the view is docked in the View manager. 
+	#If so, we replace "Render Tree" with "ICE Tree" in case the view is of type ICE Tree.
 	if WindowSignatureShort.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
 		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
-		
-		Views = Application.Desktop.ActiveLayout.Views
 		oVM = Views("vm")
 		#print "1"
 		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
@@ -5446,6 +5445,18 @@ def getView( Silent = False):
 				WindowSignatureShort = WindowSignatureShort.replace("RenderTree", "ICETree")
 				WindowSignature = WindowSignature.replace("RenderTree", "ICETree")
 	
+	#We are not over the view manager (e.g. mouse is over a floating view). Because there is no 100% reliable way to get the floating view object under the mouse
+	#we simply look for the first valid view (open and not embedded in another view) of it's type in the list of all known views.
+	#Implication: QMenu will not work over the e.g. the second floating Render Tree or OCE Tree or..., only the first one. For now we'll need to live with that
+	#until Autodesk implements a method to get the floating view object under the mouse directly and reliably.
+	
+	else:
+		if WindowSignatureShort.find("ICETree") > -1:
+			oXSIView = getFirstValidViewOfType(Views, "ICE Tree")
+		if WindowSignatureShort.find("RenderTree") > -1:
+			oXSIView = getFirstValidViewOfType(Views, "Render Tree")
+		
+					
 	#Yuk, lets carry on...
 	if Silent != True:
 		Print ("Picked Window has the following short QMenu View Signature: " + str(WindowSignatureShort), c.siVerbose)
@@ -5456,8 +5467,15 @@ def getView( Silent = False):
 	Signatures.append (WindowSignature)
 	Signatures.append (oXSIView)
 	#Signatures.append (WindowPos)
-	#Print(Signatures)
+	Print(Signatures)
 	return Signatures
+
+def getFirstValidViewOfType(ViewCollection, ViewType):
+	oView = None
+	for oView in ViewCollection:
+		if (oView.Type == ViewType):
+			if (oView.Floating == True) and (oView.State == 0): #View is not embedded nor closed/minimized?
+				return oView
 	
 def getDefaultConfigFilePath(FileNameToAppend):
 	DefaultConfigFile = ""
