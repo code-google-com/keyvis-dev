@@ -9,10 +9,23 @@
 # Changes:
 # Added verbose error reporting when manually executing a switch item
 # Added Backface culling Switch Item to Views Menu set
-# Changed QMenu Init is evaluated after Softimage has finished starting up so that a race situation with not yet fully initialised custom QMenu preference is avoided
+# Added more "Multiply by..." menu items to the property editing menus
+#Added "Open Plugin Manager" item to the Script Editor Menu.
+# QMenu Init is now evaluated after Softimage has finished starting up so that a race condition with not yet fully initialised custom QMenu preference is avoided
+# Added support for ICE Trees and Render Trees (both docked and floating)
+# View Signatures can now be substrings of the full signature and can thus be more generic -> e.g. Script Editor QMenu can be called from any mouse position over the Script editor
+# as long as it has not cought the input focus (cursor)
+# Turned off command logging while assembling and evaluating menu data to reduce script log clutter
+# 2012: More reliable command execution by using e delayed timer event that ensure that clicked menu items are executed after any QMenu code.(Pick session work from within timer events, seems to have been fixed in 2012)
 # 2012: Using new check mark feature in QMenu Menu to indicate if QMenu is activated or not instead of differently named menu items
-# Docked View? check for mouse over viewManager in signature first, then get viewport (a,b,c,d?) then view type. if not vm, check signature for type (render tree, texture editor, ICE Tree?)
-# and find first open, visible type of this view and take that
+
+
+
+ 
+
+#New Bugs:
+#Material Manager is not a relational view?  -> Rendertree can't be interrogated, MM has no "Views" to look through.
+
 
 # = Bugs and TODOs= 
 #TODO: Try using a proper command for DisplayMenuSet and see if problem with modal PPGs persists
@@ -769,10 +782,10 @@ def XSILoadPlugin( in_reg ):
 	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
 	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
 		 																 #wrong menus are displayed based on selection that does not exist anymore in new scene)
-	#in_reg.RegisterEvent( "QMenuInitialize", c.siOnStartup ) #Not used anymore in favour of timer event below, see comment to function definition for details
+	in_reg.RegisterTimerEvent( "QMenuInitialize", 0,1 ) #Not used anymore in favour of timer event below, see comment to function definition for details
 	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
-	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown )
+	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown ) #Menu Display event handler, checks the pressed key against the defined keyboard eventsd for QMenu
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded) #Test event to center new objects
 	
@@ -3916,29 +3929,22 @@ def RefreshDisplayEvents():
 	if len(globalQMenu_DisplayEvents) == 0:
 		PPG.DisplayEvent.Value = -1
 	
-
-			
+	
 #=========================================================================================================================
 #===================================== Command Callback Functions ========================================================
 #=========================================================================================================================
 
 #This is the main function that creates the string describing the Menu to render
 def DisplayMenuSet( MenuSetIndex ):
-	#Print("DisplayQMenu_MenuSet_Execute called", c.siVerbose)
+	#Print("DisplayMenuSet called", c.siVerbose)
+	globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
 	ViewSignatures = (getView(True)) #Get the short/nice view signature silently (without printing it)
 	ViewSignature = ViewSignatures[0]
-	oXSIView = ViewSignatures[2]
+	oXSIView = ViewSignatures[2] #The getView() function has built-in heuristic to get the view object under the mnouse as reliably as possible. It returns the view object as third item of the return value array.
 	#Print (ViewSignature)
-	#Test code to find floating window the user is currently working in.
-	#This would be useful to e.g. get the currently active projection that's selected in a texture editor, or selected nodes in Render Tree.
-	#However, defining popup menus for Rendertree is a bit futile because it's native menues are pretty complete already,
-	#and for Tex Editor there would first need to be proper commands for all the UV operations available(atm most of the logic seems 
-	#to happen in the menu callbacks), there are no commands that could be conveniently used in a custom popup menu. 
-	#Instead extensive scripting would be required.
-	
-	
 	
 	"""
+	#Test code to find floating window the user is currently working in by screen coordinates (unreliably :-(
 	#======= Handle cases in which the mouse cursor is over the view manager (any of the four main 3D view areas) =======
 	
 	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
@@ -3957,14 +3963,15 @@ def DisplayMenuSet( MenuSetIndex ):
 	
 	t0 = time.clock() #Record time before we start getting the first 4 menus
 
-	globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
 	
+	CmdLog = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
+	Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)
 	#Look through all defined View signatures known to QMenu and find the first that fits
 	if globalQMenu_ViewSignatures != None:
 		oCurrentView = None
 		for oView in globalQMenu_ViewSignatures.Items:
 			#if oView.Signature == ViewSignature:
-			if ViewSignature.find(oView.Signature) > -1:
+			if ViewSignature.find(oView.Signature) > -1: #
 				oCurrentView = oView
 				break  #Lets take the first matching view signature we find (there should not be duplicates anyway)
 		
@@ -3978,7 +3985,7 @@ def DisplayMenuSet( MenuSetIndex ):
 		if oMenuSet != None:
 
 			oContext = PrepareContextObject(None) #Lets fill our generic context object with all the data we have at hand for this session.
-				#so that only little remaining required data needs to be filled in on every menu or menu item object we iterate over -> faster.
+				#so that only the little remaining required data needs to be filled in on every menu or menu item object we iterate over -> faster.
 			oContext.storeCurrentXSIView (oXSIView)
 			
 			oAMenu = None; #AMenuItemList = list()
@@ -4011,11 +4018,8 @@ def DisplayMenuSet( MenuSetIndex ):
 				if ScanDepth > MaxScanDepth:
 					MaxScanDepth = ScanDepth
 					
-					
-				
 			QMenuGetSelectionDetails(MaxScanDepth) #Assemble information about current selection
-			
-			
+					
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
 				oQMenuDisplayContext = oMenuSet.AContexts[RuleIndex]
 				oContext.storeQMenuObject(oQMenuDisplayContext)
@@ -4202,6 +4206,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				#WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
 				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
+				Application.Preferences.SetPreferenceValue("scripting.cmdlog", CmdLog) #Re-enable command logging
 				
 				#win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
 				#===========================================================================
@@ -4251,7 +4256,6 @@ def DisplayMenuSet( MenuSetIndex ):
 								oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]]
 				
 				if oClickedMenuItem != None:
-					
 					return oClickedMenuItem
 				else:
 					return None
@@ -4311,19 +4315,22 @@ def QMenuDisplayMenuSet_0_Init( in_Ctxt ):
 	return True				
 
 def QMenuDisplayMenuSet_0_Execute():
-	Print("QMenuDisplayMenuSet_0_Execute called", c.siVerbose)
+	#Print("QMenuDisplayMenuSet_0_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(0)
 		if oQMenu_MenuItem != None:
 			globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 			globalQMenu_LastUsedItem.set(oQMenu_MenuItem)
 			bNonVerboseErrorReporting = False
-			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
-			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
-									#It will execute the chosen MenuItem with no noticeable delay.
-									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
+			XSIVersion = getXSIMainVersion()
+			if XSIVersion < 10: #Pre 2012 version of Softimage? Use old-style method of menu item execution 
+				QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
+			else:
+				QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+				QMenuTimer.Reset( 0, 1 ) # Reset the timer with a millisecond until execution and with just a single repetition
+									     # It will execute the chosen MenuItem with no noticeable delay.
+									     # We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+									     # is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage's Edit menu
 				
 def QMenuDisplayMenuSet_1_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4334,19 +4341,22 @@ def QMenuDisplayMenuSet_1_Init( in_Ctxt ):
 	return True				
 
 def QMenuDisplayMenuSet_1_Execute():
-	Print("QMenuDisplayMenuSet_1_Execute called", c.siVerbose)
+	#Print("QMenuDisplayMenuSet_1_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(1)
 		if oQMenu_MenuItem != None:
 			globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 			globalQMenu_LastUsedItem.set(oQMenu_MenuItem)
 			bNonVerboseErrorReporting = False
-			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
-			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
-									#It will execute the chosen MenuItem with no noticeable delay.
-									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
+			XSIVersion = getXSIMainVersion()
+			if XSIVersion < 10: #Pre 2012 version of Softimage? Use old-style method of menu item execution 
+				QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
+			else:
+				QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+				QMenuTimer.Reset( 0, 1 ) # Reset the timer with a millisecond until execution and with just a single repetition
+									     # It will execute the chosen MenuItem with no noticeable delay.
+									     # We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+									     # is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage's Edit menu
 
 def QMenuDisplayMenuSet_2_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4357,19 +4367,22 @@ def QMenuDisplayMenuSet_2_Init( in_Ctxt ):
 	return True				
 
 def QMenuDisplayMenuSet_2_Execute():
-	Print("QMenuDisplayMenuSet_2_Execute called", c.siVerbose)
+	#Print("QMenuDisplayMenuSet_2_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(2)
 		if oQMenu_MenuItem != None:
 			globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 			globalQMenu_LastUsedItem.set(oQMenu_MenuItem)
-			bNonVerboseErrorReporting = False				
-			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
-			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
-									#It will execute the chosen MenuItem with no noticeable delay.
-									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
+			bNonVerboseErrorReporting = False
+			XSIVersion = getXSIMainVersion()
+			if XSIVersion < 10: #Pre 2012 version of Softimage? Use old-style method of menu item execution 
+				QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
+			else:
+				QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+				QMenuTimer.Reset( 0, 1 ) # Reset the timer with a millisecond until execution and with just a single repetition
+									     # It will execute the chosen MenuItem with no noticeable delay.
+									     # We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+									     # is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage's Edit menu
 
 def QMenuDisplayMenuSet_3_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
@@ -4380,19 +4393,22 @@ def QMenuDisplayMenuSet_3_Init( in_Ctxt ):
 	return True				
 
 def QMenuDisplayMenuSet_3_Execute():
-	Print("QMenuDisplayMenuSet_3_Execute called", c.siVerbose)
+	#Print("QMenuDisplayMenuSet_3_Execute called", c.siVerbose)
 	if App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled"):
 		oQMenu_MenuItem = DisplayMenuSet(3)
 		if oQMenu_MenuItem != None:
 			globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 			globalQMenu_LastUsedItem.set(oQMenu_MenuItem)
 			bNonVerboseErrorReporting = False
-			QMenuExecuteMenuItem_Execute(oQMenu_MenuItem, bNonVerboseErrorReporting)
-			#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-			#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
-									#It will execute the chosen MenuItem with no noticeable delay.
-									#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-									#is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage'S Edit menu
+			XSIVersion = getXSIMainVersion()
+			if XSIVersion < 10: #Pre 2012 version of Softimage? Use old-style method of menu item execution 
+				QMenuExecuteMenuItem_Execute(oQMenu_MenuItem , bNonVerboseErrorReporting)
+			else:
+				QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+				QMenuTimer.Reset( 0, 1 ) # Reset the timer with a millisecond until execution and with just a single repetition
+									     # It will execute the chosen MenuItem with no noticeable delay.
+									     # We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+									     # is the last piece of code that's executed by this plugin so it properly appears as repeatable in Softimage's Edit menu
 
 						
 def QMenuExecuteMenuItem_Init( in_ctxt ):
@@ -4781,6 +4797,7 @@ def QMenuPrintValueChanged_OnEvent( in_ctxt):
 #Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
+	XSIVersion = getXSIMainVersion()
 	globalQMenuDisplayEventContainer = getGlobalObject("globalQMenu_DisplayEvents")
 	if globalQMenuDisplayEventContainer != None:
 		globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
@@ -4790,15 +4807,9 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 		#Print ("Pressed Key is: " + str(KeyPressed))
 		#Print ("Mask Key is: " + str(KeyMask))
 		Consumed = False #Event hasn't been consumed yet
-		
 		IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
-		#Print("Key Pressed: " + str(KeyPressed))
-		if KeyPressed not in IlligalKeyPressedValues:
-			#CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
-			#Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
-			QMenuConfigurator = App.QMenuGetConfiguratorCustomProperty()
-			#if CommandLoggingState == True: #Re-enable command logging
-				#Application.SetValue("preferences.scripting.cmdlog", True , "")
+		if KeyPressed not in IlligalKeyPressedValues: #Not only a modifier key was pressed?
+			QMenuConfigurator = getQMenuConfiguratorCustomProperty() #App.QMenuGetConfiguratorCustomProperty()
 
 			if QMenuConfigurator != None:
 				if QMenuConfigurator.RecordViewSignature.Value == True:
@@ -4834,15 +4845,16 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 							globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 							globalQMenu_LastUsedItem.set(oChosenMenuItem)
 							bNonVerboseErrorReporting = False
-							#gc.collect()
-							QMenuExecuteMenuItem_Execute (oChosenMenuItem, bNonVerboseErrorReporting)
-							#App.QMenuExecuteMenuItem(oChosenMenuItem, bNonVerboseErrorReporting)
-							#gc.collect()
-							#QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-							#QMenuTimer.Reset( 0, 1 ) #Reset the timer with a millisecond until execution and with just a single repetition
-													#It will execute the chosen MenuItem with no noticeable delay.
-													#We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-													#is the last piece of code that's executed by this plugin so it properly appears a repeatable in Softimage's Edit menu
+
+							if XSIVersion < 10: #Use old method to execute the picked menu item directly in case Softimage version is older than 2012
+								QMenuExecuteMenuItem_Execute (oChosenMenuItem, bNonVerboseErrorReporting)
+							
+							else: #We have Softimage 2012 or younger?
+								QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+								QMenuTimer.Reset( 0, 1 )# Reset the timer with a millisecond until execution and with just a single repetition
+														# It will execute the chosen MenuItem with no noticeable delay.
+														# We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+														# is the last piece of code that's executed by this plugin so it properly appears a repeatable menu item in Softimage's Edit menu in the main menu bar
 					
 						break #We only care for the first found display event assuming there are no duplicates (and even if there are it's not our fault)
 					
@@ -4851,16 +4863,13 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 		else:
 			#Print("Only Modifier Key was pressed!")
 			in_ctxt.SetAttribute("Consumed", Consumed)
-				#gc.collect()
+
 
 #Timer event that prevents a race condition between init code and custom preference that might not yet be installed when Softimage starts up.
 #The timer event code is executed once Softimage has stopped staring up (hence the custom preference is then already installed) and there is time
 #to execute the code.
-
 def QMenuExecution_OnEvent (in_ctxt):
 	Print("QMenu: QMenuExecution_OnEvent called",c.siVerbose)
-	InitQMenu()
-	"""
 	globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 	
 	if globalQMenu_LastUsedItem != None:	
@@ -4868,12 +4877,12 @@ def QMenuExecution_OnEvent (in_ctxt):
 			oItem = globalQMenu_LastUsedItem.item
 			bNonVerboseErrorReporting = False
 			QMenuExecuteMenuItem_Execute (oItem, bNonVerboseErrorReporting)
-	"""
+	
 
 #Legacy event that hosted the init code previously. We now use	the timer event above.
 def QMenuInitialize_OnEvent (in_ctxt):
 	Print ("QMenu: QMenu Startup event called",c.siVerbose)
-	
+	InitQMenu()
 	
 def InitQMenu():
 	initializeQMenuGlobals(True)
@@ -4941,12 +4950,16 @@ def QMenuDestroy_OnEvent (in_ctxt):
 #=========================================================================================================================					
 #===================================== Custom Property Menu Callback Functions ===========================================
 #=========================================================================================================================
-
-def QMenu_Init( in_ctxt ):
-	oMenu = in_ctxt.Source
+def getXSIMainVersion():
 	Version = Application.Version()
 	VersionList = Version.split(".")
 	VersionMain = int(VersionList[0])
+	return VersionMain
+
+#QMenu Menu initialisation
+def QMenu_Init( in_ctxt ):
+	oMenu = in_ctxt.Source
+	VersionMain = getXSIMainVersion()
 	#print VersionMain
 	#print type(VersionMain)
 	
@@ -5432,16 +5445,11 @@ def getView( Silent = False):
 	if WindowSignatureShort.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
 		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
 		oVM = Views("vm")
-		#print "1"
 		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
-		#print "2"
 		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
-		#print "3"
 		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
 		if oXSIView != None:
-			#print oXSIView.Type
 			if oXSIView.Type == "ICE Tree":
-				#print "Yo"
 				WindowSignatureShort = WindowSignatureShort.replace("RenderTree", "ICETree")
 				WindowSignature = WindowSignature.replace("RenderTree", "ICETree")
 	
@@ -5455,8 +5463,9 @@ def getView( Silent = False):
 			oXSIView = getFirstValidViewOfType(Views, "ICE Tree")
 		if WindowSignatureShort.find("RenderTree") > -1:
 			oXSIView = getFirstValidViewOfType(Views, "Render Tree")
+		if WindowSignatureShort.find("TextureEditor") > -1:
+			oXSIView = getFirstValidViewOfType(Views, "Texture Editor")
 		
-					
 	#Yuk, lets carry on...
 	if Silent != True:
 		Print ("Picked Window has the following short QMenu View Signature: " + str(WindowSignatureShort), c.siVerbose)
@@ -5467,7 +5476,7 @@ def getView( Silent = False):
 	Signatures.append (WindowSignature)
 	Signatures.append (oXSIView)
 	#Signatures.append (WindowPos)
-	Print(Signatures)
+	#Print(Signatures)
 	return Signatures
 
 def getFirstValidViewOfType(ViewCollection, ViewType):
@@ -5802,16 +5811,15 @@ def getQMenuConfiguratorCustomProperty():
 def getQMenuPreferencesCustomProperty():
 	colQMenuConfigurator = XSIFactory.CreateActiveXObject( "XSI.Collection" )
 	
-	CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
-	Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
+	#CommandLoggingState = Application.Preferences.GetPreferenceValue("scripting.cmdlog")
+	#Application.Preferences.SetPreferenceValue("scripting.cmdlog", False)  #Disable command logging
 	
 	CustomProperties = App.FindObjects( "", "{76332571-D242-11d0-B69C-00AA003B3EA6}" ) #Find all Custom Properties
 	for oProp in CustomProperties:
 		if oProp.Type == ("QMenuPreferences"): #Find all Custom Properties of Type "QMenuConfigurator"
 			break
 
-	if CommandLoggingState == True: #Re-enable command logging
-		Application.SetValue("preferences.scripting.cmdlog", True , "")
+	#Application.Preferences.SetPreferenceValue("scripting.cmdlog", CommandLoggingState)
 	
 	return o	
 #=========================================================================================================================	
