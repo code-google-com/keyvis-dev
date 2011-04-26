@@ -21,8 +21,6 @@
 
 
 
- 
-
 #New Bugs:
 #Material Manager is not a relational view?  -> Rendertree can't be interrogated, MM has no "Views" to look through.
 
@@ -578,11 +576,12 @@ class QMenuViewSignatures: #Container class for existing ViewSignatures
 	 # Declare list of exported attributes
 	_public_attrs_ = ['Items']
 	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
+	_readonly_attrs_ = ['Type']
 	
 	def __init__(self):
 		 # Initialize exported attributes:
 		self.Items = list()
+		self.Type = "QMenuViewSignatures"
 
 	def addSignature (self, signature):
 		items = self.Items
@@ -637,6 +636,48 @@ class QMenuMissingCommand:
 		self.Name = ""
 		self.UID = ""
 
+class QMenuRecentlyCreatedICENode:
+ # Declare list of exported functions:
+	_public_methods_ = ['storeCommandScriptingName', 'storePresetFileName']
+	 # Declare list of exported attributes
+	_public_attrs_ = ['Type','Name','UID','CommandScriptingName','PresetFileName']
+	 # Declare list of exported read-only attributes:
+	_readonly_attrs_ = ['Type']
+	
+	def __init__(self):
+		 # Initialize exported attributes:
+		self.Type = "QMenuRecentlyCreatedICENode"
+		self.Name = ""
+		self.UID = ""
+		CommandScriptingName = ""
+		PresetFileName = ""
+
+	def storeCommandScriptingName (self, CommandScriptingName):
+		self.CommandScriptingName = CommandScriptingName
+	
+	def storePresetFileName (self, PresetFileName):
+		self.PresetFileName = PresetFileName
+
+"""
+class QMenuRecentlyCreatedICENodes: #Container class storing existing DisplayEvents
+	# Declare list of exported functions:
+	_public_methods_ = ['addNode']
+	 # Declare list of exported attributes
+	_public_attrs_ = ['Nodes']
+	 # Declare list of exported read-only attributes:
+	_readonly_attrs_ = []
+	
+	def __init__(self):
+		 # Initialize exported attributes:
+		self.Nodes = list()
+	
+	def addNode(self, Node):
+		items = self.Items
+		items.append(Event)
+		while len(items) > 10:
+			items.pop(0)
+"""		
+		
 #It is potentially unsafe to reference Softimage command objects directly, we use a standin class instead that stores name and UID of the
 #respective command.	
 class QMenuCommandPlaceholder:
@@ -658,9 +699,9 @@ class QMenuCommandPlaceholder:
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QMenuContext:
  # Declare list of exported functions:
-	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView'] #'getSelectionClassNames'
+	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView','storeLastICENode'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView' ]
+	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView','LastICENodes' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['Type']
 	
@@ -745,7 +786,21 @@ class QMenuContext:
 	def storeCurrentXSIView (self, oXSIView):
 		self.CurrentXSIView = oXSIView
 		
+	def storeLastICENode (self, ICENode):
+		cleanList = list()
+		items = self.LastICENodes
+		items.append(ICENode)
 		
+		#Remove potential duplicates
+		for item in items:
+			if item.Name != ICENode.Name:
+				cleanList.append(item)
+		
+		#10 items in list max
+		while len(items) >= 10:
+			items.pop(0)
+			
+		cleanList.append(ICENode)
 #=========================================================================================================================				
 #============================================== Plugin Initialisation ====================================================
 #=========================================================================================================================	
@@ -758,6 +813,8 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Major = 0
 	in_reg.Minor = 95
 
+	XSIVersion = getXSIMainVersion()
+	
 	#=== Register the QMenu Configurator Custom Property ===
 	in_reg.RegisterProperty( "QMenuConfigurator" )
 	in_reg.RegisterProperty( "QMenuPreferences" )
@@ -782,13 +839,16 @@ def XSILoadPlugin( in_reg ):
 	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
 	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
 		 																 #wrong menus are displayed based on selection that does not exist anymore in new scene)
-	in_reg.RegisterTimerEvent( "QMenuInitialize", 0,1 ) #Not used anymore in favour of timer event below, see comment to function definition for details
+	in_reg.RegisterTimerEvent( "QMenuInitialize", 0,1 )
 	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
 	in_reg.RegisterEvent( "QMenuDestroy", c.siOnTerminate)
-	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown ) #Menu Display event handler, checks the pressed key against the defined keyboard eventsd for QMenu
+	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown ) #Menu Display event handler, checks the pressed key against the defined keyboard events for QMenu
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded) #Test event to center new objects
 	
+	if XSIVersion >= 10:
+		in_reg.RegisterEvent( "QMenuRecordMRUNodes", c.siOnBeginCommand) #siOnBeginCommand
+		
 	#=== Register Menus ===
 	#in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
 	# siMenuMainApplicationID
@@ -4547,6 +4607,11 @@ def QMenuCreateObject_Execute( QMenuType ):
 		QMenuElement = QMenuGlobals()
 	if QMenuType == "Context":
 		QMenuElement = QMenuContext()
+	if QMenuType == "RecentlyCreatedICENode":
+		QMenuElement = QMenuRecentlyCreatedICENode()
+	#if QMenuType == "RecentlyCreatedICENodes":
+		#QMenuElement = QMenuRecentlyCreatedICENodes()
+		
 	# Class MUST be wrapped before being returned:
 	if QMenuElement != None:
 		return win32com.server.util.wrap(QMenuElement)
@@ -4784,9 +4849,7 @@ def QMenuGetSelectionDetails(MaxScanDepth):
 		#t2 = time.clock()
 		#TotalTime = t2 - t1
 		#Print("Time taken to assemble selection info: " + str(TotalTime));
-		"""
-		pass
-		"""
+
 
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
@@ -4794,7 +4857,7 @@ def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
 	Print (Object.Type)
 
-#Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
+# Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
 	XSIVersion = getXSIMainVersion()
@@ -4865,9 +4928,9 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 			in_ctxt.SetAttribute("Consumed", Consumed)
 
 
-#Timer event that prevents a race condition between init code and custom preference that might not yet be installed when Softimage starts up.
-#The timer event code is executed once Softimage has stopped staring up (hence the custom preference is then already installed) and there is time
-#to execute the code.
+# Timer event that prevents a race condition between init code and custom preference that might not yet be installed when Softimage starts up.
+# The timer event code is executed once Softimage has stopped staring up (hence the custom preference is then already installed) and there is time
+# to execute the code.
 def QMenuExecution_OnEvent (in_ctxt):
 	Print("QMenu: QMenuExecution_OnEvent called",c.siVerbose)
 	globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
@@ -4879,7 +4942,7 @@ def QMenuExecution_OnEvent (in_ctxt):
 			QMenuExecuteMenuItem_Execute (oItem, bNonVerboseErrorReporting)
 	
 
-#Legacy event that hosted the init code previously. We now use	the timer event above.
+# Legacy event that hosted the init code previously. We now use	the timer event above.
 def QMenuInitialize_OnEvent (in_ctxt):
 	Print ("QMenu: QMenu Startup event called",c.siVerbose)
 	InitQMenu()
@@ -4927,6 +4990,7 @@ def InitQMenu():
 	Application.ExecuteScriptCode("DoNothing = True", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
 	App.QMenuRender("") #Call QMenu to load the required .Net components to avoid having to wait when it's actually called manually for the first time after startup
 
+# Ask user to safe the config file before XSI quits
 def QMenuDestroy_OnEvent (in_ctxt): 
 	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
 	if globalQMenu_ConfigStatus.Changed == True:
@@ -4939,13 +5003,78 @@ def QMenuDestroy_OnEvent (in_ctxt):
 			if Result == False:  #Something went wrong
 				#Message = ("The QMenu configuration file could not be written - would you like to save to the dafault backup file?")
 				#Caption = ("Saving failed, save a QMenu Configuration backup file?")
-				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed
-				
-							
+				#TODO: Add backup function that saves file to a default position in case the previous save attempt failed			
 				Message = ("Sorry, the QMenu configuration file could not be written.\n\nMaybe the folder does not exist or you don't have write permission?")
 				Caption = ("Saving failed!")
 				FailedMessage = XSIUIToolkit.MsgBox( Message, 16, Caption )
 
+"""
+def QMenuRecordMRUNodes_OnEvent(in_ctxt):
+	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True:
+	
+		LastCmd = in_ctxt.GetAttribute("Command")
+		CmdAborted = in_ctxt.GetAttribute("Aborted")
+		if CmdAborted != True:
+			ScriptingName = LastCmd.ScriptingName
+			Print("Last Command's Name: " + str(LastCmd.Name))
+			Print("Last Command's Scripting Name: " + ScriptingName)
+			
+			if ScriptingName == "AddICECompoundNode" or ScriptingName == "AddICENode" :
+				Print(LastCmd.Arguments)
+				for i in range(0, LastCmd.Arguments.Count):
+					Print ("Argument Type: " + str(LastCmd.Arguments(i).Type))
+					Print("Argument " + str(i) + " is a: " + str(LastCmd.Arguments(i)))
+					Print ("Argument Value is: " + str(LastCmd.Arguments(i).Value))
+			
+			#Print("Arguments are: " + str(LastCmd.Arguments(1).Value))
+			#try:
+				#Print(LastCmd.Type)
+			#except:
+				#Print ("Last Command has no attribute named type.", c.siWarning)
+			
+				RetVal = in_ctxt.GetAttribute("ReturnValue")
+				Print("Return Value is: " + str(RetVal))
+				try:
+					Print ("Return Value is of type: " + str(RetVal.Type))
+				except:
+					Print ("Last Commands return value has no attribute named type.", c.siWarning )
+	
+		else:
+			Print ("Command has been aborted: " + str(CmdAborted))
+"""
+def QMenuRecordMRUNodes_OnEvent(in_ctxt):
+	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True:
+	
+		LastCmd = in_ctxt.GetAttribute("Command")
+		ScriptingName = LastCmd.ScriptingName
+		Print("Last Command's Name: " + str(LastCmd.Name))
+		Print("Last Command's Scripting Name: " + ScriptingName)
+			
+		if ScriptingName == "AddICECompoundNode" or ScriptingName == "AddICENode" :
+			#Print(LastCmd.Arguments)
+			for i in range(0, LastCmd.Arguments.Count):
+				Print ("Argument Type: " + str(LastCmd.Arguments(i).Type))
+				Print("Argument " + str(i) + " is a: " + str(LastCmd.Arguments(i).Value))
+				#Print ("Argument Name is: " + str(LastCmd.Arguments.Item(i)))
+		
+			#Print("Arguments are: " + str(LastCmd.Arguments(1).Value))
+			#try:
+				#Print(LastCmd.Type)
+			#except:
+				#Print ("Last Command has no attribute named type.", c.siWarning)
+"""
+			RetVal = in_ctxt.GetAttribute("ReturnValue")
+			Print("Return Value is: " + str(RetVal))
+			try:
+				Print ("Return Value is of type: " + str(RetVal.Type))
+			except:
+				Print ("Last Commands return value has no attribute named type.", c.siWarning )
+	
+		else:
+			Print ("Command has been aborted: " + str(CmdAborted))
+"""
+			
+			
 
 #=========================================================================================================================					
 #===================================== Custom Property Menu Callback Functions ===========================================
@@ -5537,6 +5666,9 @@ def initializeQMenuGlobals(force = False):
 	
 	if (getGlobalObject ("globalQMenu_ContextObject") == None) or force == True:
 		setGlobalObject ("globalQMenu_ContextObject", App.QMenuCreateObject("Context"))
+
+	#if (getGlobalObject ("globalQMenu_RecentlyCreatedICENodes") == None) or force == True:
+		#setGlobalObject ("globalQMenu_RecentlyCreatedICENodes", App.QMenuCreateObject("RecentlyCreatedICENodes"))
 			
 	QMenuGetSelectionDetails(0)
 	
