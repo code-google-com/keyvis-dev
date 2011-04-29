@@ -846,8 +846,8 @@ def XSILoadPlugin( in_reg ):
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded) #Test event to center new objects
 	
-	if XSIVersion >= 10:
-		in_reg.RegisterEvent( "QMenuRecordMRUNodes", c.siOnBeginCommand) #siOnBeginCommand
+	#if XSIVersion >= 10:
+		#in_reg.RegisterEvent( "QMenuRecordMRUNodes", c.siOnEndCommand) #siOnBeginCommand
 		
 	#=== Register Menus ===
 	#in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
@@ -5043,8 +5043,9 @@ def QMenuRecordMRUNodes_OnEvent(in_ctxt):
 			Print ("Command has been aborted: " + str(CmdAborted))
 """
 def QMenuRecordMRUNodes_OnEvent(in_ctxt):
-	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True:
 	
+	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True or 1:
+		print ("Yo")
 		LastCmd = in_ctxt.GetAttribute("Command")
 		ScriptingName = LastCmd.ScriptingName
 		Print("Last Command's Name: " + str(LastCmd.Name))
