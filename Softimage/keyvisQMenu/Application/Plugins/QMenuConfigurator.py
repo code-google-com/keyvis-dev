@@ -233,7 +233,7 @@ class QMenu_Menu:
  # Declare list of exported functions:
 	_public_methods_ = ['insertMenuItem','removeMenuItem','removeAllMenuItems','removeMenuItemAtIndex','insertTempMenuItem','appendTempMenuItem','removeTempMenuItem','removeTempMenuItemAtIndex','removeAllTempMenuItems']
 	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','UID', 'Name', 'Items', 'tempItems','Code','Language','MenuItemLastExecuted', 'ExecuteCode']
+	_public_attrs_ = ['Type','UID', 'Name', 'Items', 'TempItems','Code','Language','MenuItemLastExecuted', 'ExecuteCode']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['Type']
 	
@@ -243,7 +243,7 @@ class QMenu_Menu:
 		self.UID = XSIFactory.CreateGuid()
 		self.Name = str()
 		self.Items = list()
-		self.tempItems = list()
+		self.TempItems = list()
 		self.Code = str()
 		#self.Code = unicode()
 		self.Language = "Python"
@@ -269,7 +269,7 @@ class QMenu_Menu:
 
 	
 	def removeAllTempMenuItems (self):
-		self.tempItems = list()
+		self.TempItems = list()
 	
 	def removeMenuItemAtIndex (self, index):
 		items = self.Items
@@ -280,25 +280,25 @@ class QMenu_Menu:
 			Print("QMenu Menu '" + str(self.Name) + "' does not have a menu item at index " + str(index) + " that could be removed!!", c.siError)
 			
 	def insertTempMenuItem (self, index, menuItem):
-		items = self.tempItems
+		items = self.TempItems
 		
 		if index == None:
-			index = 0 #len(tempItems)-1)
+			index = 0 #len(TempItems)-1)
 		items.insert (index,menuItem)
 	
 	def appendTempMenuItem (self, menuItem):
-		items = self.tempItems
+		items = self.TempItems
 		items.append (menuItem)
 	
 	def removeTempMenuItem (self, menuItem):
-		items = self.tempItems
+		items = self.TempItems
 		try:
 			items.remove (menuItem)
 		except:
 			Print("QMenu Menu '" + str(self.Name) + "' does not have a temporary menu called '" + str(menuItem.Name) + "' that could be removed!", c.siError)
 	
 	def removeTempMenuItemAtIndex (self, index):
-		items = self.tempItems
+		items = self.TempItems
 		try:
 			#menuItem = items[index]
 			items.pop(index)
@@ -699,15 +699,13 @@ class QMenuCommandPlaceholder:
 #The aquired data is passed in to Menu Contexts so these contexts don't need to harvest the data repeatedly -> Speed improvement.
 class QMenuContext:
  # Declare list of exported functions:
-	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView','storeLastICENode'] #'getSelectionClassNames'
+	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView','storeLastICENode', 'storeClickedMenu','storeClickedMenuItemNumber'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView','LastICENodes' ]
+	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView','ClickedMenu', 'ClickedMenuItemNumber', 'LastICENodes' ]
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['Type']
 	
 	def __init__( self ):
-		 # Initialize exported attributes:
-		#self.data = XSIFactory.CreateGridData();
 		self.Type = "Context"
 		self.ThisQMenuObject = None
 		self.X3DObjects = list()
@@ -723,7 +721,9 @@ class QMenuContext:
 		self.Menus = None
 		self.DispalyContexts = None
 		self.CurrentView = None
-
+		self.ClickedMenu = None
+		self.ClickedMenuItemNumber = None
+		self.LastICENodes = None
 
 	def storeQMenuObject ( self, oObj ):
 		self.ThisQMenuObject = oObj
@@ -742,11 +742,6 @@ class QMenuContext:
 		self.ClassNames = list()
 		for ClassName in ClassNameList:
 			self.ClassNames.append(ClassName)
-		#self.data.SetRowValues(1,ClassNameList)
-		#print ("Could not add " + str(ClassNameList) + " to Grid Data")
-				
-	#def getSelectionClassNames( self ):
-		#return self.data.GetRowValues(1)
 
 	def storeSelectionComponentClassNames ( self , ComponentClassNameList ):
 		self.ComponentClassNames = list()
@@ -787,13 +782,24 @@ class QMenuContext:
 		self.CurrentXSIView = oXSIView
 		
 	def storeLastICENode (self, ICENode):
+		"""
 		cleanList = list()
 		items = self.LastICENodes
 		items.append(ICENode)
+		items = list(set(items))
+	
+		#max 10 items in list
+		while len(items) >= 10:
+			items.pop(0)
+		"""
+
+		cleanList = list()
+		items = self.LastICENodes
+		#items.append(ICENode)
 		
-		#Remove potential duplicates
+		#Remove potential duplicates that may already be in the list
 		for item in items:
-			if item.Name != ICENode.Name:
+			if item != ICENode:
 				cleanList.append(item)
 		
 		#10 items in list max
@@ -801,6 +807,13 @@ class QMenuContext:
 			items.pop(0)
 			
 		cleanList.append(ICENode)
+
+	def storeClickedMenuItemNumber (self, ItemNumber):
+		self.ClickedMenuItemNumber = ItemNumber
+	
+	def storeClickedMenu (self, ClickedMenu):
+		self.ClickedMenu = ClickedMenu
+		
 #=========================================================================================================================				
 #============================================== Plugin Initialisation ====================================================
 #=========================================================================================================================	
@@ -845,13 +858,8 @@ def XSILoadPlugin( in_reg ):
 	in_reg.RegisterEvent( "QMenuCheckDisplayEvents" , c.siOnKeyDown ) #Menu Display event handler, checks the pressed key against the defined keyboard events for QMenu
 	#in_reg.RegisterEvent( "QMenuPrintValueChanged" , c.siOnValueChange)
 	#in_reg.RegisterEvent( "AutoCenterNewObjects" , c.siOnObjectAdded) #Test event to center new objects
-	
-	#if XSIVersion >= 10:
-		#in_reg.RegisterEvent( "QMenuRecordMRUNodes", c.siOnEndCommand) #siOnBeginCommand
-		
+
 	#=== Register Menus ===
-	#in_reg.RegisterMenu( c.siMenuTbGetPropertyID , "QMenuConfigurator" , true , true)
-	# siMenuMainApplicationID
 	in_reg.RegisterMenu( c.siMenuMainTopLevelID  , "QMenu" , False , True)
 	
 	
@@ -1721,7 +1729,6 @@ def QMenuConfigurator_DeleteMenu_OnClicked():
 		RefreshMenuList()
 			
 		if CurrentMenuIndex != None:
-			#Print("CurrentContextIndex is: " + str(CurrentContextIndex))
 			if CurrentMenuIndex < 2: #The first menuitem was selected?
 				if len(MenusEnum) > 2: # and more than 1 contexts in the enum list left?
 					PreviousMenuName = MenusEnum[CurrentMenuIndex +2]
@@ -4158,7 +4165,7 @@ def DisplayMenuSet( MenuSetIndex ):
 									NewMenuFound = True
 
 						#Lets find temporary submenus	
-						for oMenuItem in oMenu.tempItems:
+						for oMenuItem in oMenu.TempItems:
 							if oMenuItem.Type == "QMenu_Menu":
 								if not (oMenuItem in oMenus):
 									oMenus.append(oMenuItem)
@@ -4179,7 +4186,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				for oMenu in oMenus: 
 					MenuString = MenuString + "[" #Start the menu string
 					if oMenu != None:
-						if (len(oMenu.Items) == 0) and (len(oMenu.tempItems) == 0):
+						if (len(oMenu.Items) == 0) and (len(oMenu.TempItems) == 0):
 							MenuString = MenuString + "[[" + oMenu.Name + "]" +  "[-1]" + "[3]" + "]"
 						else:
 							if MenuCounter == 2 or MenuCounter == 3: #Add the title at the beginning of the menu in case it's menu 2 or 3
@@ -4222,7 +4229,7 @@ def DisplayMenuSet( MenuSetIndex ):
 									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[0]" + "]"
 
 							#Add temporary menu items to the display string
-							for oItem in oMenu.tempItems:
+							for oItem in oMenu.TempItems:
 								if oItem.Type == "Command":
 									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
 								if oItem.Type == "QMenu_MenuItem":
@@ -4281,13 +4288,14 @@ def DisplayMenuSet( MenuSetIndex ):
 						
 						#Was one of the upper two menus selected?
 						if MenuItemToExecute[0] == 0 or MenuItemToExecute[0] == 1: 
-							if MenuItemToExecute[1] == len(oClickedMenu.Items) + len(oClickedMenu.tempItems): #Was the menu Title selected?
+							#Was the menu Title selected?
+							if MenuItemToExecute[1] == len(oClickedMenu.Items) + len(oClickedMenu.TempItems): 
 								globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 								oClickedMenuItem = globalQMenu_LastUsedItem.item #When clicking on any of the Menu Titles repeat the last command
 							else:
 								#Was one of the temp menu items clicked on? (Temp menu items are always listed after permanent menu items)
 								if MenuItemToExecute[1] > (len(oClickedMenu.Items)-1): 
-									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items))]
+									oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items))]
 								#No, one of the normal menu items was selected...
 								else: 
 									oClickedMenuItem = oClickedMenu.Items[MenuItemToExecute[1]]
@@ -4300,7 +4308,7 @@ def DisplayMenuSet( MenuSetIndex ):
 							else:
 								#Was one of the temp menu items clicked on?
 								if MenuItemToExecute[1] > (len(oClickedMenu.Items)): 
-									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items)+1)] #get the clicked temp menu item
+									oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items)+1)] #get the clicked temp menu item
 								#No, one of the normal menu items was selected...
 								else: 
 									oClickedMenuItem = oClickedMenu.Items[MenuItemToExecute[1]-1] #Subtract the menu title entry 
@@ -4309,13 +4317,15 @@ def DisplayMenuSet( MenuSetIndex ):
 						if MenuItemToExecute[0] > 3:
 							if len(oClickedMenu.Items) > 0: #Are there any menu items to check for in the first place?
 								if MenuItemToExecute[1] > (len(oClickedMenu.Items)-1): #Was one of the temp menu items clicked on?
-									oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items))]
+									oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items))]
 								else:
 									oClickedMenuItem = oClickedMenu.Items[MenuItemToExecute[1]]
-							elif len(oClickedMenu.tempItems) > 0: #No Menu items, but maybe there are temp menu items..
-								oClickedMenuItem = oClickedMenu.tempItems[MenuItemToExecute[1]]
+							elif len(oClickedMenu.TempItems) > 0: #No Menu items, but maybe there are temp menu items..
+								oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]]
 				
 				if oClickedMenuItem != None:
+					oContext.storeClickedMenu (oClickedMenu)
+					oContext.storeClickedMenuItemNumber (MenuItemToExecute[1])
 					return oClickedMenuItem
 				else:
 					return None
@@ -5008,73 +5018,7 @@ def QMenuDestroy_OnEvent (in_ctxt):
 				Caption = ("Saving failed!")
 				FailedMessage = XSIUIToolkit.MsgBox( Message, 16, Caption )
 
-"""
-def QMenuRecordMRUNodes_OnEvent(in_ctxt):
-	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True:
-	
-		LastCmd = in_ctxt.GetAttribute("Command")
-		CmdAborted = in_ctxt.GetAttribute("Aborted")
-		if CmdAborted != True:
-			ScriptingName = LastCmd.ScriptingName
-			Print("Last Command's Name: " + str(LastCmd.Name))
-			Print("Last Command's Scripting Name: " + ScriptingName)
-			
-			if ScriptingName == "AddICECompoundNode" or ScriptingName == "AddICENode" :
-				Print(LastCmd.Arguments)
-				for i in range(0, LastCmd.Arguments.Count):
-					Print ("Argument Type: " + str(LastCmd.Arguments(i).Type))
-					Print("Argument " + str(i) + " is a: " + str(LastCmd.Arguments(i)))
-					Print ("Argument Value is: " + str(LastCmd.Arguments(i).Value))
-			
-			#Print("Arguments are: " + str(LastCmd.Arguments(1).Value))
-			#try:
-				#Print(LastCmd.Type)
-			#except:
-				#Print ("Last Command has no attribute named type.", c.siWarning)
-			
-				RetVal = in_ctxt.GetAttribute("ReturnValue")
-				Print("Return Value is: " + str(RetVal))
-				try:
-					Print ("Return Value is of type: " + str(RetVal.Type))
-				except:
-					Print ("Last Commands return value has no attribute named type.", c.siWarning )
-	
-		else:
-			Print ("Command has been aborted: " + str(CmdAborted))
-"""
-def QMenuRecordMRUNodes_OnEvent(in_ctxt):
-	
-	if Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled") == True or 1:
-		print ("Yo")
-		LastCmd = in_ctxt.GetAttribute("Command")
-		ScriptingName = LastCmd.ScriptingName
-		Print("Last Command's Name: " + str(LastCmd.Name))
-		Print("Last Command's Scripting Name: " + ScriptingName)
-			
-		if ScriptingName == "AddICECompoundNode" or ScriptingName == "AddICENode" :
-			#Print(LastCmd.Arguments)
-			for i in range(0, LastCmd.Arguments.Count):
-				Print ("Argument Type: " + str(LastCmd.Arguments(i).Type))
-				Print("Argument " + str(i) + " is a: " + str(LastCmd.Arguments(i).Value))
-				#Print ("Argument Name is: " + str(LastCmd.Arguments.Item(i)))
 		
-			#Print("Arguments are: " + str(LastCmd.Arguments(1).Value))
-			#try:
-				#Print(LastCmd.Type)
-			#except:
-				#Print ("Last Command has no attribute named type.", c.siWarning)
-"""
-			RetVal = in_ctxt.GetAttribute("ReturnValue")
-			Print("Return Value is: " + str(RetVal))
-			try:
-				Print ("Return Value is of type: " + str(RetVal.Type))
-			except:
-				Print ("Last Commands return value has no attribute named type.", c.siWarning )
-	
-		else:
-			Print ("Command has been aborted: " + str(CmdAborted))
-"""
-			
 			
 
 #=========================================================================================================================					

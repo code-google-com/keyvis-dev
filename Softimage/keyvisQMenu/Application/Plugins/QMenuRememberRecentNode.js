@@ -26,47 +26,37 @@ function XSIUnloadPlugin( in_reg )
 	return true;
 }
 
-
 // Callback for the QMenuRecordMRUNodes event.
 function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt )
 {
-	//Application.LogMessage("QMenuRememberRecentNodeEvent_OnEvent called",siVerbose);
 	var LastCmd = in_ctxt.GetAttribute("Command");
-	//Application.LogMessage("Command: " + in_ctxt.GetAttribute("Command").Name,siVerbose);
-
-	ScriptingName = LastCmd.ScriptingName;
-	//Application.LogMessage("Last Commands Name " + LastCmd.Name);
-	//Application.LogMessage("Last Commands Scripting Name " + ScriptingName);
-	
-	//if ScriptingName != "" 
-	//{
+	var ScriptingName = LastCmd.ScriptingName;
+	var strLastNodeCommandAndArgument = "";
 		if (ScriptingName == "AddICENode")
 		{
-			//Application.LogMessage("Argument 0  is: " && LastCmd.Arguments.Item(0).Value);
-			var strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
+			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
 			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
-			//Application.LogMessage (strLastNodeCommandAndArgument);
+			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
 		else if (ScriptingName == "AddICECompoundNode")
 		{
-			//Application.LogMessage("Argument 0  is: " && LastCmd.Arguments.Item(0).Value);
-			var strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
+			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
 			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
-			//Application.LogMessage (strLastNodeCommandAndArgument);
+			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
 		
 		else if (ScriptingName == "CreateShaderFromProgID")
 		{
-			//Application.LogMessage("Argument 0  is: " && LastCmd.Arguments.Item(0).Value);
-			var strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
+			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
 			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
-			//Application.LogMessage (strLastNodeCommandAndArgument);
+			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
+		
 
-	
 // 	This event can be aborted by returning true or false if you don't want to abort.
 	return false;
 }
+
 
 function QMenuGetRecentNode_Execute()
 {
@@ -74,40 +64,13 @@ function QMenuGetRecentNode_Execute()
 	return Application.Plugins("QMenuRememberRecentNode").UserData;
 }
 
-/*
-function getGlobalObject ( in_VariableName )
+function storeLastNodeCommandAndPresetName(strCmdAndPresetName)
 {
-	//if len(in_VariableName) == 0:
-		//Print("Invalid argument to getGlobalObject", c.siError)
-
-	dic = getDictionary()
-	
-	if in_VariableName in dic:
-		return dic[in_VariableName]
-	else:
-		return None
+	if (strCmdAndPresetName != "")
+		{
+			oQMenuGlobals = Application.Plugins("QMenuConfigurator").UserData;
+			oQMenuContext = oQMenuGlobals["globalQMenu_ContextObject"];
+			oQMenuContext.storeLastICENode(strCmdAndPresetName);
+		}
 }
 
-function setGlobalObject( in_VariableName, in_Value ):
-
-	//if len(in_VariableName) == 0:
-		//Print("Invalid argument to setGlobalObject", c.siError)
-
-	dic = getDictionary()		
-	dic[in_VariableName] = in_Value		
-
-function getDictionary()
-{
-	thisPlugin = Application.Plugins("QMenuConfigurator")
-	if thisPlugin.UserData == None:
-		# Create the dictionary on the fly.  Once created
-		# it will remain active as long as Softimage is running.
-		# (Unless you manually Unload or Reload this plugin)
-
-		var dict = Scripting.Dictionary;
-		thisPlugin.UserData = dict
-
-	g_dictionary = thisPlugin.UserData
-	return g_dictionary
-}
-*/
