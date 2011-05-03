@@ -18,12 +18,12 @@
 # Turned off command logging while assembling and evaluating menu data to reduce script log clutter
 # 2012: More reliable command execution by using e delayed timer event that ensure that clicked menu items are executed after any QMenu code.(Pick session work from within timer events, seems to have been fixed in 2012)
 # 2012: Using new check mark feature in QMenu Menu to indicate if QMenu is activated or not instead of differently named menu items
-
+# Added QMenuGetGlobalObjectByName command
 
 
 #New Bugs:
 #Material Manager is not a relational view?  -> Rendertree can't be interrogated, MM has no "Views" to look through.
-
+# It'S not possible to query for selected ICE nodes Preset name
 
 # = Bugs and TODOs= 
 #TODO: Try using a proper command for DisplayMenuSet and see if problem with modal PPGs persists
@@ -111,7 +111,7 @@ getClassName = getattr(App,'ClassName')
 #=========================================================================================================================
 
 
-class QMenuLastUsedItem:
+class QMenuLastUsedItem: #Stores the last used command or scripted menu item called from QMenu.
  # Declare list of exported functions:
 	_public_methods_ = ['set']
 	 # Declare list of exported attributes
@@ -128,7 +128,7 @@ class QMenuLastUsedItem:
 	def set (self, menuItem):
 		self.item = menuItem
 	
-class QMenuSeparator:
+class QMenuSeparator: #There is only one separator yet, a horizontal line.
  # Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
@@ -175,7 +175,7 @@ class QMenuSeparators: #Holds existing Separators
 		except:
 			Print(sep.Name + "could not be found in QMenu globals - nothing to delete!", c.siWarning)
 			
-class QMenu_MenuItem:
+class QMenu_MenuItem: #The scripted menu item class. Softimage commands are handled differently.
  # Declare list of exported functions:
 	_public_methods_ = []
 	 # Declare list of exported attributes
@@ -195,7 +195,7 @@ class QMenu_MenuItem:
 		self.Switch = False
 		self.IsEnabled = True
 
-class QMenu_MenuItems:
+class QMenu_MenuItems: #global Menu Items container. Not all menu items are always assigned to a menu. QMenuMenuItems stores them all, assigned or not.
  # Declare list of exported functions:
 	_public_methods_ = ['addMenuItem','deleteMenuItem']
 	 # Declare list of exported attributes
@@ -228,8 +228,8 @@ class QMenu_MenuItems:
 			items.remove (menuItem)
 		except:
 			Print("QMenu Menu Item " + str(menuItem.Name) + " was not found in global QMenu Menu Items and could not be deleted!", c.siError)
-			
-class QMenu_Menu:
+		
+class QMenu_Menu: #The menu class.
  # Declare list of exported functions:
 	_public_methods_ = ['insertMenuItem','removeMenuItem','removeAllMenuItems','removeMenuItemAtIndex','insertTempMenuItem','appendTempMenuItem','removeTempMenuItem','removeTempMenuItemAtIndex','removeAllTempMenuItems']
 	 # Declare list of exported attributes
@@ -267,7 +267,6 @@ class QMenu_Menu:
 	def removeAllMenuItems (self):
 		self.Items = list()
 
-	
 	def removeAllTempMenuItems (self):
 		self.TempItems = list()
 	
@@ -305,7 +304,7 @@ class QMenu_Menu:
 		except:
 			Print("QMenu Menu '" + str(self.Name) + "' does not have a temporary menu item at index " + str(index) + " that could be removed!!", c.siError)
 
-class QMenu_Menus:
+class QMenu_Menus: #Global menus container class. Some menus might not be assigned to menu sets. QMenu_Menus stores tham all, assigned or not.
  # Declare list of exported functions:
 	_public_methods_ = ['addMenu','deleteMenu']
 	 # Declare list of exported attributes
@@ -340,7 +339,7 @@ class QMenu_Menus:
 		except:
 			Print("QMenu Menu" + str(menu.Name) + " was not found in global QMenu Menu and could not be deleted!", c.siError)
 			
-class QMenu_MenuSet:
+class QMenu_MenuSet: #A menu set describes which menus are assinged to which display contexts in each quadrant (A,B,C,D)
  # Declare list of exported functions:
 	_public_methods_ = ['insertMenuAtIndex', 'removeMenuAtIndex','insertContextAtIndex', 'removeContextAtIndex', 'setMenutAtIndex','setContextAtIndex']
 	 # Declare list of exported attributes
@@ -422,8 +421,8 @@ class QMenu_MenuSet:
 			self.CContexts.pop(index)
 		if quadrant == "D":
 			self.DContexts.pop(index)
-			
-class QMenu_MenuSets: #Holds existing MenuSets
+
+class QMenu_MenuSets:  #Global MenuSets container class.	
  # Declare list of exported functions:
 	_public_methods_ = ['addSet','deleteSet']
 	 # Declare list of exported attributes
@@ -636,7 +635,7 @@ class QMenuMissingCommand:
 		self.Name = ""
 		self.UID = ""
 
-class QMenuRecentlyCreatedICENode:
+"""class QMenuRecentlyCreatedICENode:
  # Declare list of exported functions:
 	_public_methods_ = ['storeCommandScriptingName', 'storePresetFileName']
 	 # Declare list of exported attributes
@@ -658,7 +657,7 @@ class QMenuRecentlyCreatedICENode:
 	def storePresetFileName (self, PresetFileName):
 		self.PresetFileName = PresetFileName
 
-"""
+
 class QMenuRecentlyCreatedICENodes: #Container class storing existing DisplayEvents
 	# Declare list of exported functions:
 	_public_methods_ = ['addNode']
@@ -723,7 +722,7 @@ class QMenuContext:
 		self.CurrentView = None
 		self.ClickedMenu = None
 		self.ClickedMenuItemNumber = None
-		self.LastICENodes = None
+		self.LastICENodes = list()
 
 	def storeQMenuObject ( self, oObj ):
 		self.ThisQMenuObject = oObj
@@ -807,6 +806,7 @@ class QMenuContext:
 			items.pop(0)
 			
 		cleanList.append(ICENode)
+		self.LastICENodes = cleanList
 
 	def storeClickedMenuItemNumber (self, ItemNumber):
 		self.ClickedMenuItemNumber = ItemNumber
@@ -835,6 +835,7 @@ def XSILoadPlugin( in_reg ):
 	#=== Register Custom Commands ===
 	in_reg.RegisterCommand( "QMenuCreateObject" , "QMenuCreateObject" )
 	in_reg.RegisterCommand( "QMenuGetByName" , "QMenuGetByName" )
+	in_reg.RegisterCommand( "QMenuGetGlobalObjectByName" , "QMenuGetGlobalObjectByName" )
 	in_reg.RegisterCommand( "QMenuCreatePreferencesCustomProperty", "QMenuCreatePreferencesCustomProperty" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_0", "QMenuDisplayMenuSet_0" )
 	in_reg.RegisterCommand( "QMenuDisplayMenuSet_1", "QMenuDisplayMenuSet_1" )
@@ -4375,7 +4376,21 @@ def QMenuGetByName_Execute( strQMenuObjectType ,  strQMenuObjectName):
 		return oObject
 	else:
 		Print("QMenu: " + str(strQMenuObjectType) + " is an unknown Object Type", c.siError)
-	
+
+def QMenuGetGlobalObjectByName_Init(in_Ctxt):
+	oCmd = in_Ctxt.Source
+	oCmd.ReturnValue = True
+	oArgs = oCmd.Arguments
+	oArgs.Add("strQMenuGlobalObject")
+	oCmd.SetFlag(c.siSupportsKeyAssignment, False)
+	oCmd.SetFlag(c.siCannotBeUsedInBatch, False)
+	oCmd.SetFlag(c.siNoLogging, True)
+	oCmd.SetFlag(c.siAllowNotifications, False) #It's important this is "False" otherwise XSI becomes unstable when undoing the command (forgets about existing commands, but not always about the last executed one)
+	return True
+
+def QMenuGetGlobalObjectByName_Execute(strQMenuGlobalObject):
+	return (getGlobalObject(strQMenuGlobalObject))
+
 def QMenuDisplayMenuSet_0_Init( in_Ctxt ):
 	oCmd = in_Ctxt.Source
 	oCmd.SetFlag(c.siSupportsKeyAssignment, True)
@@ -4617,8 +4632,8 @@ def QMenuCreateObject_Execute( QMenuType ):
 		QMenuElement = QMenuGlobals()
 	if QMenuType == "Context":
 		QMenuElement = QMenuContext()
-	if QMenuType == "RecentlyCreatedICENode":
-		QMenuElement = QMenuRecentlyCreatedICENode()
+	#if QMenuType == "RecentlyCreatedICENode":
+		#QMenuElement = QMenuRecentlyCreatedICENode()
 	#if QMenuType == "RecentlyCreatedICENodes":
 		#QMenuElement = QMenuRecentlyCreatedICENodes()
 		
