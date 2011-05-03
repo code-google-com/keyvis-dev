@@ -11,10 +11,9 @@ function XSILoadPlugin( in_reg )
 	in_reg.Minor = 0;
 
 	in_reg.RegisterEvent("QMenuRememberRecentNodeEvent", siOnBeginCommand);
-	in_reg.RegisterCommand( "QMenuGetRecentNode" , "QMenuGetRecentNode" );
+	//in_reg.RegisterCommand( "QMenuGetRecentNode" , "QMenuGetRecentNode" );
 	
 	//RegistrationInsertionPoint - do not remove this line
-
 	return true;
 }
 
@@ -35,20 +34,20 @@ function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt )
 		if (ScriptingName == "AddICENode")
 		{
 			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
-			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
+			//Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
 			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
 		else if (ScriptingName == "AddICECompoundNode")
 		{
 			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
-			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
+			//Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
 			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
 		
 		else if (ScriptingName == "CreateShaderFromProgID")
 		{
 			strLastNodeCommandAndArgument = (ScriptingName + ";" + LastCmd.Arguments.Item(0).Value);
-			Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
+			//Application.Plugins("QMenuRememberRecentNode").UserData = strLastNodeCommandAndArgument;
 			storeLastNodeCommandAndPresetName(strLastNodeCommandAndArgument);
 		}
 		
@@ -58,19 +57,21 @@ function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt )
 }
 
 
-function QMenuGetRecentNode_Execute()
-{
-	//thisPlugin = Application.Plugins("QMenuRememberRecentNode");
-	return Application.Plugins("QMenuRememberRecentNode").UserData;
-}
-
 function storeLastNodeCommandAndPresetName(strCmdAndPresetName)
 {
 	if (strCmdAndPresetName != "")
 		{
 			oQMenuGlobals = Application.Plugins("QMenuConfigurator").UserData;
-			oQMenuContext = oQMenuGlobals["globalQMenu_ContextObject"];
+			oQMenuContext = Application.QMenuGetGlobalObjectByName("globalQMenu_ContextObject");
+			//Application.LogMessage(oQMenuContext);
 			oQMenuContext.storeLastICENode(strCmdAndPresetName);
 		}
 }
 
+/*
+function QMenuGetRecentNode_Execute()
+{
+	//thisPlugin = Application.Plugins("QMenuRememberRecentNode");
+	return Application.Plugins("QMenuRememberRecentNode").UserData;
+}
+*/
