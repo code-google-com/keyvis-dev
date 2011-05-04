@@ -19,11 +19,14 @@
 # 2012: More reliable command execution by using e delayed timer event that ensure that clicked menu items are executed after any QMenu code.(Pick session work from within timer events, seems to have been fixed in 2012)
 # 2012: Using new check mark feature in QMenu Menu to indicate if QMenu is activated or not instead of differently named menu items
 # Added QMenuGetGlobalObjectByName command
-
+# Added scripting preferences menu over script editor button, added plugin manager, made script editor menu easier to access over most of the Script editor
+#Additions to the context object: 	self.DispalyContexts = None, 	self.CurrentView = None, self.ClickedMenu = None, self.ClickedMenuItemNumber = None, self.LastICENodes = list(), self.SoftimageMainVersion = getXSIMainVersion()
 
 #New Bugs:
 #Material Manager is not a relational view?  -> Rendertree can't be interrogated, MM has no "Views" to look through.
 # It'S not possible to query for selected ICE nodes Preset name
+# siOnBeginCommand in Python does not return a useful command name
+
 
 # = Bugs and TODOs= 
 #TODO: Try using a proper command for DisplayMenuSet and see if problem with modal PPGs persists
@@ -657,7 +660,6 @@ class QMenuMissingCommand:
 	def storePresetFileName (self, PresetFileName):
 		self.PresetFileName = PresetFileName
 
-
 class QMenuRecentlyCreatedICENodes: #Container class storing existing DisplayEvents
 	# Declare list of exported functions:
 	_public_methods_ = ['addNode']
@@ -700,7 +702,7 @@ class QMenuContext:
  # Declare list of exported functions:
 	_public_methods_ = ['storeQMenuObject','storeX3DObjects','storeSelectionTypes','storeSelectionClassNames','storeSelectionComponentClassNames','storeSelectionComponentParents','storeSelectionComponentParentTypes','storeSelectionComponentParentClassNames','storeMenuItems','storeMenus','storeMenuSets','storeDisplayContexts','storeMenuContexts','storeCurrentXSIView','storeLastICENode', 'storeClickedMenu','storeClickedMenuItemNumber'] #'getSelectionClassNames'
 	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView','ClickedMenu', 'ClickedMenuItemNumber', 'LastICENodes' ]
+	_public_attrs_ = ['Type','ThisQMenuObject','X3DObjects','Types','ClassNames','ComponentClassNames','ComponentParents','ComponentParentTypes','ComponentParentClassNames','MenuItems','Menus','MenuSets','DisplayContexts','MenuContexts','CurrentXSIView','ClickedMenu', 'ClickedMenuItemNumber', 'LastICENodes','SoftimageMainVersion']
 	 # Declare list of exported read-only attributes:
 	_readonly_attrs_ = ['Type']
 	
@@ -723,6 +725,7 @@ class QMenuContext:
 		self.ClickedMenu = None
 		self.ClickedMenuItemNumber = None
 		self.LastICENodes = list()
+		self.SoftimageMainVersion = getXSIMainVersion()
 
 	def storeQMenuObject ( self, oObj ):
 		self.ThisQMenuObject = oObj
@@ -1028,7 +1031,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 
 	aUIitems = (CustomGFXFilesPath + "QMenu_MenuA.bmp", 0, CustomGFXFilesPath + "QMenu_MenuB.bmp", 1, CustomGFXFilesPath + "QMenu_MenuD.bmp", 3, CustomGFXFilesPath + "QMenu_MenuC.bmp",2)
 	oLayout.AddSpacer()
-	oLayout.AddStaticText("Select a Quad to Edit")
+	oLayout.AddStaticText("Select Quad to Edit")
 	oMenuSelector = oLayout.AddEnumControl ("QuadSelector", aUIitems, "Quadrant", c.siControlIconList)
 	oMenuSelector.SetAttribute(c.siUINoLabel, True)
 	oMenuSelector.SetAttribute(c.siUIColumnCnt,2)
@@ -1178,21 +1181,30 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	#oEditorHeight.SetAttribute(c.siUIWidthPercentage, 10)
 	oLayout.EndRow()
 	
+	keyWordsFile = getDefaultConfigFilePath ("Python.keywords")
+	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
 	#oCodeEditor = d.Dispatch( oCodeEditor )	#dispatching does not help either
 	#oCodeEditor.SetAttribute(c.siUIHeight, oLayout.Item("CodeEditorHeight").Value)
-	Height = 200
+	Height = 200# PPG.CodeEditorHeight.Value
+	
+	
 	try:
 		Height = PPG.CodeEditorHeight.Value
 	except:
 		pass
-	oCodeEditor.SetAttribute(c.siUIHeight, Height)
+	
+	
+	#oCodeEditor.SetAttribute(c.siUIHeight, Height)
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
 	oCodeEditor.SetAttribute("Folding", True ) #Code folding Broken since XSI7.0
 	oCodeEditor.SetAttribute("KeywordFile", getDefaultConfigFilePath ("Python.keywords")) #Code color coding broken since XSI7.0
 	oCodeEditor.SetAttribute(c.siUICommentColor, 0xFF00FF) #Comment coloring broken since XSI7.0
 	oCodeEditor.SetAttribute(c.siUICapability, c.siCanLoad ) #File Loading menu item broken since XSI7.0
+	
+	
+	#oCodeEditor = App.QMenuInjectScriptEditor(oLayout, keyWordsFile)
 	oLayout.EndGroup()
 	
 	#================================== Display Events Tab =======================================================================================
