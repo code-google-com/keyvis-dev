@@ -3,22 +3,36 @@
 // Executed Fri Apr 29 00:05:10 UTC+0200 2011 by StefanKubicek
 
 
-function XSILoadPlugin( in_reg )
-{
+function XSILoadPlugin( in_reg ) {
 	in_reg.Author = "StefanKubicek";
 	in_reg.Name = "QMenuRememberRecentNode";
 	in_reg.Major = 1;
 	in_reg.Minor = 0;
 
-	in_reg.RegisterEvent("QMenuRememberRecentNodeEvent", siOnBeginCommand);
-	//in_reg.RegisterCommand( "QMenuGetRecentNode" , "QMenuGetRecentNode" );
+	var strVersion = Application.Version();
+	var arrVersion = new Array();
+	arrVersion = strVersion.split('.');
+	var intMajorVersion = arrVersion[0];
+	//Application.LogMessage (intMajorVersion);
+
+	// siOnBeginCommand Events only exist in SOftimage Version 10 (2012) and later
+	if (intMajorVersion >= 10)
+	{
+		in_reg.RegisterEvent("QMenuRememberRecentNodeEvent", siOnBeginCommand);
+		
+		//in_reg.RegisterCommand( "QMenuGetRecentNode" , "QMenuGetRecentNode" );
 	
 	//RegistrationInsertionPoint - do not remove this line
+	}
+	
+	//in_reg.RegisterCommand( "QMenuInjectScriptEditor" , "QMenuInjectScriptEditor" ) 	//Tried to work around the SDK bug that prevents setting certain
+																						//Text Editor flags via Python from having any effect (like color coding, line folding etc...)
+																						//by using a JScript custom command to inject the editor into the PPG layout and
+																						//setting flags from there, but it does not work this way either :-(
 	return true;
 }
 
-function XSIUnloadPlugin( in_reg )
-{
+function XSIUnloadPlugin( in_reg ) {
 	var strPluginName;
 	strPluginName = in_reg.Name;
 	Application.LogMessage(strPluginName + " has been unloaded.",siVerbose);
@@ -26,8 +40,7 @@ function XSIUnloadPlugin( in_reg )
 }
 
 // Callback for the QMenuRecordMRUNodes event.
-function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt )
-{
+function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt ) {
 	var LastCmd = in_ctxt.GetAttribute("Command");
 	var ScriptingName = LastCmd.ScriptingName;
 	var strLastNodeCommandAndArgument = "";
@@ -57,8 +70,7 @@ function QMenuRememberRecentNodeEvent_OnEvent( in_ctxt )
 }
 
 
-function storeLastNodeCommandAndPresetName(strCmdAndPresetName)
-{
+function storeLastNodeCommandAndPresetName(strCmdAndPresetName) {
 	if (strCmdAndPresetName != "")
 		{
 			oQMenuGlobals = Application.Plugins("QMenuConfigurator").UserData;
@@ -69,9 +81,38 @@ function storeLastNodeCommandAndPresetName(strCmdAndPresetName)
 }
 
 /*
-function QMenuGetRecentNode_Execute()
-{
-	//thisPlugin = Application.Plugins("QMenuRememberRecentNode");
-	return Application.Plugins("QMenuRememberRecentNode").UserData;
+function QMenuInjectScriptEditor_Init( io_Context ) {
+	oCmd = io_Context.Source;
+	oCmd.ReturnValue = true;
+	oArgs = oCmd.Arguments;
+	oArgs.Add("oLayout");
+	oArgs.Add ("keyWordsFile");
+	oCmd.SetFlag(siSupportsKeyAssignment, false);
+	oCmd.SetFlag(siCannotBeUsedInBatch, true)
+	oCmd.SetFlag(siNoLogging, true);
+	return true;
+}
+
+function QMenuInjectScriptEditor_Execute(oLayout, keyWordsFile) {
+	Application.LogMessage("Adding Code Editor to Layout...")
+	var oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", siControlTextEditor);
+	//oCodeEditor.SetAttribute(siUIHeight, oLayout.Item("CodeEditorHeight").Value)
+	Application.LogMessage("Code Editor added to Layout.")
+	var Height = 200;
+	
+
+	try:
+		Height = PPG.CodeEditorHeight.Value
+	catch:
+		var doNothing = true
+
+	oCodeEditor.SetAttribute(siUIHeight, Height)
+	oCodeEditor.SetAttribute(siUIToolbar, true );
+	oCodeEditor.SetAttribute(siUILineNumbering, true );
+	oCodeEditor.SetAttribute("Folding", true ); //Code folding Broken since XSI7.0
+	oCodeEditor.SetAttribute("KeywordFile", keyWordsFile); //Code color coding broken since XSI7.0
+	oCodeEditor.SetAttribute(siUICommentColor, 0xFF00FF); //Comment coloring broken since XSI7.0
+	oCodeEditor.SetAttribute(siUICapability, siCanLoad ); //File Loading menu item broken since XSI7.0
+	return oCodeEditor;
 }
 */
