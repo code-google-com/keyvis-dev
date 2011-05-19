@@ -192,7 +192,7 @@ class QMenu_MenuItem: #The scripted menu item class. Softimage commands are hand
 		 # Initialize exported attributes:
 		self.UID = XSIFactory.CreateGuid()
 		self.Name = str()
-		self.Category = str()
+		self.Category = "_Undefined Category"
 		#self.File = str()
 		self.Language = "Python"
 		self.Code = str()
@@ -859,7 +859,7 @@ def XSILoadPlugin( in_reg ):
 	
 	#=== Register events ===
 	#in_reg.RegisterEvent( "QMenuGetSelectionDetails", c.siOnSelectionChange)
-	in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
+	#in_reg.RegisterEvent( "QMenu_NewSceneHandler", c.siOnEndNewScene) #Needed because selection change handler is not fired when new scene is created 
 		 																 #wrong menus are displayed based on selection that does not exist anymore in new scene)
 	in_reg.RegisterTimerEvent( "QMenuInitialize", 0,1 )
 	in_reg.RegisterTimerEvent( "QMenuExecution", 0, 1 )
@@ -2144,8 +2144,8 @@ def QMenuConfigurator_MenuSetName_OnChanged():
 	NewMenuSetName = PPG.MenuSetName.Value
 	CurrentMenuSetName = PPG.MenuSets.Value
 	#Disable name field and delete button
-	PPG.MenuSetName.SetCapabilityFlag(c.siReadOnly, True)
-	PPG.PPGLayout.Item("DeleteMenuSet").SetAttribute (c.siUIButtonDisable, True)
+	#PPG.MenuSetName.SetCapabilityFlag(c.siReadOnly, True)
+	#PPG.PPGLayout.Item("DeleteMenuSet").SetAttribute (c.siUIButtonDisable, True)
 
 	if NewMenuSetName != "" :
 		if NewMenuSetName != CurrentMenuSetName:		
@@ -2166,8 +2166,8 @@ def QMenuConfigurator_MenuSetName_OnChanged():
 			PPG.MenuSets.Value = uniqueMenuSetName
 			PPG.MenuSetName.Value = uniqueMenuSetName
 			#Re-enable name field and delete button
-			PPG.MenuSetName.SetCapabilityFlag(c.siReadOnly, False)
-			PPG.PPGLayout.Item("DeleteMenuSet").SetAttribute (c.siUIButtonDisable, False)
+			#PPG.MenuSetName.SetCapabilityFlag(c.siReadOnly, False)
+			#PPG.PPGLayout.Item("DeleteMenuSet").SetAttribute (c.siUIButtonDisable, False)
 			
 			RefreshViewMenuSets()
 			RefreshViewMenuSetsWidgets()
@@ -4800,12 +4800,14 @@ def QMenuGetPreferencesCustomProperty_Execute():
 #=========================================================================================================================		
 # ========================================= Event Callback Functions =====================================================
 #=========================================================================================================================
-#"On selection changed" event to collect information about currently selected Objects
 
-""" #Obsolete event
+#Obsolete event function definitions
+""" 
 def QMenu_NewSceneHandler_OnEvent(in_ctxt):
 	QMenuGetSelectionDetails(0)
-	
+
+
+#"On selection changed" event to collect information about currently selected Objects	
 def QMenuGetSelectionDetails_OnEvent(in_ctxt):
 	#Print("QMenu: QMenuGetSelectionDetails_OnEvent called",c.siVerbose)
 	
@@ -5915,11 +5917,11 @@ def getQMenu_MenuDisplayContextByName (menuDisplayContextName):
 			
 def getQMenu_MenuItemByName (menuItemName):
 	globalQMenu_Menus = getGlobalObject("globalQMenu_MenuItems")
-	oMenuItem = None
+	#oMenuItem = None
 	for oMenuItem in globalQMenu_Menus.Items:
 		if oMenuItem.Name == menuItemName:
-			break
-	return oMenuItem
+			return oMenuItem
+	return None
 
 def getQMenuSeparatorByName (separatorName):
 	globalQMenu_Separators = getGlobalObject("globalQMenu_Separators")
