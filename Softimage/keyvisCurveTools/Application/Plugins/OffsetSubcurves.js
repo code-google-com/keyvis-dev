@@ -1012,7 +1012,7 @@ function OffsetSubcurves_DefineLayout( in_ctxt )
 	oLayout.EndGroup();
 	
 	oLayout.AddGroup("Offset Plane", true);
-	var aRadioItems = ["Automatic", 0, "XY", 1, "XZ", 2, "YZ", 3];
+	var aRadioItems = ["Automatic (defined by next best CVs)", 0, "XY", 1, "XZ", 2, "YZ", 3];
 	var oCurvePlane = oLayout.AddEnumControl("curvePlane", aRadioItems, "Curve Plane", siControlRadio);
 	oCurvePlane.SetAttribute(siUINoLabel, true);
 	oLayout.EndGroup();

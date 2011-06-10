@@ -80,7 +80,7 @@ function ApplySplitSubcurves_Execute( args )
 
 				var aElements = cSel(i).SubElements.toArray();
 				// [SubCrv, Value(0.0 - 1.0), SubCrv, Value, ...]
-				// The value is correct even if the Knot vector does not start with 0.
+				// Note: the % value is correct even if the Knot vector does not start with 0.
 
 				// Create percentage arrays for all Subcurves.
 				var aAllPercentages = [];
@@ -155,7 +155,6 @@ function ApplySplitSubcurves_Execute( args )
 									// U is between two Knots.
 							 		aAllNewKnots.push( newKnot + addedKnotsOnSubCrv + prevKnotCntAll );
 									addedKnotsOnSubCrv++; // one more Knot on this SubCrv
-									//prevKnotCntAll++; // ...on the previous SubCrv.
 									break;
 
 								}
@@ -200,6 +199,7 @@ function ApplySplitSubcurves_Execute( args )
 				// Insert Knots at Isopoints.
 				var cOps = InsertCurveKnot(sCnx, 3, siPersistentOperation); //( cSel(i), 3, siPersistentOperation );
 
+				// Create Knot Cluster.
 				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", aAllNewKnots );
 				cKnotClusters.Add(oCluster);
 				cCurveLists.Add(oObject);
