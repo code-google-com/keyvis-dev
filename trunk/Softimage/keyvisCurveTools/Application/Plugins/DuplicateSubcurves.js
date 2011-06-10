@@ -83,10 +83,9 @@ function ApplyDuplicateSubcurves_Execute(args)
 			{
 				cSubcurveClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
-				
-			}
 
-			if( cSel(i).Type == "subcrvSubComponent" )
+	
+			} else if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
@@ -112,7 +111,9 @@ function ApplyDuplicateSubcurves_Execute(args)
 
 		}
 
-		DeselectAllUsingFilter("SubCurve");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
+
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");

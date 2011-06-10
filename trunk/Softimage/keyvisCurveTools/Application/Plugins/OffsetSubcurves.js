@@ -71,16 +71,13 @@ function ApplyOffsetSubcurves_Execute(args)
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
-			}
 
-			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
+			} else if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
 				
-			}
-
-			if( cSel(i).Type == "subcrvSubComponent" )
+			} else if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var aElements = cSel(i).SubComponent.ElementArray.toArray();
@@ -118,7 +115,8 @@ function ApplyOffsetSubcurves_Execute(args)
 
 		}
 
-		DeselectAllUsingFilter("SubCurve");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
@@ -1000,8 +998,8 @@ function OffsetSubcurves_DefineLayout( in_ctxt )
 	
 	oLayout.AddGroup("On open Curves", true);
 	
-	oLayout.AddItem("closeStart", "Connect at start");
-	oLayout.AddItem("closeEnd", "Connect at end");
+	oLayout.AddItem("closeStart", "Blend at start");
+	oLayout.AddItem("closeEnd", "Blend at end");
 	
 	oLayout.AddGroup("Blend Style (Degree 2 and 3)");
 	
@@ -1131,7 +1129,7 @@ function logMatrix(sLog, oM, dp)
 		var s = "";
 		for(var col = 0; col < size; col++) // column
 		{
-			s += getRoundedString( oM.Value( row, col ), 100 ) + "\t\t";
+			s += numberToString( oM.Value( row, col ), 100 ) + "\t\t";
 				
 		}
 		
@@ -1142,7 +1140,7 @@ function logMatrix(sLog, oM, dp)
 }
 
 
-function getRoundedString(x, dp)
+function numberToString(x, dp)
 {
 	var s = "";
 	var dpLen = log10(dp);

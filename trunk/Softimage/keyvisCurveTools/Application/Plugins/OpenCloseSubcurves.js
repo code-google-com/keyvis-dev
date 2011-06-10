@@ -69,16 +69,14 @@ function ApplyOpenCloseSubcurves_Execute(args)
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
-			}
 
-			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
+			} else if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
-				
-			}
 
-			if( cSel(i).Type == "subcrvSubComponent" )
+
+			} else if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
@@ -116,7 +114,9 @@ function ApplyOpenCloseSubcurves_Execute(args)
 
 		}
 
-		//DeselectAllUsingFilter("SubCurve");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
+
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");

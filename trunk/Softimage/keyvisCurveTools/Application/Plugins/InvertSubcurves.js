@@ -75,10 +75,9 @@ function ApplyInvertSubcurves_Execute(args)
 			{
 				cSubcurveClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
-				
-			}
 
-			if( cSel(i).Type == "subcrvSubComponent" )
+
+			} else if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
@@ -89,6 +88,10 @@ function ApplyInvertSubcurves_Execute(args)
 			}
 			
 		}
+
+		//DeselectAllUsingFilter(siSubcomponentFilter);
+		//DeselectAllUsingFilter(siClusterFilter);
+		
 
 		// If nothing usable was selected, start a Pick Session.
 		if(cSubcurveClusters.Count == 0)
@@ -373,7 +376,7 @@ function invertNurbsCurve(aPoints, aKnots, isClosed) //, degree, parameterizatio
 
 }
 
-
+/*
 function logControlPointsArray(logString, aPoints, dp)
 {
 	LogMessage(logString);
@@ -401,14 +404,14 @@ function logKnotsArray(logString, aKnots, dp)
 	for ( var j = 0; j < aKnots.length; j++ )
 	{
 		var knotValue = Math.round(aKnots[j]*dp)/dp;
-		if ( j == 0 ) sKnotArray = sKnotArray + /*"Knot Vector: " + */knotValue;//.toString(10);
+		if ( j == 0 ) sKnotArray = sKnotArray + knotValue;
 		else sKnotArray = sKnotArray + ", " + knotValue;
 	}
 	
 	LogMessage( sKnotArray );
 	
 }
-
+*/
 
 // Function to remove empty items from a JScript Array
 // e.g. NurbsCurveList.Get2 returns "dirty" Knot Arrays

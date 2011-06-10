@@ -71,12 +71,11 @@ function ApplyMergeSubcurves_Execute( args )
 					cCrvBndryClusters.Add(cSel(i));
 					cCurveLists.Add( cSel(i).Parent3DObject );
 				}
-				
-			}
 
-			// Curve Boundaries selected.
-			if( cSel(i).Type == "crvbndrySubComponent" )
+
+			} else if( cSel(i).Type == "crvbndrySubComponent" )
 			{
+				// Curve Boundaries selected.
 				var oSubComponent = cSel(i).SubComponent;
 				if(oSubComponent.ElementArray.toArray().length > 1)
 				{
@@ -117,7 +116,8 @@ function ApplyMergeSubcurves_Execute( args )
 
 		}
 
-		//DeselectAllUsingFilter("CurveBoundary");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
 
 
 		// Construction mode automatic updating.
