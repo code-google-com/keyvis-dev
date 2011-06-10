@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // SplitSubcurvesPlugin
 // 2010/05 by Eugen Sares
-// last update: 2011/03/03
+// last update: 2011/05/31
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -50,8 +50,6 @@ function ApplySplitSubcurves_Execute( args )
 {
 	Application.LogMessage("ApplySplitSubcurves_Execute called",siVerbose);
 
-//	LogMessage(args);	// crvlist.knot[4,5]
-
 	try
 	{
 		var cSel = Selection;
@@ -60,32 +58,176 @@ function ApplySplitSubcurves_Execute( args )
 		var cKnotClusters = new ActiveXObject("XSI.Collection");
 		var cCurveLists = new ActiveXObject("XSI.Collection");
 
-		// Filter the Selection for Clusters and Subcurves.
+		// Filter the Selection for Knot Clusters / Isopoints / Knots.
 		for(var i = 0; i < cSel.Count; i++)
 		{
 			if( cSel(i).Type == "knot" && ClassName(cSel(i)) == "Cluster")
 			{
+				// Knot Cluster selected.
 				cKnotClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
+
+
+			} else if( cSel(i).Type == "isopntSubComponent")
+			{
+				// Isopoints selected.
+
+				// Insert Bezier-Knots at selected Isopoints using InsertCurveKnot().
+				// To create a Cluster of these new Knots, their indices have to be
+				// calculated first.
+
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+
+				var aElements = cSel(i).SubElements.toArray();
+				// [SubCrv, Value(0.0 - 1.0), SubCrv, Value, ...]
+				// The value is correct even if the Knot vector does not start with 0.
+
+				// Create percentage arrays for all Subcurves.
+				var aAllPercentages = [];
+
+				for(var j = 0; j < aElements.length; j+=2)
+				{
+					var subCrv = aElements[j];
+					var percentage = aElements[j + 1];
+					
+					if(aAllPercentages[subCrv] == undefined)
+						aAllPercentages[subCrv] = [];
+						
+					aAllPercentages[subCrv].push(percentage);
+				
+				}
+
+				// Sort them.
+				// Note: SubElements object does not sort Isopoints.
+				for(var j = 0; j < aAllPercentages.length; j++)
+				{
+					if(aAllPercentages[j] != undefined)
+						aAllPercentages[j] = aAllPercentages[j].sort();
+
+				}
+
+
+				var aAllKnotCounts = [];
+				var aSubCrvKnotMin = [];
+				var aAllNewKnots = [];
+				var cCurves = oObject.ActivePrimitive.Geometry.Curves;
+				var dp = 1E6;
+				var prevKnotCntAll = 0;
+				
+				for(var subCrv = 0; subCrv < cCurves.Count; subCrv++)
+				{
+					// Get Subcurve.
+					var oSubCrv = cCurves.item(subCrv);
+					VBdata = new VBArray(oSubCrv.Get2(siSINurbs));								
+					var aSubCrvData = VBdata.toArray();
+
+					var vbArg1 = new VBArray(aSubCrvData[1]);
+					var aKnots = vbArg1.toArray();
+
+					aKnots = allKnotsToMultiplicity1(aKnots);
+					var knotCnt = aKnots.length;
+					var knotInterval = aKnots[knotCnt - 1] - aKnots[0];
+					var addedKnotsOnSubCrv = 0;
+
+					if(aAllPercentages[subCrv] != undefined)
+					{
+						//Isopoints are selected on this SubCrv.
+						var aPercentages = aAllPercentages[subCrv];
+						var newKnot = 0;
+
+						for(var p = 0; p < aPercentages.length; p++)
+						{
+							var U = aPercentages[p] * knotInterval + aKnots[0];
+							// This is the exact U value as shown during selection.
+							// Note: multiply by Knot interval, not Knot count!!!
+
+							// Get corresponding Knot index.
+							for(; newKnot < knotCnt; newKnot++)
+							{
+								if( Math.abs(U - aKnots[newKnot]) < 1/dp )
+								{
+									// U is on an existing Knot.
+									aAllNewKnots.push( newKnot + addedKnotsOnSubCrv + prevKnotCntAll );
+									break;
+
+								} else if(U < aKnots[newKnot])
+								{
+									// U is between two Knots.
+							 		aAllNewKnots.push( newKnot + addedKnotsOnSubCrv + prevKnotCntAll );
+									addedKnotsOnSubCrv++; // one more Knot on this SubCrv
+									//prevKnotCntAll++; // ...on the previous SubCrv.
+									break;
+
+								}
+									
+							}
+
+						}
+						
+					}
+					
+					prevKnotCntAll = prevKnotCntAll + knotCnt + addedKnotsOnSubCrv;
+
+				}
+
+
+				// Create ConnectionSet string with precise values,
+				// instead of just using cSel(i).
+				var sCnx = oObject + ".isopnt[";
+
+				for(var subCrv = 0; subCrv < aAllPercentages.length; subCrv++)
+				{
+					var aPercentages = aAllPercentages[subCrv];
+					if(aPercentages == undefined)
+						continue;
+
+					for(var k = 0; k < aPercentages.length; k++)
+					{
+						sCnx = sCnx + "(" + subCrv + "," + aPercentages[k] + ")";
+
+						if(k < aPercentages.length - 1)
+							sCnx += ",";
+
+					}
+
+					if(subCrv < aAllPercentages.length - 1)
+						sCnx += ",";
+
+				}
+				
+				sCnx += "]";
+
+				// Insert Knots at Isopoints.
+				var cOps = InsertCurveKnot(sCnx, 3, siPersistentOperation); //( cSel(i), 3, siPersistentOperation );
+
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", aAllNewKnots );
+				cKnotClusters.Add(oCluster);
+				cCurveLists.Add(oObject);
+
+
+			} else if( cSel(i).Type == "knotSubComponent" )
+			{
+				// Knots selected.
+				var oObject = cSel(i).SubComponent.Parent3DObject;
+				var aElementIndices = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", aElementIndices );
+/*				var sCnx = oObject + ".knot[" + aElementIndices + "]";
+				var cClusters = CreateCluster(sCnx);
+				var oCluster = cClusters.item(0);
+*/
+				cKnotClusters.Add(oCluster);
+				cCurveLists.Add(oObject);
 				
 			}
 
-			if( cSel(i).Type == "knotSubComponent" )
-			{
-				var oObject = cSel(i).SubComponent.Parent3DObject;
-				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", elementIndices );
-
-				cKnotClusters.Add(oCluster);
-				cCurveLists.Add(oObject);
-			}
-			
 		}
+
+
+		//SetSelFilter(siKnotFilter);
 
 		// If nothing usable was selected, start a Pick Session.
 		if(cKnotClusters.Count == 0)
 		{
-			SetSelFilter(siKnotFilter);
 			do{
 				var components, button;	// useless, but needed in JScript.
 				var rtn = PickElement( "Knot", "Knots", "Knots", components, button, 0 );
@@ -95,7 +237,7 @@ function ApplySplitSubcurves_Execute( args )
 
 				var modifier = rtn.Value( "ModifierPressed" );
 				var element = rtn.Value( "PickedElement" ); // e.crvlist.crvbndry[(0,1),(1,1)]
-				AddToSelection(element);
+				SelectGeometryComponents(element);
 				var cSel = Selection;
 				var oSubComponent = cSel(0).SubComponent;
 				var oObject = oSubComponent.Parent3DObject;
@@ -108,7 +250,9 @@ function ApplySplitSubcurves_Execute( args )
 			
 		}
 
-		DeselectAllUsingFilter("Knot");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
+
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
@@ -193,8 +337,9 @@ function SplitSubcurves_Define( in_ctxt )
 	var oCustomOperator;
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
-	//oCustomOperator.AlwaysEvaluate = false;
-	//oCustomOperator.Debug = 0;
+
+	oCustomOperator.AlwaysEvaluate = false;
+	oCustomOperator.Debug = 0;
 	return true;
 }
 
@@ -239,7 +384,7 @@ function SplitSubcurves_Update( in_ctxt )
 	var aAllParameterization = new Array();
 
 
-	// Main slice array. Holds arrays of indices where to split each Subcurves.
+	// Main slice array. Holds arrays of indices where to split each Subcurve.
 	var aAllSubCrvSlices = new Array();
 	// Example:
 	// Subcurve   0           1    2   3
@@ -248,7 +393,7 @@ function SplitSubcurves_Update( in_ctxt )
 	// Some helper arrays
 	var aKnotIsOnSubCrv = new Array();
 	var aLastKnots = new Array();
-	var aKnotsOnSubCrv = new Array();
+	var aKnotIndices = new Array();
 
 	// Explanation 
 	// Example CurveList, one open and one closed Subcurve
@@ -259,7 +404,7 @@ function SplitSubcurves_Update( in_ctxt )
 	// aKnots =				[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6] [0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
 	// aKnotIsOnSubCrv =	[0,       0, 0, 0,       0, 0, 0,		 1,       1, 1, 1, 1, 1,       1,  1]
 	// aLastKnots =			[                             10,										  11]
-	// aKnotsOnSubcurve =	[               3,                                            5             ]
+	// aKnotIndices =	    [0,       1, 2, 3,       4, 5, 6,        0,       1, 2, 3, 4, 5        6, 7 ]
 
 	// Note:
 	// To make sure the curvature remains unchanged after splitting, all selected Knots are first raised
@@ -287,17 +432,17 @@ function SplitSubcurves_Update( in_ctxt )
 		aLastKnots[subCrv] = 0;
 
 		var knot = 0;
-		aKnotsOnSubCrv.push(knot++);
+		aKnotIndices.push(knot++);
 
 		// Loop through all Knots in the Vector.
 		for(var i = 1; i < aKnots.length; i++)
 		{
 			// Eliminate Multiplicity.
-			if(aKnots[i] != aKnots[i - 1]) // also works when out of array bound
+			if(aKnots[i] != aKnots[i - 1]) // also works when out of array bounds
 			{
 				aKnotIsOnSubCrv.push(subCrv);
 				aLastKnots[subCrv] += 1;
-				aKnotsOnSubCrv.push(knot++);
+				aKnotIndices.push(knot++);
 
 			}
 			
@@ -315,25 +460,23 @@ function SplitSubcurves_Update( in_ctxt )
 	{
 		var knot = oKnotCluster.Elements(i);
 		var subCrv = aKnotIsOnSubCrv[knot];
-		
-		var knotOnSubCrv = aKnotsOnSubCrv[knot];
-		
+		var knotIdx = aKnotIndices[knot];
 		var aSubCrvSlices = aAllSubCrvSlices[subCrv];
 		var length = aSubCrvSlices.length;
 
 		if(length == 0)
-			aSubCrvSlices.push(knotOnSubCrv);
+			aSubCrvSlices.push(knotIdx);
 		else
 		{
 			for(var j = 0; j < length; j++)
 			{
-				if(knotOnSubCrv < aSubCrvSlices[j])
+				if(knotIdx < aSubCrvSlices[j])
 				{
-					aSubCrvSlices.splice(j, 0, knotOnSubCrv);
+					aSubCrvSlices.splice(j, 0, knotIdx);
 					break;
 
 				} else if(j == length - 1)
-					aSubCrvSlices.push(knotOnSubCrv);
+					aSubCrvSlices.push(knotIdx);
 
 			}
 
@@ -391,7 +534,6 @@ function SplitSubcurves_Update( in_ctxt )
 
 		// aSubCrvSlices is not empty:
 		// Slice the Subcurve.
-
 		var firstKnot = aSubCrvSlices[0];
 		var lastKnot = aSubCrvSlices[aSubCrvSlices.length - 1];
 
@@ -424,9 +566,10 @@ function SplitSubcurves_Update( in_ctxt )
 				for(var i = 0; i < aSubCrvSlices.length; i++)
 					aSubCrvSlices[i] -= firstKnot;
 
-				aSubCrvSlices.push(aLastKnots[subCrv]);
-
 			}
+			
+			if( lastKnot != aLastKnots[subCrv] )
+				aSubCrvSlices.push( aLastKnots[subCrv] );
 
 			// OPEN the Subcurve.
 			var ret = openNurbsCurve(aPoints, aKnots, degree, false);
@@ -436,10 +579,12 @@ function SplitSubcurves_Update( in_ctxt )
 
 		}
 
-
 		// Subcurve is always open here.
 
-		// Slice loop: CONCAT all Slices to the CurveList data arrays.
+
+		// 3) SLICE LOOP
+		// Concat all Slices to the CurveList data arrays.
+
 		for(var i = 0; i < aSubCrvSlices.length - 1; i++)
 		{
 			var startIdx = getKnotVectorIdx(aKnots, aSubCrvSlices[i]);
@@ -485,12 +630,46 @@ function SplitSubcurves_Update( in_ctxt )
 
 //______________________________________________________________________________
 
+
+function allKnotsToMultiplicity1(aKnots)
+{
+	var aKnots1 = [];
+	
+	for(var i = 0; i < aKnots.length; i++)
+	{
+		if(aKnots[i] != aKnots[i - 1])
+			aKnots1.push(aKnots[i]);
+	}
+	
+	return aKnots1;
+
+}
+
+/*
+function getKnotCount(aKnots)
+{
+	if(aKnots.length == 0)
+		return 0;
+
+	var knotCount = 1;
+
+	for(var i = 1; i < aKnots.length; i++)
+	{
+		if(aKnots[i - 1] < aKnots[i])
+			knotCount += 1;
+	}
+	
+	return knotCount;
+
+}
+*/
+
 function getKnotVectorIdx(aKnots, knot)
 {
 	if(knot < 0)
 		return -1;
 
-	var idx = -1;	
+	var idx = -1;
 
 	for(var i = 0; i < aKnots.length; i++)
 	{

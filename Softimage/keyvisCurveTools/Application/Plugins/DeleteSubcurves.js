@@ -66,15 +66,13 @@ function ApplyDeleteSubcurves_Execute(args)
 			{
 				cSubcurveClusters.Add(cSel(i));
 				cCurveLists.Add( cSel(i).Parent3DObject );
-				
-			}
 
-			if( cSel(i).Type == "subcrvSubComponent" )
+
+			} else if( cSel(i).Type == "subcrvSubComponent" )
 			{
 				var oObject = cSel(i).SubComponent.Parent3DObject;
-				var elementIndices = cSel(i).SubComponent.ElementArray.toArray();
-				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", elementIndices );
-
+				var aElements = cSel(i).SubComponent.ElementArray.toArray();
+				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 			}
@@ -85,6 +83,7 @@ function ApplyDeleteSubcurves_Execute(args)
 		if(cSubcurveClusters.Count == 0)
 		{
 			SetSelFilter("SubCurve");
+
 			do{
 				var components, button;	// useless, but needed in JScript.
 				var rtn = PickElement( "SubCurve", "Subcurve", "Subcurve", components, button, 0 );
@@ -100,14 +99,16 @@ function ApplyDeleteSubcurves_Execute(args)
 				var oObject = oSubComponent.Parent3DObject;
 				var aElements = oSubComponent.ElementArray.toArray();
 			} while (aElements.length < 1);
-		
+
 			var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO", aElements );
 			cSubcurveClusters.Add(oCluster);
 			cCurveLists.Add( oObject );
 
 		}
 
-		DeselectAllUsingFilter("SubCurve");
+		DeselectAllUsingFilter(siSubcomponentFilter); // ("SubCurve");
+		DeselectAllUsingFilter(siClusterFilter);
+
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");

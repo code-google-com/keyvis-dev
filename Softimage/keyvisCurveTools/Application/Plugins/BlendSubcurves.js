@@ -74,10 +74,9 @@ function ApplyBlendSubcurves_Execute( args )
 					cCrvBndryClusters.Add(cSel(i));
 					cCurveLists.Add( cSel(i).Parent3DObject );
 				}
-				
-			}
 
-			if( cSel(i).Type == "crvbndrySubComponent" )
+
+			} else if( cSel(i).Type == "crvbndrySubComponent" )
 			{
 				var oSubComponent = cSel(i).SubComponent;
 				if(oSubComponent.ElementArray.toArray().length > 1)
@@ -118,7 +117,9 @@ function ApplyBlendSubcurves_Execute( args )
 
 		}
 
-		//DeselectAllUsingFilter("CurveBoundary");
+		DeselectAllUsingFilter(siSubcomponentFilter);
+		DeselectAllUsingFilter(siClusterFilter);
+
 
 		// Construction mode automatic updating.
 		var constructionModeAutoUpdate = GetValue("preferences.modeling.constructionmodeautoupdate");
