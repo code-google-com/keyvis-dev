@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // LogCurveDataPlugin
 // 2010/03/30 by Eugen Sares
-// last update: 2011/05/06
+// last update: 2011/06/10
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -135,12 +135,14 @@ function LogCurveData(oCrv, dp)	// Arg: NurbsCurve
 	var eParFactor = aOutput[4];
 
 	aPoints = vbCtrlPts.toArray();
-	LogMessage("Number of Control Points: " + aPoints.length/4);
+	numPoints = aPoints.length/4;
+	LogMessage("Number of Control Points: " + numPoints);
 	logControlPointsArray("", aPoints, dp);
 	LogMessage("");
 
 	aKnots = vbKnots.toArray();
-	LogMessage("Number of Knots: " + aKnots.length);
+	var numKnots = aKnots.length;
+	LogMessage("Number of Knots: " + numKnots);
 	LogMessage("Number of Knots without multiplicity: " + getKnotCount(aKnots) );
 
 	logKnotsArray("", aKnots, dp);
@@ -151,15 +153,28 @@ function LogCurveData(oCrv, dp)	// Arg: NurbsCurve
 	else LogMessage( oCrv + " is open." );
 
 	LogMessage( "Degree of " + oCrv + " is " + lDegree + "." );
+	LogMessage("");
 
 	if(bClosed == false)
 	{
 		LogMessage("On open Curves: numKnots = numPoints + degree - 1");
-		LogMessage("");
+		LogMessage(numKnots + " = " + numPoints + " + " + lDegree + " - 1");
+		if(numKnots == numPoints + lDegree - 1)
+			LogMessage("Valid.");
+		else
+			LogMessage("Invalid!");
+			
 	} else
 	{
-		LogMessage("");
+		LogMessage("On closed Curves: numKnots = numPoints + 1");
+		LogMessage(numKnots + " = " + numPoints + " + 1");
+		if(numKnots == numPoints + 1)
+			LogMessage("Valid.");
+		else
+			LogMessage("Invalid!");
+
 	}
+	LogMessage("");
 
 	switch( eParFactor )
 	{
