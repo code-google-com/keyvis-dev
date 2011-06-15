@@ -170,7 +170,7 @@ class QMenuSeparators: #Holds existing Separators
 			items.append (sep)
 			return True
 		else:
-			Print("Could not add " + str(unwrappedSep.Name) + " to global QMenu Menu Sets because a set with that name already exists!", c.siError)
+			Print("Could not add " + str(unwrappedSep.Name) + " to global QMenu Separators because a set with that name already exists!", c.siError)
 			return False	
 
 	def deleteSeparator (self,sep):
@@ -2876,13 +2876,13 @@ def QMenuConfigurator_ExecuteItemCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteItemCode_OnClicked called", c.siVerbose)
 
 	#Is a menu selected?
-	#gc.collect()
 	doNotAppend = False
-	QMenuGetSelectionDetails(999999999, doNotAppend) #Refresh Selection Info completely
 	if PPG.Menus.Value != "":
 		oSelectedItem = getQMenu_MenuByName(PPG.Menus.Value)
 		if oSelectedItem != None:
 			oContext = PrepareContextObject(oSelectedItem)
+			#TODO: honor specified scan depth of actual QMenu item being executed
+			QMenuGetSelectionDetails(999999999, doNotAppend) #Refresh Selection Info completely
 			
 			Language = oSelectedItem.Language
 			Code = oSelectedItem.Code
@@ -2900,8 +2900,7 @@ def QMenuConfigurator_ExecuteItemCode_OnClicked():
 		oSelectedItem = getQMenu_MenuItemByName(PPG.MenuItemList.Value)
 		if oSelectedItem != None:
 			bVerboseErrorReporting = True
-			Application.QMenuExecuteMenuItem( oSelectedItem , bVerboseErrorReporting )
-	#gc.collect()
+			App.QMenuExecuteMenuItem( oSelectedItem , bVerboseErrorReporting )
 
 def QMenuConfigurator_ExecuteDisplayContextCode_OnClicked():
 	Print("QMenuConfigurator_ExecuteDisplayContextCode_OnClicked called", c.siVerbose)
@@ -2929,6 +2928,7 @@ def ExecuteDisplayContext (oQMenuDisplayContext, oContext, silent):
 				exec (PyCode) #Execute Python code natively within the context of this function, all passed function variables are known
 			except Exception as ContextError:
 				Print("An Error occurred executing the QMenu_MenuDiplayContext '" + oQMenuDisplayContext.Name +"', use QMenu Configurator for manual execution and debugging.", c.siError)
+				#raise
 				DisplayMenu = False
 				ErrorOccured = True
 
@@ -4587,28 +4587,15 @@ def QMenuExecuteMenuItem_Execute ( oQMenu_MenuItem , verbosity ):
 			Code = (oQMenu_MenuItem.Code)
 			if Code != "":
 				Language = (oQMenu_MenuItem.Language)
-				if oQMenu_MenuItem.Switch == True:
-					
-					""" #Do we really need to reevaluate Switch_Init here?
-					try:
-						App.ExecuteScriptCode(Code, Language, "Switch_Init", [oContext] )		
-					except:
-						if verbosity == True:
-							raise
-						else:
-							Print("An Error occured executing the Switch_Init function of '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
-					"""
-					
+				if oQMenu_MenuItem.Switch == True: #A switch item?	
 					try:
 						App.ExecuteScriptCode(Code, Language, "Switch_Execute", [oContext] )		
 					except:
 						if verbosity == True:
 							raise
 						else:
-							Print("An Error occured executing the Switch_Execute function of '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)
-
-						
-				else:
+							Print("An Error occured executing the Switch_Execute function of '" + oQMenu_MenuItem.Name + "', please see script editor for details!", c.siError)			
+				else: #No, it's a menu item
 					try:
 						App.ExecuteScriptCode( Code, Language , "Script_Execute", [oContext] )
 					except:
@@ -4824,11 +4811,14 @@ def QMenuGetSelectionDetails(MaxScanDepth, appendData = True):
 	#t1 = time.clock() #Get Start time
 	
 	oSelDetails = getGlobalObject("globalQMenu_ContextObject")
+	#oSelDetails = win32com.server.util.unwrap(oSelDetails)
 	
-	if oSelDetails != None:
-		
-		oSelection = Application.Selection
-		SelCount = oSelection.Count
+	oSelection = Application.Selection
+	SelCount = oSelection.Count
+
+	if appendData == False:
+		CurrentScanDepth = 0
+		oSelDetails.CurrentScanDepth = 0
 		
 		lsX3DObjects = list()
 		lsSelectionTypes = list()
@@ -4837,112 +4827,129 @@ def QMenuGetSelectionDetails(MaxScanDepth, appendData = True):
 		lsSelectionComponentParents = list()
 		lsSelectionComponentParentTypes = list()
 		lsSelectionComponentParentClassNames = list()
-		
-		#To speed up context evaluation we add at least an empty string in case nothing is selected
-		if SelCount == 0:
-			lsSelectionTypes.append ("")
-			lsSelectionClassNames.append ("")		
-			lsSelectionComponentClassNames.append("")
-			lsSelectionComponentParents.append ("")
-			lsSelectionComponentParentTypes.append ("")
-			lsSelectionComponentParentClassNames.append ("")
-			oSelDetails.CurrentScanDepth = 0
 			
-		else:
-			CurrentScanDepth = oSelDetails.CurrentScanDepth
-			if appendData == True: 
-				ScanDepth = CurrentScanDepth
-			else: 
-				ScanDepth = 0
-				oSelDetails.CurrentScanDepth = 0
-			if SelCount < MaxScanDepth: 
-				MaxScanDepth = SelCount
-			for oSel in oSelection:
-				if ScanDepth < MaxScanDepth:
-					Print("Scanning at depth " + str(ScanDepth) + " of " + str(MaxScanDepth))
-					#Lets also collect all X3DObjects (those directly selected _and_ those of selected components
-					siX3DObjectID = c.siX3DObjectID 
-					 
+	if appendData == True: 
+		CurrentScanDepth = oSelDetails.CurrentScanDepth
+		
+		lsX3DObjects = list(oSelDetails.X3DObjects)
+		lsSelectionTypes = list(oSelDetails.Types)
+		lsSelectionClassNames = list(oSelDetails.ClassNames)
+		lsSelectionComponentClassNames = list(oSelDetails.ComponentClassNames)
+		lsSelectionComponentParents = list(oSelDetails.ComponentParents)
+		lsSelectionComponentParentTypes = list(oSelDetails.ComponentParentTypes)
+		lsSelectionComponentParentClassNames = list(oSelDetails.ComponentParentClassNames )
+		
+		"""
+		lsX3DObjects = oSelDetails.X3DObjects
+		lsSelectionTypes = oSelDetails.Types
+		lsSelectionClassNames = oSelDetails.ClassNames
+		lsSelectionComponentClassNames = oSelDetails.ComponentClassNames
+		lsSelectionComponentParents = oSelDetails.ComponentParents
+		lsSelectionComponentParentTypes = oSelDetails.ComponentParentTypes
+		lsSelectionComponentParentClassNames = oSelDetails.ComponentParentClassNames 
+		"""
+		
+	#To speed up context evaluation we add at least an empty string in case nothing is selected
+	if (SelCount == 0) and (CurrentScanDepth == 0):
+		
+		lsSelectionTypes.append ("")
+		lsSelectionClassNames.append ("")		
+		lsSelectionComponentClassNames.append("")
+		lsSelectionComponentParents.append ("")
+		lsSelectionComponentParentTypes.append ("")
+		lsSelectionComponentParentClassNames.append ("")
+		oSelDetails.CurrentScanDepth = 0
+		
+	else:
+		if SelCount < MaxScanDepth: 
+			MaxScanDepth = SelCount
+		#for oSel in oSelection:
+		while CurrentScanDepth < MaxScanDepth: #was "if"...
+			Print("Scanning from current Scan Depth of " + str(CurrentScanDepth) + " to a max Scan Depth of " + str(MaxScanDepth))
+			#Lets also collect all X3DObjects (those directly selected _and_ those of selected components
+			siX3DObjectID = c.siX3DObjectID 
+			 
+			try:
+				oSel = oSelection[CurrentScanDepth]
+				if oSel.IsClassOf(siX3DObjectID):
+					if oSel not in lsX3DObjects:
+						lsX3DObjects.append(oSel) #Collect directly selected X3DObjects
+						print ("Appending " + oSel.Name + " to x3DObjects list")
+			except:
+				pass
+			
+			SelectionType = oSel.Type
+			SelectionClassName = getClassName(oSel)
+			#print("Got the following Class Name: " + str(SelectionClassName))
+			#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
+			SelectionComponentClassName = ""
+			SelectionComponentParent = ""
+			SelectionComponentParentType = ""
+			SelectionComponentParentClassName = ""
+						
+			#Start appending values to the lists
+			lsSelectionTypes.append (SelectionType)
+			lsSelectionClassNames.append (SelectionClassName)
+			
+			#Let's get subcomponent collection data if there is any (otherwise the above (None and "") values are used later on
+			if SelectionClassName == "CollectionItem":
+				try:
+					SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
+				except:
+					SelectionComponentClassName = ""
+				try:
+					SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
 					try:
-						if oSel.IsClassOf(siX3DObjectID):
-							if oSel not in lsX3DObjects:
-								lsX3DObjects.append(oSel) #Collect directly selected X3DObjects
-								#print ("Appending " + oSel.Name + " to x3DObjects list")
+						if SelectionComponentParent.IsClassOf(siX3DObjectID) : #Collect X3DObjects of selected components
+							if SelectionComponentParent not in lsX3DObjects: 
+								lsX3DObjects.append(SelectionComponentParent)
 					except:
 						pass
-					
-					SelectionType = oSel.Type
-					SelectionClassName = getClassName(oSel)
-					#print("Got the following Class Name: " + str(SelectionClassName))
-					#Make sure there are dummy values so all lists will have the same number of items independant of selected objects or components
-					SelectionComponentClassName = ""
+				except:
 					SelectionComponentParent = ""
+				try:
+					SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
+				except:
 					SelectionComponentParentType = ""
+				try:
+					SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
+				except:
 					SelectionComponentParentClassName = ""
-								
-					#Start appending values to the lists
-					lsSelectionTypes.append (SelectionType)
-					lsSelectionClassNames.append (SelectionClassName)
-					
-					#Let's get subcomponent collection data if there is any (otherwise the above (None and "") values are used later on
-					if SelectionClassName == "CollectionItem":
-						try:
-							SelectionComponentClassName = getClassName(oSel.SubComponent.ComponentCollection(0)) #We assume that the class of the first element in the collection is representative of the rest of it's elements
-						except:
-							SelectionComponentClassName = ""
-						try:
-							SelectionComponentParent = (oSel.SubComponent.Parent3DObject)
-							try:
-								if SelectionComponentParent.IsClassOf(siX3DObjectID) : #Collect X3DObjects of selected components
-									if SelectionComponentParent not in lsX3DObjects: 
-										lsX3DObjects.append(SelectionComponentParent)
-							except:
-								pass
-						except:
-							SelectionComponentParent = ""
-						try:
-							SelectionComponentParentType = (oSel.SubComponent.Parent3DObject.Type)
-						except:
-							SelectionComponentParentType = ""
-						try:
-							SelectionComponentParentClassName = getClassName(oSel.SubComponent.Parent3DObject)
-						except:
-							SelectionComponentParentClassName = ""
-					
-					#Finally add remaining component items to the lists
-					lsSelectionComponentClassNames.append(SelectionComponentClassName)
-					lsSelectionComponentParents.append (SelectionComponentParent)
-					lsSelectionComponentParentTypes.append (SelectionComponentParentType)
-					lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
-		
-					ScanDepth += 1
-			oSelDetails.CurrentScanDepth = ScanDepth
-				
-		#Fill the SelectionInfo Object with the Data we have aquired
-		
-		#Print("Recording X3DObjects: " + str(lsX3DObjects))
-		oSelDetails.storeX3DObjects(lsX3DObjects)
-		
-		#Print("Recording Selection Types: " + str(lsSelectionTypes))
-		oSelDetails.storeSelectionTypes (lsSelectionTypes)
-		
-		#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
-		oSelDetails.storeSelectionClassNames (lsSelectionClassNames)
-		
-		#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
-		oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames)
-		
-		#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
-		oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents)
-		
-		#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
-		oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
-		
-		#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
-		oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)
-		#t2 = time.clock()
-		#TotalTime = t2 - t1
-		#Print("Time taken to assemble selection info: " + str(TotalTime));
+			
+			#Finally add remaining component items to the lists
+			lsSelectionComponentClassNames.append(SelectionComponentClassName)
+			lsSelectionComponentParents.append (SelectionComponentParent)
+			lsSelectionComponentParentTypes.append (SelectionComponentParentType)
+			lsSelectionComponentParentClassNames.append (SelectionComponentParentClassName)
+
+			CurrentScanDepth += 1
+		oSelDetails.CurrentScanDepth = CurrentScanDepth
+			
+	#Fill the SelectionInfo Object with the Data we have aquired
+	
+	#Print("Recording X3DObjects: " + str(lsX3DObjects))
+	oSelDetails.storeX3DObjects(lsX3DObjects)
+	
+	#Print("Recording Selection Types: " + str(lsSelectionTypes))
+	oSelDetails.storeSelectionTypes (lsSelectionTypes)
+	
+	#Print("Recording Selection Class Names: " + str(lsSelectionClassNames))
+	oSelDetails.storeSelectionClassNames (lsSelectionClassNames)
+	
+	#Print("Recording Component Class Names: " + str(lsSelectionComponentClassNames))
+	oSelDetails.storeSelectionComponentClassNames (lsSelectionComponentClassNames)
+	
+	#Print("Recording Component Parents: " + str(lsSelectionComponentParents))
+	oSelDetails.storeSelectionComponentParents (lsSelectionComponentParents)
+	
+	#Print("Recording Component Parent Types: " + str(lsSelectionComponentParentTypes))
+	oSelDetails.storeSelectionComponentParentTypes (lsSelectionComponentParentTypes)
+	
+	#Print("Recording Component Parent Class Names: " + str(lsSelectionComponentParentClassNames))
+	oSelDetails.storeSelectionComponentParentClassNames (lsSelectionComponentParentClassNames)
+	#t2 = time.clock()
+	#TotalTime = t2 - t1
+	#Print("Time taken to assemble selection info: " + str(TotalTime));
 
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
@@ -4953,7 +4960,7 @@ def QMenuPrintValueChanged_OnEvent( in_ctxt):
 # Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
-	XSIVersion = getXSIMainVersion()
+	
 	globalQMenuDisplayEventContainer = getGlobalObject("globalQMenu_DisplayEvents") 
 	if globalQMenuDisplayEventContainer != None:
 		globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
@@ -4988,7 +4995,11 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 						QMenuConfigurator.DisplayEventKeyMask.Value = KeyMask
 						QMenuConfigurator.DisplayEventKeys_Record.Value = False
 			
-			QMenuEnabled = App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
+			try:
+				QMenuEnabled = App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
+			except:
+				QMenuEnabled = False
+				
 			if (QMenuEnabled == True) or (QMenuEnabled == 1) or (QMenuEnabled == 'True') and (Consumed == False): #Is QMenu enabled and the event hasn't been consumed yet?
 				#Check known display events whether there is one that should react to the currently pressed key(s)
 				for oDispEvent in globalQMenu_DisplayEvents:
@@ -4999,6 +5010,7 @@ def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):
 						oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
 						#Now after user has clicked on something...
 						if oChosenMenuItem != None:
+							XSIVersion = getXSIMainVersion()
 							globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
 							globalQMenu_LastUsedItem.set(oChosenMenuItem)
 							bNonVerboseErrorReporting = False
@@ -5058,11 +5070,15 @@ def InitQMenu():
 	
 	if (FirstStartup == "True") or (FirstStartup == "1") or (FirstStartup == True) or (FirstStartup == 1):
 		#Print("FirstStartup is actually: " + str(FirstStartup) + ". -> getting default config file path")
-		QMenuConfigFile = getDefaultConfigFilePath("QMenuConfiguration_Default.xml") #Get the file path as string of the QMenu default configuration file.
-		App.Preferences.SetPreferenceValue("QMenu.ShowQMenu_MenuString", False)
-		#App.SetValue("Preferences.QMenu.ShowQMenu_MenuString", False)
-		App.Preferences.SetPreferenceValue("QMenu.ShowQMenuTimes", False)
-		#App.SetValue("Preferences.QMenu.ShowQMenuTimes", False)
+		
+		try:
+			App.Preferences.SetPreferenceValue("QMenu.ShowQMenu_MenuString", False)
+			#App.SetValue("Preferences.QMenu.ShowQMenu_MenuString", False)
+			App.Preferences.SetPreferenceValue("QMenu.ShowQMenuTimes", False)
+			#App.SetValue("Preferences.QMenu.ShowQMenuTimes", False)
+			QMenuConfigFile = getDefaultConfigFilePath("QMenuConfiguration_Default.xml") #Get the file path as string of the QMenu default configuration file.
+		except:
+			pass
 		
 	if (str(QMenuConfigFile) != ""):
 		Print("Attempting to load QMenu Configuration from: " + str(QMenuConfigFile), c.siVerbose)
@@ -5078,8 +5094,11 @@ def InitQMenu():
 		else:
 			Print("Failed loading QMenu Config file from: " + str(QMenuConfigFile) , c.siError)
 	else:
-		Print("QMenu configuration file could not be found, check QMenu preferences. -> QMenu is disabled.", c.siWarning)
-		App.Preferences.SetPreferenceValue("QMenu.QMenuEnabled", False)
+		#Print("QMenu configuration file could not be found, check QMenu preferences. -> QMenu is disabled.", c.siWarning)
+		try:
+			App.Preferences.SetPreferenceValue("QMenu.QMenuEnabled", False)
+		except:
+			pass
 	
 	#App.Preferences.SaveChanges()
 	Application.ExecuteScriptCode("DoNothing = True", "Python") #Dummy script code execution call to prevent stupid Softimage bug causing error messages upon calling this command on code stored in a menu item code attribute for the first time
@@ -5123,7 +5142,7 @@ def QMenu_Init( in_ctxt ):
 	enabled = False
 	continyou = True
 	try:
-		enabled = Application.GetValue("preferences.QMenu.QMenuEnabled")
+		enabled = Application.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
 	except:
 		continyou = False
 		Print("QMenu Preferences not found! If you just installed the QMenu addon you need to restart Softimage.", c.siWarning)
