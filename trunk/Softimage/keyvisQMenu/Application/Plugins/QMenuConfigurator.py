@@ -725,7 +725,7 @@ class QMenuContext:
 		self.MenuSets = None
 		self.MenuContexts = None
 		self.Menus = None
-		self.DispalyContexts = None
+		self.DisplayContexts = None
 		self.CurrentXSIView = None
 		self.ClickedMenu = None
 		self.ClickedMenuItemNumber = None
@@ -782,8 +782,8 @@ class QMenuContext:
 	def storeMenuContexts (self, oMenuContexts):
 		self.MenuContexts = oMenuContexts
 
-	def storeDisplayContexts (self, oDispalyContexts):
-		self.DispalyContexts = oDispalyContexts
+	def storeDisplayContexts (self, oDisplayContexts):
+		self.DisplayContexts = oDisplayContexts
 		
 	def storeCurrentXSIView (self, oXSIView):
 		self.CurrentXSIView = oXSIView
