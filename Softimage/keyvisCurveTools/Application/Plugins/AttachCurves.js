@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // AttachCurvesPlugin
-// 11/2010 by Eugen Sares
-// last update: 03.02.2011
+// 2010/11 by Eugen Sares
+// last update: 2011/03/02
 //
 // Thanks to Guillaume Laforge for the C++ sourcecode!!
 //______________________________________________________________________________

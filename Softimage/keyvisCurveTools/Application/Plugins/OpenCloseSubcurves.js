@@ -52,7 +52,7 @@ function ApplyOpenCloseSubcurves_Execute(args)
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
@@ -63,7 +63,7 @@ function ApplyOpenCloseSubcurves_Execute(args)
 		{
 			if( cSel(i).Type == "crvlist")
 			{
-				// Object selected? Offset all Subcurves.
+				// Object selected? Open/Close all Subcurves.
 				var oObject = cSel(i);
 				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO"/*, elementIndices*/ );
 				cSubcurveClusters.Add( oCluster );
@@ -649,7 +649,7 @@ function ApplyOpenCloseSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("Open/Close Subcurves","ApplyOpenCloseSubcurves");
+	oMenu.AddCommandItem("Open/Close (Sub)Curves","ApplyOpenCloseSubcurves");
 	return true;
 }
 

@@ -54,7 +54,7 @@ function ApplyOffsetSubcurves_Execute(args)
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
@@ -1024,7 +1024,7 @@ function ApplyOffsetSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("Offset Subcurves","ApplyOffsetSubcurves");
+	oMenu.AddCommandItem("Offset (Sub)Curves","ApplyOffsetSubcurves");
 	return true;
 }
 

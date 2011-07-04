@@ -58,9 +58,7 @@ function ApplyDuplicateSubcurves_Execute(args)
 
 	try
 	{
-		//var app = Application;
-
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
@@ -291,18 +289,26 @@ function DuplicateSubcurves_Update( in_ctxt )
 	var outCrvListGeom = oOutTarget.Geometry;
 
 	// Get complete data description of input CurveList.
-	var VBdata = inCrvListGeom.Get2( siSINurbs ); var data = VBdata.toArray();
+	var VBdata = inCrvListGeom.Get2( siSINurbs );
+	var data = VBdata.toArray();
 
 	var numAllSubcurves = data[0];
-	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
-	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
-	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
+	var VBdata1 = new VBArray(data[1]);
+	var aAllPoints = VBdata1.toArray();
+	var VBdata2 = new VBArray(data[2]);
+	var aAllNumPoints =  VBdata2.toArray();
+	var VBdata3 = new VBArray(data[3]);
+	var aAllKnots= VBdata3.toArray();
 	// Bug: Knot array has undefined elements.
 	aAllKnots = removeUndefinedElementsFromArray(aAllKnots);
-	var VBdata4 = new VBArray(data[4]); var aAllNumKnots = VBdata4.toArray();
-	var VBdata5 = new VBArray(data[5]); var aAllIsClosed = VBdata5.toArray();
-	var VBdata6 = new VBArray(data[6]); var aAllDegree = VBdata6.toArray();
-	var VBdata7 = new VBArray(data[7]); var aAllParameterization = VBdata7.toArray();
+	var VBdata4 = new VBArray(data[4]);
+	var aAllNumKnots = VBdata4.toArray();
+	var VBdata5 = new VBArray(data[5]);
+	var aAllIsClosed = VBdata5.toArray();
+	var VBdata6 = new VBArray(data[6]);
+	var aAllDegree = VBdata6.toArray();
+	var VBdata7 = new VBArray(data[7]);
+	var aAllParameterization = VBdata7.toArray();
 
 
 	// Array to store the indices of new/duplicated Subcurves, for later selection.

@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // ExtractAllSubcurvesPlugin
-// 11/2009 by Eugen Sares
-// last revision: 08.11.2010
+// 2009/11 by Eugen Sares
+// last revision: 2011/06/30
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -35,6 +35,9 @@ function ExtractAllSubcurves_Init( in_ctxt )
 	oCmd.Description = "Extract All Subcurves from a CurveList";
 	oCmd.Tooltip = "Extract All Subcurves from a CurveList";
 	oCmd.ReturnValue = true;
+	var oArgs = oCmd.Arguments;
+	// To get a collection of subcomponents, or the current selection of subcomponents:
+	oArgs.AddWithHandler("args", "Collection");
 
 	return true;
 }
@@ -42,18 +45,17 @@ function ExtractAllSubcurves_Init( in_ctxt )
 
 //______________________________________________________________________________
 
-function ExtractAllSubcurves_Execute(  )
+function ExtractAllSubcurves_Execute( args )
 {
-
 	Application.LogMessage("ExtractAllSubcurves_Execute called",siVerbose);
 
-	var cSel = Application.Selection;
+	var cSel = args;
 
 	var immed = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
 	
 	if(!immed)
 	{
-		var buttonPressed = XSIUIToolkit.Msgbox( "Do you want to keep modelling relations?", 
+		var buttonPressed = XSIUIToolkit.Msgbox( "Keep modelling relations?", 
 			siMsgYesNo | siMsgQuestion, "Extract All Subcurves" ) ;
 		if (buttonPressed == siMsgNo) immed = true;
 	}

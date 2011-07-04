@@ -53,7 +53,7 @@ function ApplyDeleteSubcurves_Execute(args)
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args; //Selection;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
@@ -183,7 +183,7 @@ function ApplyDeleteSubcurves_Execute(args)
 	{
 		LogMessage(e, siWarning);
 		return false;
-	};
+	}
 	
 }
 

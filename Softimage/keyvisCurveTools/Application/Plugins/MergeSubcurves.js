@@ -53,7 +53,7 @@ function ApplyMergeSubcurves_Execute( args )
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cCrvBndryClusters = new ActiveXObject("XSI.Collection");
@@ -241,7 +241,7 @@ function MergeSubcurves_Define( in_ctxt )
 	//oCustomOperator.AddParameter(oPDef);
 	//oPDef = XSIFactory.CreateParamDef("modifytan",siInt4,siClassifUnknown,siPersistable | siKeyable,"Modify Tangent","",0,0,3,0,3);
 	//oCustomOperator.AddParameter(oPDef);
-	oPDef = XSIFactory.CreateParamDef("mergeRadius",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.33,0,1E+100,0,10);
+	oPDef = XSIFactory.CreateParamDef("distance",siDouble,siClassifUnknown,siPersistable | siKeyable,"Merge Radius","",0.33,0,1E+100,0,10);
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
@@ -276,7 +276,7 @@ function MergeSubcurves_Update( in_ctxt )
 	//var cont = in_ctxt.GetParameterValue("cont");
 	//var seam = in_ctxt.GetParameterValue("seam");
 	//var modifytan = in_ctxt.GetParameterValue("modifytan");
-	var mergeRadius = in_ctxt.GetParameterValue("mergeRadius");
+	var distance = in_ctxt.GetParameterValue("distance");
 
 
 	// Get Port connections.
@@ -477,7 +477,7 @@ function MergeSubcurves_Update( in_ctxt )
 				oFirstBnd.selected = false;
 
 				// Find nearby Boundary!
-				var foundBnd = findBoundary( oFirstBnd.x, oFirstBnd.y, oFirstBnd.z, mergeRadius, aBnds );
+				var foundBnd = findBoundary( oFirstBnd.x, oFirstBnd.y, oFirstBnd.z, distance, aBnds );
 
 				if(foundBnd != -1)
 				{
@@ -524,7 +524,7 @@ function MergeSubcurves_Update( in_ctxt )
 				oLastBnd.selected = false;
 
 				// Find nearby Boundary!
-				var foundBnd = findBoundary( oLastBnd.x, oLastBnd.y, oLastBnd.z, mergeRadius, aBnds );
+				var foundBnd = findBoundary( oLastBnd.x, oLastBnd.y, oLastBnd.z, distance, aBnds );
 
 				if(foundBnd != -1)
 				{
@@ -812,7 +812,7 @@ function invertNurbsCurve(aPoints, aKnots, isClosed)
 }
 
 
-function findBoundary(x, y, z, mergeRadius, aBnds)
+function findBoundary(x, y, z, distance, aBnds)
 {
 	var nearestBnd = -1;
 	var nearestDist = -1;
@@ -830,7 +830,7 @@ function findBoundary(x, y, z, mergeRadius, aBnds)
 		var dz = z - bnd.z;
 		var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);	// Math.pow(xxx, 2);
 
-		if(dist < mergeRadius)
+		if(dist < distance)
 		{
 			if(dist < nearestDist || nearestDist == -1)
 			{
@@ -856,7 +856,7 @@ function MergeSubcurves_DefineLayout( in_ctxt )
 	//oLayout.AddItem("cont");
 	//oLayout.AddItem("seam");
 	//oLayout.AddItem("modifytan");
-	oLayout.AddItem("mergeRadius");
+	oLayout.AddItem("distance", "Distance");
 	return true;
 }
 
@@ -873,11 +873,11 @@ function MergeSubcurves_OnClosed( )
 }
 
 
-function MergeSubcurves_mergeRadius_OnChanged( )
+function MergeSubcurves_distance_OnChanged( )
 {
-	Application.LogMessage("MergeSubcurves_mergeRadius_OnChanged called",siVerbose);
+	Application.LogMessage("MergeSubcurves_distance_OnChanged called",siVerbose);
 	var oParam;
-	oParam = PPG.mergeRadius;
+	oParam = PPG.distance;
 	var paramVal;
 	paramVal = oParam.Value;
 	Application.LogMessage("New value: " + paramVal,siVerbose);
