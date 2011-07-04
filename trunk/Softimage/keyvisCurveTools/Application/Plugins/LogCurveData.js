@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // LogCurveDataPlugin
 // 2010/03/30 by Eugen Sares
-// last update: 2011/06/10
+// last update: 2011/06/30
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -34,13 +34,16 @@ function LogCurveData_Init( in_ctxt )
 	oCmd = in_ctxt.Source;
 	oCmd.Description = "";
 	oCmd.ReturnValue = true;
+	var oArgs = oCmd.Arguments;
+	// To get a collection of subcomponents, or the current selection of subcomponents: 
+	oArgs.AddWithHandler("args", "Collection");
 
 	return true;
 }
 
 //______________________________________________________________________________
 
-function LogCurveData_Execute(  )
+function LogCurveData_Execute( args )
 {
 
 	Application.LogMessage("LogCurveData_Execute called",siVerbose);
@@ -52,7 +55,7 @@ function LogCurveData_Execute(  )
 
 	do
 	{
-		var oSel = Application.Selection;
+		var oSel = args;
 		if(oSel.Count == 0)
 		{	
 			LogMessage("Please select a CurveList or Subcurve first.");

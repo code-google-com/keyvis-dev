@@ -52,12 +52,11 @@ function ApplyBlendSubcurves_Init( in_ctxt )
 
 function ApplyBlendSubcurves_Execute( args )
 {
-
 	Application.LogMessage("ApplyBlendSubcurves_Execute called",siVerbose);
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cCrvBndryClusters = new ActiveXObject("XSI.Collection");
@@ -308,7 +307,6 @@ function BlendSubcurves_Update( in_ctxt )
 	// Example:
 	// Idx	aSubCrvs	aInvert		close?
 	// -----------------------------------
-	
 	// init:
 	// 0	[0]			[f]			f
 	// 1	[1]			[f]			f

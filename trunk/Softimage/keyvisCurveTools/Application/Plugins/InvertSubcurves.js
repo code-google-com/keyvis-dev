@@ -35,7 +35,6 @@ function ApplyInvertSubcurves_Init( in_ctxt )
 	oCmd = in_ctxt.Source;	// source object that is the cause of the callback being fired
 	oCmd.Description = "Create an instance of InvertSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
-
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
@@ -52,7 +51,7 @@ function ApplyInvertSubcurves_Execute(args)
 
 	try
 	{
-		var cSel = Selection;
+		var cSel = args;
 
 		// Filter a Collection of Subcurve Clusters out of the Selection.
 		var cSubcurveClusters = new ActiveXObject("XSI.Collection");
@@ -61,16 +60,16 @@ function ApplyInvertSubcurves_Execute(args)
 		// Filter the Selection for Clusters and Subcurves.
 		for(var i = 0; i < cSel.Count; i++)
 		{
-/*			if( cSel(i).Type == "crvlist")
+			if( cSel(i).Type == "crvlist")
 			{
-				// Object selected? Offset all Subcurves.
+				// Object selected? Invert all Subcurves.
 				var oObject = cSel(i);
 				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siSubCurveCluster, "Subcurve_AUTO");
 				cSubcurveClusters.Add( oCluster );
 				cCurveLists.Add( oObject );
 
 			}
-*/
+
 			if( cSel(i).Type == "subcrv" && ClassName(cSel(i)) == "Cluster")
 			{
 				cSubcurveClusters.Add(cSel(i));
@@ -430,7 +429,7 @@ function ApplyInvertSubcurves_Menu_Init( in_ctxt )
 {
 	var oMenu;
 	oMenu = in_ctxt.Source;
-	oMenu.AddCommandItem("Invert Subcurves","ApplyInvertSubcurves");
+	oMenu.AddCommandItem("Invert (Sub)Curves","ApplyInvertSubcurves");
 	return true;
 }
 
