@@ -259,7 +259,6 @@ class QMenu_Menu: #The menu class.
 		
 	def insertMenuItem (self, index, menuItem):
 		items = self.Items
-		
 		if index == None:
 			index = 0
 		items.insert (index,menuItem)
@@ -286,8 +285,7 @@ class QMenu_Menu: #The menu class.
 			Print("QMenu Menu '" + str(self.Name) + "' does not have a menu item at index " + str(index) + " that could be removed!!", c.siError)
 			
 	def insertTempMenuItem (self, index, menuItem):
-		items = self.TempItems
-		
+		items = self.TempItems	
 		if index == None:
 			index = 0 #len(TempItems)-1)
 		items.insert (index,menuItem)
@@ -729,7 +727,7 @@ class QMenuContext:
 		self.CurrentXSIView = None
 		self.ClickedMenu = None
 		self.ClickedMenuItemNumber = None
-		self.LastICENodes = list()
+		self.LastICENodes = list() #Currently not used
 		self.SoftimageMainVersion = getXSIMainVersion()
 
 	def storeQMenuObject ( self, oObj ):
@@ -4053,28 +4051,10 @@ def DisplayMenuSet( MenuSetIndex ):
 	globalQMenu_ViewSignatures = getGlobalObject("globalQMenu_ViewSignatures")
 	silent = True
 	append = True
-	ViewSignatures = (getView(silent)) #Get the short/nice view signature silently (without printing it)
-	ViewSignature = ViewSignatures[0]
+	ViewSignatures = (getView(silent)) 
+	ViewSignature = ViewSignatures[0] #Get the short/nice view signature silently (without printing it)
 	oXSIView = ViewSignatures[2] #The getView() function has built-in heuristic to get the view object under the mouse as reliably as possible. It returns the view object as third item of the return value array.
 	#Print (ViewSignature)
-	
-	"""
-	#Test code to find floating window the user is currently working in by screen coordinates (unreliably :-(
-	#======= Handle cases in which the mouse cursor is over the view manager (any of the four main 3D view areas) =======
-	
-	#Lets find the current viewport under the mouse and activate it so we can work with a specific view further down.
-	#This makes view operations more predictable in case the user clicks on a menu entry in a long menu that overlaps another view
-	#In which case the wrong view would be affected.
-	if ViewSignature.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
-		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
-		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
-		#print ViewportUnderMouse
-		#Activate the 3D view currently under the mouse so viewport operations triggered affect that view and not the one that was active before the menu was opened from 
-		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
-		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
-		#print ("View under mouse is: ")
-		#print oXSIView
-	"""
 	
 	t0 = time.clock() #Record time before we start getting the first 4 menus
 
@@ -4102,6 +4082,8 @@ def DisplayMenuSet( MenuSetIndex ):
 				#so that only the little remaining required data needs to be filled in on every menu or menu item object we iterate over -> faster.
 			oContext.storeCurrentXSIView (oXSIView)
 			#print ("Storing XSIView named " + oXSIView.Name)
+
+#TODO: Check if we are in an ICE Tree or Render Tree and implement editable-menu code
 			
 			oAMenu = None; #AMenuItemList = list()
 			oBMenu = None; #BMenuItemList = list()
@@ -4235,66 +4217,69 @@ def DisplayMenuSet( MenuSetIndex ):
 				for oMenu in oMenus: 
 					MenuString = MenuString + "[" #Start the menu string
 					if oMenu != None:
-						if (len(oMenu.Items) == 0) and (len(oMenu.TempItems) == 0):
-							MenuString = MenuString + "[[" + oMenu.Name + "]" +  "[-1]" + "[3]" + "]"
-						else:
-							if MenuCounter == 2 or MenuCounter == 3: #Add the title at the beginning of the menu in case it's menu 2 or 3
-								MenuString = MenuString + "[[" + oMenu.Name + "]"  + "[-1]" + "[3]" + "]" 
-							
-							#Add regular menu items to the display string
-							for oItem in oMenu.Items:
-								if oItem.Type == "CommandPlaceholder":
-									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
-								if oItem.Type == "QMenu_MenuItem":
-									#Print(oItem.Name + " is a switch: " + str(oItem.Switch))
-									if oItem.Switch == True:
-										Language = oItem.Language
-										oContext.storeQMenuObject(oItem)
-										QMenuGetSelectionDetails (oItem.ScanDepth, append) ##Add more selection info in case the switch item requires a higher scan depth than any previous menu or display context
-										if Language == "Python": #Execute Python code natively, it's faster this way
-											Code = (oItem.Code + ("\nresult = Switch_Init( oContext )"))
-											exec (Code)
-										else:
-											results = App.ExecuteScriptCode(oItem.Code, Language, "Switch_Init",[oContext])
-											result = results[0]
-										if result == True:
-											MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[5]" + "]"
-										else:
-											MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]"
-										#except:
-											#Print ("An Error occured evaluating the Switch_Eval function of menu item '" + oItem.Name + "'. Please see script editor for details", c.siVerbose)	
-											#raise
-									else: #Item is not a switch, must be a normal menu item
-										MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]"
-										
-								if oItem.Type == "QMenu_Menu":
-									#try:
-									MenuIndex = oMenus.index(oItem)
-									MenuString = MenuString + "[[" + oItem.Name + "]" + "[" + str(MenuIndex) + "]" + "[1]" + "]" 
-									#except:
-										#pass
-								if oItem.Type == "QMenuSeparator":
-									MenuString = MenuString + "[]"
-								if oItem.Type == "MissingCommand":
-									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[0]" + "]"
 
-							#Add temporary menu items to the display string
-							for oItem in oMenu.TempItems:
-								if oItem.Type == "Command":
-									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
-								if oItem.Type == "QMenu_MenuItem":
-									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
-								if oItem.Type == "QMenu_Menu":
-									#try:
-										MenuIndex = oMenus.index(oItem)
-										MenuString = MenuString + "[[" + oItem.Name + "]"  + "[" + str(MenuIndex) + "]" + "[1]" + "]" 
+						if MenuCounter == 2 or MenuCounter == 3: #Add the title at the beginning of the menu in case it's menu 2 or 3
+							MenuString = MenuString + "[[" + oMenu.Name + "]"  + "[-1]" + "[3]" + "]" 
+						
+						if oXSIView.Type  == "ICE Tree":
+							if (len(oMenu.Items) == 0):
+								if (len(oMenu.TempItems) == 0): #No Menu Items or temp menu items in the menu? 
+									MenuString = MenuString + "[[Shift-Click to insert selected ICE Node]"  + "[-1]" + "[1]" + "]"
+								
+						#Add regular menu items to the display string
+						for oItem in oMenu.Items:
+							if oItem.Type == "CommandPlaceholder":
+								MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
+							if oItem.Type == "QMenu_MenuItem":
+								#Print(oItem.Name + " is a switch: " + str(oItem.Switch))
+								if oItem.Switch == True:
+									Language = oItem.Language
+									oContext.storeQMenuObject(oItem)
+									QMenuGetSelectionDetails (oItem.ScanDepth, append) ##Add more selection info in case the switch item requires a higher scan depth than any previous menu or display context
+									if Language == "Python": #Execute Python code natively, it's faster this way
+										Code = (oItem.Code + ("\nresult = Switch_Init( oContext )"))
+										exec (Code)
+									else:
+										results = App.ExecuteScriptCode(oItem.Code, Language, "Switch_Init",[oContext])
+										result = results[0]
+									if result == True:
+										MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[5]" + "]"
+									else:
+										MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]"
 									#except:
-										#DoNothing = True
-								if oItem.Type == "QMenuSeparator":
-									MenuString = MenuString + "[[]"  + "[-1]" + "[0]" + "]" 
-							#Add the title at the end of the menu in case it's menu 0 or 1
-							if MenuCounter == 0 or MenuCounter == 1:
-								MenuString = MenuString + "[[" + oMenu.Name + "]"  + "[-1]" + "[3]" + "]" 
+										#Print ("An Error occured evaluating the Switch_Eval function of menu item '" + oItem.Name + "'. Please see script editor for details", c.siVerbose)	
+										#raise
+								else: #Item is not a switch, must be a normal menu item
+									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]"
+									
+							if oItem.Type == "QMenu_Menu":
+								#try:
+								MenuIndex = oMenus.index(oItem)
+								MenuString = MenuString + "[[" + oItem.Name + "]" + "[" + str(MenuIndex) + "]" + "[1]" + "]" 
+								#except:
+									#pass
+							if oItem.Type == "QMenuSeparator":
+								MenuString = MenuString + "[]"
+							if oItem.Type == "MissingCommand":
+								MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[0]" + "]"
+
+						#Add temporary menu items to the display string
+						for oItem in oMenu.TempItems:
+							if oItem.Type == "Command":
+								MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
+							if oItem.Type == "QMenu_MenuItem":
+								MenuString = MenuString + "[[" + oItem.Name + "]"  + "[-1]" + "[1]" + "]" 
+							if oItem.Type == "QMenu_Menu":
+								#try:
+									MenuIndex = oMenus.index(oItem)
+									MenuString = MenuString + "[[" + oItem.Name + "]"  + "[" + str(MenuIndex) + "]" + "[1]" + "]" 
+								#except:
+									#DoNothing = True
+							if oItem.Type == "QMenuSeparator":
+								MenuString = MenuString + "[[]"  + "[-1]" + "[0]" + "]" 
+						#Add the title at the end of the menu in case it's menu 0 or 1
+						if MenuCounter == 0 or MenuCounter == 1:
+							MenuString = MenuString + "[[" + oMenu.Name + "]"  + "[-1]" + "[3]" + "]" 
 					#else:
 						#MenuString = MenuString + "[[None]" +  "[-1]" + "[3]" + "]"
 						
@@ -4323,6 +4308,7 @@ def DisplayMenuSet( MenuSetIndex ):
 				#WinUnderMouse = win32gui.WindowFromPoint (CursorPos) #Get window under mouse
 				
 				MenuItemToExecute = App.QMenuRender(MenuString) #Display the menu, get clicked menu item from user
+				keyState = keyState = Application.GetKeyboardState()
 				Application.Preferences.SetPreferenceValue("scripting.cmdlog", CmdLog) #Re-enable command logging
 				
 				#win32gui.SetFocus(WinUnderMouse) #Set focus back to window under mouse
@@ -4344,11 +4330,61 @@ def DisplayMenuSet( MenuSetIndex ):
 								oClickedMenuItem = globalQMenu_LastUsedItem.item #When clicking on any of the Menu Titles repeat the last command
 							else:
 								#Was one of the temp menu items clicked on? (Temp menu items are always listed after permanent menu items)
-								if MenuItemToExecute[1] > (len(oClickedMenu.Items)-1): 
+								if MenuItemToExecute[1] > (len(oClickedMenu.Items)-1) and (len(oClickedMenu.TempItems) > 0):
 									oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items))]
 								#No, one of the normal menu items was selected...
 								else: 
-									oClickedMenuItem = oClickedMenu.Items[MenuItemToExecute[1]]
+									if oXSIView.Type  == "ICE Tree": #Special Case handling for in-place-editable ICE Tree menus
+										#if len(oClickedMenu.Items) <=0: #User has clicked the dummy item that does not exist ?
+										if keyState[1] == 1: #Is Shift pressed? We want to add a menu item named after currently selected ICE node
+											ActiveIceOpFullName = oView.GetAttributeValue("container") #Get the ICE Op
+											if ActiveIceOpFullName != "": #Without an ICE Tree we don't need to continue as there can be no nodes selected
+												SelectedNodeFullName = oXSIView.GetAttributeValue("selection")
+												oSelectedNode = Application.Dictionary.GetObject(SelectedNodeFullName)
+												if oSelectedNode != None: #We have an actual ICE node object selected?
+													SelectedNodeName = oSelectedNode.Name
+													NewMenuItem = Application.QMenuGetByName("MenuItem", SelectedNodeName) #Lets see if a menu item with this name already exists
+													if NewMenuItem == None: #No? Lets create a new one from scratch
+														NewMenuItem = Application.QMenuCreateObject("MenuItem")
+														#Assemble the command string required to recreate the ICE node (commands differ depending on type of node created, like compounds or base nodes)
+														
+														if Application.ClassName (oSelectedNode) == "ICENode": 
+															IceCommand = "AddICENode" 
+															Preset = (str(oSelectedNode.Type) + ".Preset")
+
+														if Application.ClassName (oSelectedNode) == "ICECompoundNode": 
+															IceCommand = "AddICECompoundNode"
+															Preset = (str(oSelectedNode.Type).replace("_"," "))
+														
+														#Special Case handling for...
+														#Get Data
+														if Application.ClassName (oSelectedNode) == "ICEDataProviderNode":
+															IceCommand = "AddICENode" 
+															Preset = "GetDataNode.Preset"
+
+														#Assemble the menu item's code..
+														MenuItemCode = "def Script_Execute (oContext): #Dont rename this function\n"
+														MenuItemCode += "\toView = oContext.CurrentXSIView"
+														MenuItemCode += "\tif (oView != None) and (oView.Type  == \"ICE Tree\"): #Are we working in an ICE Tree view?"
+														MenuItemCode += "\t\tActiveIceOpFullName = oView.GetAttributeValue(\"container\")"
+														MenuItemCode += ("\t\tApplication." + IceCommand + "(\"" + Preset + "\"," + ActiveIceOpFullName + ")")
+														NewMenuItem.Code = NewMenuItemCode
+														NewMenuItem.Name = SelectedNodeName
+														NewMenuItem.Category = "ICE Nodes"
+													
+														Application.LogMessage("Shift key was pressed -> Adding a new menu item for selected ICE Node " + SelectedNodeName )
+														globalQMenuItems.addMenuItem(NewMenuItem) #Also store it in the global list of menu items in case user wants to safe the file
+													
+													else:
+														Application.LogMessage("Shift key was pressed -> Adding an already existing menu item for selected ICE Node " + SelectedNodeName )
+						
+													oClickedMenu.insertMenuItem( MenuItemToExecute[1] , NewMenuItem ) #Store the new menu item in the clicked menu and in the place of the clicked menu item
+				
+												else:
+													Application.LogMessage("No ICE node was selected to be added to the menu. Select a node and try again please.",c.siWarning)
+					
+									else: #We are not in an ICE Tree view
+										oClickedMenuItem = oClickedMenu.Items[MenuItemToExecute[1]]
 									
 						#Was one of the lower two menus selected?
 						if MenuItemToExecute[0] == 2 or MenuItemToExecute[0] == 3: 
@@ -4357,7 +4393,7 @@ def DisplayMenuSet( MenuSetIndex ):
 								oClickedMenuItem = globalQMenu_LastUsedItem.item 
 							else:
 								#Was one of the temp menu items clicked on?
-								if MenuItemToExecute[1] > (len(oClickedMenu.Items)): 
+								if MenuItemToExecute[1] > (len(oClickedMenu.Items)) and (len(oClickedMenu.TempItems) > 0):
 									oClickedMenuItem = oClickedMenu.TempItems[MenuItemToExecute[1]-(len(oClickedMenu.Items)+1)] #get the clicked temp menu item
 								#No, one of the normal menu items was selected...
 								else: 
@@ -4788,23 +4824,6 @@ def QMenuGetPreferencesCustomProperty_Execute():
 # ========================================= Event Callback Functions =====================================================
 #=========================================================================================================================
 
-#Obsolete event function definitions
-""" 
-def QMenu_NewSceneHandler_OnEvent(in_ctxt):
-	QMenuGetSelectionDetails(0)
-
-
-#"On selection changed" event to collect information about currently selected Objects	
-def QMenuGetSelectionDetails_OnEvent(in_ctxt):
-	#Print("QMenu: QMenuGetSelectionDetails_OnEvent called",c.siVerbose)
-	
-	t0 = time.clock()
-	QMenuGetSelectionDetails(0)
-	t1 = time.clock()
-	timeTaken = (t1 - t0)#/1000
-	if App.Preferences.GetPreferenceValue("QMenu.ShowQMenuTimes"):
-		Print("QMenuGetSelectionDetails event took: " + str(timeTaken) + "seconds")
-"""
 
 def QMenuGetSelectionDetails(MaxScanDepth, appendData = True):
 	#Print("QMenu: QMenuGetSelectionDetails called",c.siVerbose)
@@ -4839,15 +4858,7 @@ def QMenuGetSelectionDetails(MaxScanDepth, appendData = True):
 		lsSelectionComponentParentTypes = list(oSelDetails.ComponentParentTypes)
 		lsSelectionComponentParentClassNames = list(oSelDetails.ComponentParentClassNames )
 		
-		"""
-		lsX3DObjects = oSelDetails.X3DObjects
-		lsSelectionTypes = oSelDetails.Types
-		lsSelectionClassNames = oSelDetails.ClassNames
-		lsSelectionComponentClassNames = oSelDetails.ComponentClassNames
-		lsSelectionComponentParents = oSelDetails.ComponentParents
-		lsSelectionComponentParentTypes = oSelDetails.ComponentParentTypes
-		lsSelectionComponentParentClassNames = oSelDetails.ComponentParentClassNames 
-		"""
+
 		
 	#To speed up context evaluation we add at least an empty string in case nothing is selected
 	if (SelCount == 0) and (CurrentScanDepth == 0):
@@ -4951,88 +4962,91 @@ def QMenuGetSelectionDetails(MaxScanDepth, appendData = True):
 	#TotalTime = t2 - t1
 	#Print("Time taken to assemble selection info: " + str(TotalTime));
 
+#Old event, not used anymore
 def QMenuPrintValueChanged_OnEvent( in_ctxt):
 	Object = in_ctxt.GetAttribute("Object")
 	Print ("Changed Object is: " + str(Object))
 	Print ("Full Name is: " + in_ctxt.GetAttribute("FullName") )
 	Print (Object.Type)
 
-# Key down event that searches through defined QMenu view signatures to find one matching the window under the mouse
+# Key down event that searches through defined QMenu view signatures to find one that matches the window under the mouse
 def QMenuCheckDisplayEvents_OnEvent( in_ctxt ):  
 	#Print("QMenuCheckDisplayEvents_OnEvent called",c.siVerbose)
-	
-	globalQMenuDisplayEventContainer = getGlobalObject("globalQMenu_DisplayEvents") 
-	if globalQMenuDisplayEventContainer != None:
-		globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
+	try:
+		QMenuEnabled = App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
+	except:
+		QMenuEnabled = False
+		
+	if (QMenuEnabled == True) or (QMenuEnabled == 1) or (QMenuEnabled == 'True'):	
+		globalQMenuDisplayEventContainer = getGlobalObject("globalQMenu_DisplayEvents") 
+		if globalQMenuDisplayEventContainer != None:
+			globalQMenu_DisplayEvents = globalQMenuDisplayEventContainer.Items
 
-		KeyPressed = in_ctxt.GetAttribute("KeyCode")
-		KeyMask = in_ctxt.GetAttribute("ShiftMask")
-		#Print ("Pressed Key is: " + str(KeyPressed))
-		#Print ("Mask Key is: " + str(KeyMask))
-		Consumed = False #Event hasn't been consumed yet
-		IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
-		if KeyPressed not in IlligalKeyPressedValues: #Not only a modifier key was pressed?
-			QMenuConfigurator = getQMenuConfiguratorCustomProperty() #App.QMenuGetConfiguratorCustomProperty()
+			KeyPressed = in_ctxt.GetAttribute("KeyCode")
+			KeyMask = in_ctxt.GetAttribute("ShiftMask")
+			#Print ("Pressed Key is: " + str(KeyPressed))
+			#Print ("Mask Key is: " + str(KeyMask))
+			Consumed = False #Event hasn't been consumed yet
+			IlligalKeyPressedValues = (16,17,18) #Mask Keys not allowed as single key assignments (Strg, Alt and Shift keys)
+			if KeyPressed not in IlligalKeyPressedValues: #Not only a modifier key was pressed?
+				QMenuConfigurator = getQMenuConfiguratorCustomProperty() #App.QMenuGetConfiguratorCustomProperty()
 
-			if QMenuConfigurator != None:
-				if QMenuConfigurator.RecordViewSignature.Value == True:
-					nonsilent = False
-					ViewSignature = (getView(nonsilent))[0] #Get the nice version of the View's signature non-silently, seeing the view signatures could be useful when recording it
-					QMenuConfigurator.ViewSignature.Value = ViewSignature
-					QMenuConfigurator.RecordViewSignature.Value = False
-					#Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
-					Consumed = True
-				
-				if QMenuConfigurator.DisplayEventKeys_Record.Value == True:
-					oSelectedEvent = None
-					oSelectedEvent = globalQMenu_DisplayEvents[QMenuConfigurator.DisplayEvent.Value] #Get the currently selected display event by looking at the selected number in the Configurator'S list of display events
-				
-					if oSelectedEvent != None:
-						oSelectedEvent.Key = KeyPressed
-						oSelectedEvent.KeyMask = KeyMask
-					
-						QMenuConfigurator.DisplayEventKey.Value = KeyPressed
-						QMenuConfigurator.DisplayEventKeyMask.Value = KeyMask
-						QMenuConfigurator.DisplayEventKeys_Record.Value = False
-			
-			try:
-				QMenuEnabled = App.Preferences.GetPreferenceValue("QMenu.QMenuEnabled")
-			except:
-				QMenuEnabled = False
-				
-			if (QMenuEnabled == True) or (QMenuEnabled == 1) or (QMenuEnabled == 'True') and (Consumed == False): #Is QMenu enabled and the event hasn't been consumed yet?
-				#Check known display events whether there is one that should react to the currently pressed key(s)
-				for oDispEvent in globalQMenu_DisplayEvents:
-					if ((oDispEvent.Key == KeyPressed) and (oDispEvent.KeyMask == KeyMask )): #We have found a display event that matches the key(s) that were just pressed
+				if QMenuConfigurator != None:
+					if QMenuConfigurator.RecordViewSignature.Value == True:
+						nonsilent = False
+						ViewSignature = (getView(nonsilent))[0] #Get the nice version of the View's signature non-silently, seeing the view signatures could be useful when recording it
+						QMenuConfigurator.ViewSignature.Value = ViewSignature
+						QMenuConfigurator.RecordViewSignature.Value = False
+						#Print("QMenu View Signature of picked window is: " + str(ViewSignature), c.siVerbose)
 						Consumed = True
+					
+					if QMenuConfigurator.DisplayEventKeys_Record.Value == True:
+						oSelectedEvent = None
+						oSelectedEvent = globalQMenu_DisplayEvents[QMenuConfigurator.DisplayEvent.Value] #Get the currently selected display event by looking at the selected number in the Configurator'S list of display events
+					
+						if oSelectedEvent != None:
+							oSelectedEvent.Key = KeyPressed
+							oSelectedEvent.KeyMask = KeyMask
 						
-						#Finally display the corresponding menu set associated with the display event and get the users input
-						oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
-						#Now after user has clicked on something...
-						if oChosenMenuItem != None:
-							XSIVersion = getXSIMainVersion()
-							globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
-							globalQMenu_LastUsedItem.set(oChosenMenuItem)
-							bNonVerboseErrorReporting = False
+							QMenuConfigurator.DisplayEventKey.Value = KeyPressed
+							QMenuConfigurator.DisplayEventKeyMask.Value = KeyMask
+							QMenuConfigurator.DisplayEventKeys_Record.Value = False
+				
 
-							if XSIVersion < 10: #Use old method to execute the picked menu item directly in case Softimage version is older than 2012
-								QMenuExecuteMenuItem_Execute (oChosenMenuItem, bNonVerboseErrorReporting)
+					
+				if Consumed == False: #Is QMenu enabled and the event hasn't been consumed yet?
+					#Check known display events whether there is one that should react to the currently pressed key(s)
+					for oDispEvent in globalQMenu_DisplayEvents:
+						if ((oDispEvent.Key == KeyPressed) and (oDispEvent.KeyMask == KeyMask )): #We have found a display event that matches the key(s) that were just pressed
+							Consumed = True
 							
-							else: #We have Softimage 2012 or younger?
-								QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
-								QMenuTimer.Reset( 0, 1 )# Reset the timer with a millisecond until execution and with just a single repetition
-														# It will execute the chosen MenuItem with no noticeable delay.
-														# We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
-														# is the last piece of code that's executed by this plugin so it properly appears a repeatable menu item,
-														# in Softimage's Edit menu in the main menu bar, besides avoiding some other problems too.
-					
-						break #We only care for the first found display event assuming there are no duplicates (and even if there are it's not our fault)
-					
-			# Finally tell Softimage that the event has been consumed (which prevents commands bound to the same hotkey to be executed)
-			in_ctxt.SetAttribute("Consumed", Consumed)
-		else:
-			#Print("Only Modifier Key was pressed!")
-			in_ctxt.SetAttribute("Consumed", Consumed)
+							#Finally display the corresponding menu set associated with the display event and get the users input
+							oChosenMenuItem = DisplayMenuSet( globalQMenuDisplayEventContainer.getEventNumber(oDispEvent))
+							#Now after user has clicked on something...
+							if oChosenMenuItem != None:
+								XSIVersion = getXSIMainVersion()
+								globalQMenu_LastUsedItem = getGlobalObject("globalQMenu_LastUsedItem")
+								globalQMenu_LastUsedItem.set(oChosenMenuItem)
+								bNonVerboseErrorReporting = False
+
+								if XSIVersion < 10: #Use old method to execute the picked menu item directly in case Softimage version is older than 2012
+									QMenuExecuteMenuItem_Execute (oChosenMenuItem, bNonVerboseErrorReporting)
+								
+								else: #We have Softimage 2012 or younger?
+									QMenuTimer = Application.EventInfos( "QMenuExecution" ) #Find the execution timer
+									QMenuTimer.Reset( 0, 1 )# Reset the timer with a millisecond until execution and with just a single repetition
+															# It will execute the chosen MenuItem with no noticeable delay.
+															# We are using this timer event to ensure that, no matter what has happened before, the chosen menu item
+															# is the last piece of code that's executed by this plugin so it properly appears a repeatable menu item,
+															# in Softimage's Edit menu in the main menu bar, besides avoiding some other problems too.
+						
+							break #We only care for the first found display event assuming there are no duplicates (and even if there are it's not our fault)
+						
+				# Finally tell Softimage that the event has been consumed (which prevents commands bound to the same hotkey to be executed)
+				in_ctxt.SetAttribute("Consumed", Consumed)
+			else:
+				#Print("Only Modifier Key was pressed!")
+				in_ctxt.SetAttribute("Consumed", Consumed)
 
 
 # Timer event that prevents a race condition between init code and custom preference that might not yet be installed when Softimage starts up.
