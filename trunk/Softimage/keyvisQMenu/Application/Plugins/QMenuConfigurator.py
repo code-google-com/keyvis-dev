@@ -2881,9 +2881,7 @@ def QMenuConfigurator_RemoveSetInView_OnClicked():
 	RefreshViewMenuSetsWidgets()
 	RefreshMenuSetChooser()
 	RefreshMenuContexts()
-	print ("Menu Chooser Value before refresh is: " + str(PPG.MenuChooser.Value))
 	RefreshMenuChooser()
-	print ("Menu Chooser Value after refresh is: " + str(PPG.MenuChooser.Value))
 	RefreshMenuItems()
 	RefreshMenuSetDetailsWidgets()
 	PPG.Refresh()		
@@ -3300,10 +3298,6 @@ def RefreshMenuSetDetailsWidgets():
 					#Refresh Context manipulation widgets...
 					if oCurrentMenu != None: #Is a menu assigned to the selected context?
 						PPG.PPGLayout.Item("RemoveMenu").SetAttribute (c.siUIButtonDisable, False)
-						#PPG.MenuChooser.Value = oCurrentMenu.Name
-						#Print("QMenu: RefreshMenuSetDetailsWidgets: Menu Chooser Value is now :" + str(PPG.MenuChooser.Value))
-					#else:
-						#PPG.MenuChooser.Value = "None"
 
 					
 					if PPG.MenuContexts.Value > -1:
@@ -3316,8 +3310,6 @@ def RefreshMenuSetDetailsWidgets():
 						PPG.PPGLayout.Item("CtxUp").SetAttribute (c.siUIButtonDisable, False)
 					if PPG.MenuContexts.Value < ((len(PPG.PPGLayout.Item("MenuContexts").UIItems )/2)-1):
 						PPG.PPGLayout.Item("CtxDown").SetAttribute (c.siUIButtonDisable, False)
-				#else:
-					#PPG.MenuChooser.Value = "None"
 				
 				PPG.PPGLayout.Item("InsertMenuContext").SetAttribute (c.siUIButtonDisable, False) #Enable the button
 	else:
@@ -3615,8 +3607,7 @@ def RefreshMenuContexts():
 			startrange = 0
 			endrange = (len(CurrentContexts))
 			
-			if ((CurrentContexts != None) and (CurrentMenus != None)):
-				
+			if ((CurrentContexts != None) and (CurrentMenus != None)):		
 				for i in range(startrange , endrange):
 					ContextString = str(CurrentContexts[i].Name)
 					MenuString = "NO MENU ASSIGNED"
@@ -3643,10 +3634,8 @@ def RefreshMenuContexts():
 				PPG.MenuContexts.Value = 0
 			else:
 				PPG.MenuContexts.Value = -1
-		print ("Context now is: " + str(PPG.MenuContexts.Value))		
 			
 	except:
-		print "Except"
 		PPG.MenuContexts.Value = -1
 		
 def RefreshMenuSetChooser():
