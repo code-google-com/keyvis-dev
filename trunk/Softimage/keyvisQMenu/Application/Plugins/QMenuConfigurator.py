@@ -1029,7 +1029,53 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	
 	CustomGFXFilesPath = getCustomGFXFilesPath()
 	
-	oLayout.AddTab("Main Configuration")
+	#================================== Key Events Tab =======================================================================================
+	
+	oLayout.AddTab("Hotkeys")
+	oLayout.AddGroup()
+	oLayout.AddItem("QMenuEnabled", "Enable QMenu")
+	oLayout.AddRow()
+	oQMenuConfigFile2 = oLayout.AddItem("QMenuConfigurationFile", "QMenu Config File", c.siControlFilePath)
+	oQMenuConfigFile2.SetAttribute (c.siUIFileFilter, "QMenu Configuration Files (*.xml)|*.xml|All Files (*.*)|*.*||")
+	oQMenuConfigFile2.SetAttribute (c.siUIInitialDir, "C:\\")
+	oQMenuConfigFile2.SetAttribute (c.siUIOpenFile, True)
+	oQMenuConfigFile2.SetAttribute (c.siUIFileMustExist, False)
+	oLayout.AddButton("LoadConfig","Load")
+	oLayout.AddButton("SaveConfig","Save")
+	oLayout.EndRow()
+	oLayout.EndGroup()
+	
+	oLayout.AddGroup("How to display Menu Sets")
+	oLayout.AddStaticText("There are two ways of invoking Menu Sets - Commands and Display Events\n\n- Commands\n\nUsing commands is straight forward: Open the Softimage Keyboard Mapping editor, select the Custom Script Commands category and assign as many QMenuDisplayMenuSet_n commands as you need to the hotkeys of your choice.\n\n- Key Events\n\nKey Events are the recommended way for all versions of Softimage from 7.0 to 2012.\nAdvantage: Key Event keys override any Softimage hotkeys as long as QMenu is enabled, you can quickly return back to your previous hotkey layout by disabling QMenu from the dropdown menu in the main menu bar and don't need to reconfigure your keys using the Keyboard Mapping editor.\nTo define Key Events please follow the steps in the section below\n\nNote: You may also use a combination of commands and key events.\n",0,260 )
+	oLayout.EndGroup()
+	
+	
+	oLayout.AddGroup("Edit Key Events")
+	oLayout.AddStaticText("1. Select and existing key event below or create a new one.\n\n2. Set the 'Record' check mark below, then press your desired key or key combination ( key + Shift, Alt or Ctrl) for the selected key event.\n\nNote: The record check mark will be automatically unchecked when a valid key or key combination has been pressed, or when leaving this tab or closing the configurator.",0,100)
+	
+	oLayout.AddRow()
+	oLayout.AddButton("AddDisplayEvent","Create new Key Event")
+	oLayout.AddButton("DeleteDisplayEvent","Delete selected Key Event")
+	oLayout.EndRow()
+	oLayout.AddRow()
+	oLayout.AddGroup("",False,0)
+	oEvents = oLayout.AddEnumControl ("DisplayEvent", None, "DisplayEvents", c.siControlListBox)
+	oEvents.SetAttribute(c.siUINoLabel, True)
+	oLayout.EndGroup()
+	
+
+	oLayout.AddGroup("",False,0)
+	oLayout.AddItem("DisplayEventKeys_Record","Record")
+	oKey = oLayout.AddItem("DisplayEventKey", "Key", c.siControlString)
+	oKeyMask = oLayout.AddItem("DisplayEventKeyMask", "KeyMask", c.siControlString)
+
+	oLayout.EndGroup()
+	oLayout.EndRow()	
+	oLayout.EndGroup()
+	
+	#================================== Main Configuration Tab =======================================================================================
+	
+	oLayout.AddTab("Menu Configuration")
 	oLayout.AddGroup()
 	oLayout.AddItem("QMenuEnabled", "Enable QMenu")
 	oLayout.AddRow()
@@ -1045,10 +1091,15 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	
 	oSC = oLayout.AddGroup("Configure Menu Sets") #Second column for  menu sets editing start#=======================================
 	oLayout.AddRow()
+	oLayout.AddGroup("1. Select a View")
 	oViews = oLayout.AddEnumControl ("View", None, "1. Select a View",c.siControlCombo)
 	#oViews.SetAttribute(c.siUILabelMinPixels,100 )
+	oViews.SetAttribute(c.siUINoLabel, True)
+	oLayout.EndGroup()
+	oLayout.AddGroup("2. Select a Menu Set")
 	oMSChooser = oLayout.AddEnumControl ("MenuSetChooser", None, "2. Select a Menu Set", c.siControlCombo)
-	#oMSChooser.SetAttribute(c.siUINoLabel, True)
+	oMSChooser.SetAttribute(c.siUINoLabel, True)
+	oLayout.EndGroup()
 	
 	oLayout.EndRow()
 	
@@ -1218,18 +1269,14 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	keyWordsFile = getDefaultConfigFilePath ("Python.keywords")
 	
 	oCodeEditor = oLayout.AddItem("MenuItem_Code", "Code", c.siControlTextEditor)
+	oCodeEditor.SetAttribute(c.siUINoLabel, True)
 	#oCodeEditor = d.Dispatch( oCodeEditor )	#dispatching does not help either
 	#oCodeEditor.SetAttribute(c.siUIHeight, oLayout.Item("CodeEditorHeight").Value)
-	Height = 200# PPG.CodeEditorHeight.Value
+	Height = 200
+	#PPG.CodeEditorHeight.Value
 	
 	
-	try:
-		Height = PPG.CodeEditorHeight.Value
-	except:
-		pass
-	
-	
-	#oCodeEditor.SetAttribute(c.siUIHeight, Height)
+	oCodeEditor.SetAttribute(c.siUIHeight, Height)
 	oCodeEditor.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor.SetAttribute(c.siUILineNumbering, True )
 	oCodeEditor.SetAttribute("Folding", True ) #Code folding Broken since XSI7.0
@@ -1330,7 +1377,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oLayout.EndRow()
 	
 	oCodeEditor2 = oLayout.AddItem("MenuDisplayContext_Code", "Code", c.siControlTextEditor)
-	#oCodeEditor2.SetAttribute(c.siUIValueOnly, True)
+	oCodeEditor2.SetAttribute(c.siUINoLabel, True)
 	oCodeEditor2.SetAttribute(c.siUIToolbar, True )
 	oCodeEditor2.SetAttribute(c.siUILineNumbering, True )
 	oCodeEditor2.SetAttribute(c.siUIFolding, True )
@@ -1338,45 +1385,8 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	oCodeEditor2.SetAttribute(c.siUICommentColor, 0xFF00FF)
 	oCodeEditor2.SetAttribute(c.siUICapability, c.siCanLoad )    #Does not work?
 	oLayout.EndGroup()
-		#================================== Key Events Tab =======================================================================================
-	
-	oLayout.AddTab("Hotkeys")
-	oLayout.AddGroup()
-	oLayout.AddItem("QMenuEnabled", "Enable QMenu")
-	oLayout.AddRow()
-	oQMenuConfigFile2 = oLayout.AddItem("QMenuConfigurationFile", "QMenu Config File", c.siControlFilePath)
-	oQMenuConfigFile2.SetAttribute (c.siUIFileFilter, "QMenu Configuration Files (*.xml)|*.xml|All Files (*.*)|*.*||")
-	oQMenuConfigFile2.SetAttribute (c.siUIInitialDir, "C:\\")
-	oQMenuConfigFile2.SetAttribute (c.siUIOpenFile, True)
-	oQMenuConfigFile2.SetAttribute (c.siUIFileMustExist, False)
-	oLayout.AddButton("LoadConfig","Load")
-	oLayout.AddButton("SaveConfig","Save")
-	oLayout.EndRow()
-	oLayout.EndGroup()
-	
-	oLayout.AddGroup("How to display Menu Sets")
-	oLayout.AddStaticText("There are two ways of invoking Menu Sets - Commands and Display Events\n\n- Commands\n\nUsing commands is straight forward: Open the Keyboard Mapping Editor, select the Custom Script Commands category and assign as many QMenuDisplayMenuSet_n commands as you need to the hotkeys of your choice.\n\n- Key Events\n\nKey Events are the recommended way for all versions of Softimage from 7.0 to 2012.\nAdvantage: Key Event keys override any Softimage hotkeys as long as QMenu is enabled, you can quickly return back to your previous hotkey layout by disabling QMenu from the dropdown menu in the main menu bar and don't need to reconfigure your keys using the Keyboard Mapping Editor.\nTo define Key Events please follow the steps in the section below\n\nNote: You may also use a combination of commands and key events if you want.\n",0,260 )
-	oLayout.EndGroup()
 	
 	
-	oLayout.AddGroup("Edit Key Events")
-	oLayout.AddStaticText("\nSet the 'Record' check mark below, then press your desired key or key combination ( key + Shift, Alt or Ctrl) for the selected key event.\n\nNote: The record check mark will be automatically unchecked when a valid key or key combination has been pressed, or when leaving this tab or closing the configurator.",0,100)
-	oLayout.AddRow()
-	
-	oLayout.AddGroup("",False,0)
-	oEvents = oLayout.AddEnumControl ("DisplayEvent", None, "DisplayEvents", c.siControlListBox)
-	oEvents.SetAttribute(c.siUINoLabel, True)
-	oLayout.EndGroup()
-	
-	oLayout.AddGroup("",False,0)
-	oLayout.AddItem("DisplayEventKeys_Record","Record")
-	oKey = oLayout.AddItem("DisplayEventKey", "Key", c.siControlString)
-	oKeyMask = oLayout.AddItem("DisplayEventKeyMask", "KeyMask", c.siControlString)
-	oLayout.AddButton("AddDisplayEvent","Create new Key Event")
-	oLayout.AddButton("DeleteDisplayEvent","Delete selected Key Event")
-	oLayout.EndGroup()
-	oLayout.EndRow()	
-	oLayout.EndGroup()
 	
 
 	
@@ -1490,8 +1500,8 @@ def QMenuConfigurator_AutoSelectMenu_OnChanged():
 		#PPG.MenuSetChooser.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.QuadSelector.SetCapabilityFlag ( c.siReadOnly , False)
 		PPG.View.SetCapabilityFlag ( c.siReadOnly , False)
-		#RefreshMenuChooser()
 		RefreshMenuSetDetailsWidgets()
+		RefreshMenuChooser()
 		RefreshMenuItems()
 		PPG.Refresh()
 	else:
@@ -1936,7 +1946,8 @@ def QMenuConfigurator_MenuItem_Name_OnChanged():
 				oItem = getQMenu_MenuByName(PPG.Menus.Value)
 			
 		if oItem != None:
-			if oItem.Name != PPG.MenuItem_Name.Value:
+			oldItemName = oItem.Name
+			if oldItemName != PPG.MenuItem_Name.Value:
 				NewMenuItem_Name = getUniqueName(PPG.MenuItem_Name.Value, KnownMenuItemNames)
 				oItem.Name = NewMenuItem_Name	
 		
@@ -1958,7 +1969,18 @@ def QMenuConfigurator_MenuItem_Name_OnChanged():
 			
 			SelectedMenuItem = PPG.MenuItems.Value
 			RefreshMenuContexts()
-			RefreshMenuChooser()
+			
+			if PPG.AutoSelectMenu.Value == False:
+				if PPG.MenuChooser.Value == oldItemName:
+					RefreshMenuChooser()
+					PPG.MenuChooser.Value = NewMenuItem_Name
+				else:
+					PrevMenuItem = PPG.MenuChooser.Value
+					RefreshMenuChooser()
+					PPG.MenuChooser.Value = PrevMenuItem
+			else:
+				RefreshMenuChooser()
+			
 			RefreshMenuSetDetailsWidgets()
 			
 			RefreshMenuItems()
@@ -3221,12 +3243,12 @@ def QMenuConfigurator_DisplayEventKeyMask_OnChanged():
 	#App.Preferences.SetPreferenceValue("QMenu.DisplayEventKeys_Record", False)
 	RefreshDisplayEventsKeys()
 				
-def QMenuConfigurator_DisplayEvents_OnTab():
+def QMenuConfigurator_Hotkeys_OnTab():
 	Print("QMenuConfigurator_DisplayEvents_OnTab called",c.siVerbose)
 	PPG.DisplayEventKeys_Record.Value = False
 	PPG.RecordViewSignature.Value = False	
 
-def QMenuConfigurator_LowLevelSettings_OnTab():
+def QMenuConfigurator_AdvancedConfiguration_OnTab():
 	Print("QMenuConfigurator_LowLevelSettings_OnTab called",c.siVerbose)
 	PPG.RecordViewSignature.Value = False
 	PPG.DisplayEventKeys_Record.Value = False
@@ -3236,7 +3258,7 @@ def QMenuConfigurator_Tools_OnTab():
 	PPG.RecordViewSignature.Value = False
 	PPG.DisplayEventKeys_Record.Value = False
 
-def QMenuConfigurator_MainSettings_OnTab():
+def QMenuConfigurator_MenuConfiguration_OnTab():
 	Print("QMenuConfigurator_MeinSettings_OnTab called",c.siVerbose)
 	PPG.RecordViewSignature.Value = False
 	PPG.DisplayEventKeys_Record.Value = False
@@ -3594,7 +3616,7 @@ def RefreshMenuContexts():
 	CurrentMenus = None
 	CurrentContextsEnum = list()
 	CurrentContext = PPG.MenuContexts.Value
-	print ("CurrentContext is: " + str(CurrentContext))
+	#print ("CurrentContext is: " + str(CurrentContext))
 	
 	if CurrentMenuSetName != "":
 		oCurrentMenuSet = getQMenu_MenuSetByName(CurrentMenuSetName)
@@ -4258,14 +4280,13 @@ def DisplayMenuSet( MenuSetIndex ):
 					MaxScanDepth = ScanDepth
 			
 			doNotAppend = False
-
 			QMenuGetSelectionDetails(MaxScanDepth, doNotAppend) #Assemble information about current selection, full refresh
 			
 			#Are we in a view in which we allow dynamic menu editing? (ICE Tree or RenderTree?)
 			DynaView = False
 			
 			if oXSIView != None:
-				if oXSIView.Type  == "ICE Tree" or "Render Tree":
+				if (oXSIView.Type  == "ICE Tree") or (oXSIView.Type  == "Render Tree"):
 					DynaView = True
 				
 			for RuleIndex in range(0,len(oMenuSet.AContexts)):
@@ -4567,7 +4588,7 @@ def DisplayMenuSet( MenuSetIndex ):
 													#print (SelectedNodeName)
 													NewMenuItem = Application.QMenuGetByName("MenuItem", SelectedNodeName) #Lets see if a menu item with this name already exists
 													if NewMenuItem != None:
-														Print("QMenu: Shift key was pressed -> Adding an already existing menu item for selected ICE Node named " + SelectedNodeName )
+														Print("QMenu: Shift key was pressed -> Adding an already existing menu item for selected Node \"" + SelectedNodeName +"\"" )
 													else: #No? Lets create a new one from scratch
 														DynaViewType = oXSIView.Type
 														if DynaViewType == "ICE Tree": 
@@ -4626,7 +4647,7 @@ def DisplayMenuSet( MenuSetIndex ):
 																
 
 													if NewMenuItem != None:	#Are we still in the game?												
-														Print("QMenu: Shift key was pressed -> Adding a new menu item for selected Node " + SelectedNodeName )
+														Print("QMenu: Shift key was pressed -> Adding a new menu item for selected Node \"" + SelectedNodeName + "\"")
 														oClickedMenu.insertMenuItem( RealItemNumber , NewMenuItem ) #Store the new menu item in the clicked menu and in the place of the clicked menu item
 														globalQMenuItems = getGlobalObject("globalQMenu_MenuItems")
 														globalQMenuItems.addMenuItem(NewMenuItem) #Also store it in the global list of menu items in case user wants to safe the file
@@ -4642,12 +4663,12 @@ def DisplayMenuSet( MenuSetIndex ):
 									oClickedMenuItem = None
 										
 								if (keyState[1] == 4):
-									Print("QMenu: Alt-key was pressed, removing the clicked menu item from the menu!", c.siWarning)
+									Print("QMenu: Alt-key was pressed, removing menu item \"" + oClickedMenuItem.Name + "\" from menu \"" + oClickedMenu.Name +"\"", c.siWarning)
 									oClickedMenu.removeMenuItemAtIndex( RealItemNumber)
 									oClickedMenuItem = None										
-#				
+				
 				if oClickedMenuItem != None:
-					if oClickedMenuItem.Name == "Shift-Click to insert selected ICE Node":
+					if oClickedMenuItem.Name == "Shift-Click to insert selected Node (s)":
 						oClickedMenuItem = None
 					else:
 						oContext.storeClickedMenu (oClickedMenu)
@@ -5409,7 +5430,7 @@ def QMenu_Init( in_ctxt ):
 			else:
 				oMenu.AddCallbackItem("Disable QMenu","QMenuDisableClicked")
 		else:
-			oMenuItem = oMenu.AddCallbackItem("QMenu Enabled","QMenuEnableClicked")
+			oMenuItem = oMenu.AddCallbackItem("QMenu enabled","QMenuEnableClicked")
 			if enabled == False:
 				oMenuItem.Checked = False
 			else:
