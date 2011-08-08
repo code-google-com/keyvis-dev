@@ -6,7 +6,14 @@
 
 # Code dependencies: none
 
-# Changes:
+# code Changes:
+#Added QMenu awareness of Face Robot View Manager ("frmviewmanager")
+
+#Config file changes:
+#Added "Null" Class object awareness to the "Any Object" Context
+
+#################################################################
+# Version 0.95
 # Added verbose error reporting when manually executing a switch item
 # Added Backface culling Switch Item to Views Menu Set
 # Added more "Multiply by..." menu items to the marked params editing menus
@@ -28,16 +35,15 @@
 # PPG parameter naming and text updates for better understanding of working steps required
 # Arnold Standin item removed from shading menu set, Arnold standin is no longer a sepparate object
 
-
 #New Bugs:
 #Material Manager is not a relational view?  -> Rendertree can't be queried for the Render Tree, MM has no "Views" to look through.
 # It's not possible to query for selected ICE nodes Preset name
 # Getting neighbor for edges/faces fails in Python?
-
+###################################################################################
 
 # = Bugs and TODOs= 
 
-#TODO: Store Keys in preferences instead of config file
+#TODO: Store Hotkeys in user preferences instead of config file
 #TODO: WIP- Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
 
 #TODO: Try finding currently active view by comparing Rectangles of available views -> Difficult, because rectangles retrieved from Python differ from those rported by Softimage
@@ -906,8 +912,8 @@ def XSIUnloadPlugin( in_reg ):
 def QMenuConfigurator_OnInit( ):
 	Print("QMenu: QMenuConfigurator_OnInit called",c.siVerbose)
 	initializeQMenuGlobals(False)
-	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
-	globalQMenu_ConfigStatus.Changed = True #When opening the PPG we assume that changes are made. This is a simplification but checking every value for changes would be too laborious.
+	setConfigChanged()
+	#When opening the PPG we assume that changes are made. This is a simplification but checking every value for changes would be too laborious.
 	RefreshQMenuConfigurator()
 	#Print("QMenu: Currently Inspected PPG's are: " + str(PPG.Inspected))
 	PPG.Refresh()
@@ -4651,7 +4657,8 @@ def DisplayMenuSet( MenuSetIndex ):
 														oClickedMenu.insertMenuItem( RealItemNumber , NewMenuItem ) #Store the new menu item in the clicked menu and in the place of the clicked menu item
 														globalQMenuItems = getGlobalObject("globalQMenu_MenuItems")
 														globalQMenuItems.addMenuItem(NewMenuItem) #Also store it in the global list of menu items in case user wants to safe the file
-													
+														setConfigChanged()
+														
 													if oClickedMenuItem.Name == "Shift-Click to insert selected Node (s)": #Did user click on a dummy item?
 														MenuItems = oClickedMenu.Items
 														for item in MenuItems:
@@ -4665,6 +4672,7 @@ def DisplayMenuSet( MenuSetIndex ):
 								if (keyState[1] == 4):
 									Print("QMenu: Alt-key was pressed, removing menu item \"" + oClickedMenuItem.Name + "\" from menu \"" + oClickedMenu.Name +"\"", c.siWarning)
 									oClickedMenu.removeMenuItemAtIndex( RealItemNumber)
+									setConfigChanged()
 									oClickedMenuItem = None										
 				
 				if oClickedMenuItem != None:
@@ -5387,8 +5395,11 @@ def QMenuDestroy_OnEvent (in_ctxt):
 		Message = ("The QMenu configuration has been changed - would you like to save it?")
 		Caption = ("Save QMenu configuration?")
 		DoSaveFile = XSIUIToolkit.MsgBox( Message, 36, Caption )
-		if DoSaveFile == True:
+		if DoSaveFile == 6: #Was the Yes-button pressed?
 			QMenuConfigFile = App.Preferences.GetPreferenceValue("QMenu.QMenuConfigurationFile")
+			#Message = str(QMenuConfigFile)
+			#Caption = (" QMenu Config file location?")
+			#XSIUIToolkit.MsgBox( Message, 36, Caption )
 			Result = saveQMenuConfiguration(QMenuConfigFile)
 			if Result == False:  #Something went wrong
 				#Message = ("The QMenu configuration file could not be written - would you like to save to the dafault backup file?")
@@ -5652,7 +5663,7 @@ def saveQMenuConfiguration(fileName):
 		
 def loadQMenuConfiguration(fileName):
 	Print("QMenu: loadQMenuConfiguration called", c.siVerbose)
-
+	t0 = time.clock()
 	if fileName != "":
 		if os.path.isfile(fileName) == True:
 			QMenuConfigFile = DOM.parse(fileName)
@@ -5870,6 +5881,9 @@ def loadQMenuConfiguration(fileName):
 							oNewDisplayEvent.KeyMask = int(Event.getAttribute("keyMask"))
 							result = globalQMenu_DisplayEvents.addEvent(oNewDisplayEvent)
 			gc.collect()
+			t1 = time.clock()
+			duration = (t1 - t0)
+			Print("QMenu: Loaded Config file in " + str(duration) + " seconds.")
 			return True
 		else:
 			Print("QMenu: Could not load QMenu Configuration from \"" + str(fileName) + "\" because the file could not be found!", c.siError)
@@ -5903,24 +5917,36 @@ def getView( Silent = False):
 	for char in WindowSignature: #Remove numbers from the string
 		if not char.isdigit():
 			WindowSignatureShort = (WindowSignatureShort + char)
-			
-	#The following is a workaround for a Softimage limitation: it does not name ICE Trees properly, win32com sees them as "Render Tree".
+	
+	#print WindowSignatureShort
+	#The following is a workaround for a Softimage limitation: it does not name doked ICE Trees properly, win32gui sees them as "Render Tree".
 	#So we figure out if we find Render Tree in the signature and check if the view is docked in the View manager. 
 	#If so, we replace "Render Tree" with "ICE Tree" in case the view is of type ICE Tree.
+	oVM = None
 	if WindowSignatureShort.find("ViewManager") > -1: #Mouse is over one of the view managers windows (3D View or an editor window docked in A,B,C or D view?)		
+		
 		ViewIndices = {"A":0,"B":1,"C":2,"D":3}
 		oVM = Views("vm")
-		ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
-		oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse)
-		oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
-		if oXSIView != None:
-			if oXSIView.Type == "ICE Tree": #When docked, Softimage ICE Trees report as Render Trees by name, but their Type is correctly set, so we can fix it...
-				WindowSignatureShort = WindowSignatureShort.replace("RenderTree", "ICETree")
-				WindowSignature = WindowSignature.replace("RenderTree", "ICETree")
+		if oVM == None:
+			oVM = Views("frmviewmanager")
+		
+		if oVM != None:
+			#print ("vm name is: " + oVM.Name)
+			ViewportUnderMouse = oVM.GetAttributeValue("viewportundermouse")
+			#print type(ViewportUnderMouse)
+			#print ("ViewportUnderMouse is: " + str(ViewportUnderMouse))
+			if ViewportUnderMouse != None:
+				oVM.SetAttributeValue("focusedviewport",ViewportUnderMouse) #We set the active view explicitely because the view under mouse might not be active. As a result, 
+																			#viewport operations like Toggling Shading, minimizing and maximizing could affect the wrong viewport..
+				oXSIView = oVM.Views[ViewIndices[str(ViewportUnderMouse)]]
+				if oXSIView != None:
+					if oXSIView.Type == "ICE Tree": #When docked, pyWin reports Softimage ICE Tree windows as "Render Tree" by name, but their Type is correctly set, so we can fix it...
+						WindowSignatureShort = WindowSignatureShort.replace("RenderTree", "ICETree")
+						WindowSignature = WindowSignature.replace("RenderTree", "ICETree")
 	
 	#We are not over the view manager (e.g. mouse is over a floating view). Because there is no 100% reliable way to get the floating view object under the mouse
 	#we simply look for the first valid view (open and not embedded in another view) of it's type in the list of all known views.
-	#Implication: QMenu will not work over the e.g. the second floating Render Tree or OCE Tree or..., only the first one. For now we'll need to live with that
+	#Implication: QMenu will not work over the e.g. the second floating Render Tree or ICE Tree or..., only the first one. For now we'll need to live with that
 	#until Autodesk implements a method to get the floating view object under the mouse directly and reliably.
 	
 	else:
@@ -5943,7 +5969,6 @@ def getView( Silent = False):
 	Signatures.append (WindowSignature)
 	Signatures.append (oXSIView)
 	#Signatures.append (WindowPos)
-	#Print(Signatures)
 	return Signatures
 
 def getFirstValidViewOfType(ViewCollection, ViewType):
@@ -6298,7 +6323,10 @@ def getXSIMainVersion():
 	VersionList = Version.split(".")
 	VersionMain = int(VersionList[0])
 	return VersionMain
-	
+
+def setConfigChanged():
+	globalQMenu_ConfigStatus = getGlobalObject("globalQMenu_ConfigStatus")
+	globalQMenu_ConfigStatus.Changed = True	
 #=========================================================================================================================	
 #========================================== Old and experimental Stuff ===================================================
 #=========================================================================================================================	
