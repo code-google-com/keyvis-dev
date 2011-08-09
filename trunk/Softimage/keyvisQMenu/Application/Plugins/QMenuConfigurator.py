@@ -8,9 +8,12 @@
 
 # code Changes:
 #Added QMenu awareness of Face Robot View Manager ("frmviewmanager")
+#Query user to save config file when exiting Softimage even when menu items were only addedv ia ICE and Render Tree views
 
 #Config file changes:
 #Added "Null" Class object awareness to the "Any Object" Context
+#Fixed Parameter editing menu items code so they also work with compound parameters that are not of the "Parameter" class (like scl, ori, pos )
+
 
 #################################################################
 # Version 0.95
