@@ -164,27 +164,43 @@ public:
 // multi-monitor support:
 // the origin of screen space (complete desktop) is the upper left corner of the primary screen
 //		Windows::Forms::Screen clickedScreen = Windows::Forms::Screen.FromPoint(QP::center);
-		Drawing::Rectangle primScrRect = Windows::Forms::Screen::GetBounds(Drawing::Point(0, 0) );	// 0,0,1920,1200
-		Drawing::Rectangle clickScrRect = Windows::Forms::Screen::GetBounds(center);
+		//Drawing::Rectangle primScrRect = Windows::Forms::Screen::GetBounds(Drawing::Point(0, 0) );	// 0,0,1920,1200
+		//Drawing::Rectangle clickScrRect = Windows::Forms::Screen::GetBounds(center);
 		Drawing::Rectangle clickScrWorkingArea = Windows::Forms::Screen::GetWorkingArea(center);
-		Drawing::Point clickScrOffset = Drawing::Point(clickScrRect.X - primScrRect.X, clickScrRect.Y - primScrRect.Y);
-		Drawing::Point centerInClickScr = Drawing::Point(QP::center.X - clickScrRect.X, QP::center.Y - clickScrRect.Y);
+		//Drawing::Point clickScrOffset = Drawing::Point(clickScrRect.X - primScrRect.X, clickScrRect.Y - primScrRect.Y);
+		//Drawing::Point centerInClickScr = Drawing::Point(QP::center.X - clickScrRect.X, QP::center.Y - clickScrRect.Y);
 
 // check if screen boundaries are exceeded and re-align if necessary
+		/*
 		QP::leftLimit = clickScrOffset.X + clickScrWorkingArea.X;
 		QP::rightLimit = clickScrOffset.X + clickScrWorkingArea.X + clickScrWorkingArea.Width;
 		QP::topLimit = clickScrOffset.Y + clickScrWorkingArea.Y;
 		QP::bottomLimit = clickScrOffset.Y + clickScrWorkingArea.Y + clickScrWorkingArea.Height;
+		*/
+		QP::leftLimit = clickScrWorkingArea.X;
+		QP::rightLimit = clickScrWorkingArea.X + clickScrWorkingArea.Width;
+		QP::topLimit = clickScrWorkingArea.Y;
+		QP::bottomLimit = clickScrWorkingArea.Y + clickScrWorkingArea.Height;
+/*
+		if(center.X - leftMax < clickScrRect.X)
+			center.X = clickScrRect.X + leftMax;
+		if(center.X + rightMax > clickScrRect.X + clickScrRect.Width)
+			center.X = clickScrRect.X + clickScrRect.Width - rightMax;
+		if(center.Y + lowerMax > clickScrRect.Y + clickScrRect.Height)
+			center.Y = clickScrRect.Y - lowerMax;
+		if(center.Y - upperMax < clickScrRect.Y )
+			center.Y = clickScrRect.Y + upperMax;
+*/
+		if(center.X - leftMax < clickScrWorkingArea.X)
+			center.X = clickScrWorkingArea.X + leftMax;
+		else if(center.X + rightMax > clickScrWorkingArea.X + clickScrWorkingArea.Width)
+			center.X = clickScrWorkingArea.X + clickScrWorkingArea.Width - rightMax;
 
-		if(centerInClickScr.X < QP::leftLimit + leftMax)
-			center.X = QP::leftLimit + leftMax;
-		if(centerInClickScr.X > QP::rightLimit - rightMax)
-			center.X = QP::rightLimit - rightMax;
-		if(centerInClickScr.Y < QP::topLimit + upperMax)
-			center.Y = QP::topLimit + upperMax;
-		if(centerInClickScr.Y > QP::bottomLimit - lowerMax)
-			center.Y = QP::bottomLimit - lowerMax;
-
+		if(center.Y + lowerMax > clickScrWorkingArea.Y + clickScrWorkingArea.Height)
+			center.Y = clickScrWorkingArea.Y + clickScrWorkingArea.Height - lowerMax;
+		else if(center.Y - upperMax < clickScrWorkingArea.Y )
+			center.Y = clickScrWorkingArea.Y + upperMax;
+		
 
 // upper left menu location
 		menus[0]->Location = Drawing::Point(center.X - menus[0]->Width, center.Y - menus[0]->Height);
