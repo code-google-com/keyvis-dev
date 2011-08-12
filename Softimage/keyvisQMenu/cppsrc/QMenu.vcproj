@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="QMenu_d.32.dll"
+				OutputFile="..\Application\Plugins\QMenu_d.32.dll"
 				AssemblyDebug="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"

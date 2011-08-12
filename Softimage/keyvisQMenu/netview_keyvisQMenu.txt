@@ -1,1 +1,1 @@
-QMenu - a customizable Quad menu system for Softimage
+QMenu v0.96 - a customizable Quad menu system for Softimage 7.0 - 2012

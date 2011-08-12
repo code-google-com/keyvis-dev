@@ -6,17 +6,20 @@
 
 # Code dependencies: none
 
-# code Changes:
-#Added QMenu awareness of Face Robot View Manager ("frmviewmanager")
-#Query user to save config file when exiting Softimage even when menu items were only addedv ia ICE and Render Tree views
+# Version 0.96
+# Code Changes:
+# Added QMenu awareness of differently named Face Robot View Manager ("frmviewmanager" instead of the usual "vm").
+# Query user to save config file when exiting Softimage even when menu items were only added via ICE and Render Tree views.
+# Graceful handling of Softimage bug that prevents getting a docked view object in the vew manager in non-factory Layouts (does nothing in 0.96, but crashed in 0.95)
+# Fixed QMenu rendering on Multi-Monitor setups (hopefully)
 
 #Config file changes:
 #Added "Null" Class object awareness to the "Any Object" Context
 #Fixed Parameter editing menu items code so they also work with compound parameters that are not of the "Parameter" class (like scl, ori, pos )
 
 
-#################################################################
 # Version 0.95
+# Code changes
 # Added verbose error reporting when manually executing a switch item
 # Added Backface culling Switch Item to Views Menu Set
 # Added more "Multiply by..." menu items to the marked params editing menus
@@ -38,17 +41,16 @@
 # PPG parameter naming and text updates for better understanding of working steps required
 # Arnold Standin item removed from shading menu set, Arnold standin is no longer a sepparate object
 
-#New Bugs:
+#New Bugs found in Softimage 2012 SDK and Architecture:
 #Material Manager is not a relational view?  -> Rendertree can't be queried for the Render Tree, MM has no "Views" to look through.
-# It's not possible to query for selected ICE nodes Preset name
-# Getting neighbor for edges/faces fails in Python?
-###################################################################################
+#It's not possible to query for selected ICE nodes Preset name
+#Getting neighbor for edges/faces fails in Python in certain cases
 
-# = Bugs and TODOs= 
 
+# = TODOs = 
+#TODO: Use UserPrefs instead of custom prefs (can be set independant of existence of a custom preference)
 #TODO: Store Hotkeys in user preferences instead of config file
-#TODO: WIP- Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems.
-
+#TODO: WIP- Execute all Python code items natively, ExecuteScriptCode is problematic on 32bit systems - almost done
 #TODO: Try finding currently active view by comparing Rectangles of available views -> Difficult, because rectangles retrieved from Python differ from those rported by Softimage
 #TODO: Execute button should only execute current text selection in editor
 #TODO: Create texture Editor example menu items
@@ -56,7 +58,6 @@
 #TODO: Implement QMenu command as Python lib so it can be called as a function and not as a command (prevents QMenu from appearing as the Undo/Repeat item in the edit menu)
 #TODO: Better use dictionaries in globalQMenu_Menus, ..Items etc? 
 #TODO: Add categorisation to menus (like script items)
-#TODO: Check if CommandCollection.Filter with "Custom" is any faster refreshing the Softimage commands lister
 #TODO: Implement Cleanup functionality to delete empty script items and menus
 #TODO: Implement import/merge/partial loading functionality from other config files
 
@@ -672,47 +673,6 @@ class QMenuMissingCommand:
 		self.Type = "MissingCommand"
 		self.Name = ""
 		self.UID = ""
-
-"""class QMenuRecentlyCreatedICENode:
- # Declare list of exported functions:
-	_public_methods_ = ['storeCommandScriptingName', 'storePresetFileName']
-	 # Declare list of exported attributes
-	_public_attrs_ = ['Type','Name','UID','CommandScriptingName','PresetFileName']
-	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = ['Type']
-	
-	def __init__(self):
-		 # Initialize exported attributes:
-		self.Type = "QMenuRecentlyCreatedICENode"
-		self.Name = ""
-		self.UID = ""
-		CommandScriptingName = ""
-		PresetFileName = ""
-
-	def storeCommandScriptingName (self, CommandScriptingName):
-		self.CommandScriptingName = CommandScriptingName
-	
-	def storePresetFileName (self, PresetFileName):
-		self.PresetFileName = PresetFileName
-
-class QMenuRecentlyCreatedICENodes: #Container class storing existing DisplayEvents
-	# Declare list of exported functions:
-	_public_methods_ = ['addNode']
-	 # Declare list of exported attributes
-	_public_attrs_ = ['Nodes']
-	 # Declare list of exported read-only attributes:
-	_readonly_attrs_ = []
-	
-	def __init__(self):
-		 # Initialize exported attributes:
-		self.Nodes = list()
-	
-	def addNode(self, Node):
-		items = self.Items
-		items.append(Event)
-		while len(items) > 10:
-			items.pop(0)
-"""		
 		
 #It is potentially unsafe to reference Softimage command objects directly, we use a standin class instead that stores name and UID of the
 #respective command.	
@@ -863,7 +823,7 @@ def XSILoadPlugin( in_reg ):
 	in_reg.Email = "stefan@keyvis.at"
 	in_reg.URL = "http://www.keyvis.at"
 	in_reg.Major = 0
-	in_reg.Minor = 95
+	in_reg.Minor = 96
 
 	XSIVersion = getXSIMainVersion()
 	
@@ -918,7 +878,6 @@ def QMenuConfigurator_OnInit( ):
 	setConfigChanged()
 	#When opening the PPG we assume that changes are made. This is a simplification but checking every value for changes would be too laborious.
 	RefreshQMenuConfigurator()
-	#Print("QMenu: Currently Inspected PPG's are: " + str(PPG.Inspected))
 	PPG.Refresh()
 
 def QMenuConfigurator_OnClosed():
@@ -1060,7 +1019,7 @@ def QMenuConfigurator_DefineLayout( in_ctxt ):
 	
 	
 	oLayout.AddGroup("Edit Key Events")
-	oLayout.AddStaticText("1. Select and existing key event below or create a new one.\n\n2. Set the 'Record' check mark below, then press your desired key or key combination ( key + Shift, Alt or Ctrl) for the selected key event.\n\nNote: The record check mark will be automatically unchecked when a valid key or key combination has been pressed, or when leaving this tab or closing the configurator.",0,100)
+	oLayout.AddStaticText("1. Select an existing key event below or create a new one.\n\n2. Set the 'Record' check mark below, then press your desired key or key combination ( key + Shift, Alt or Ctrl) for the selected key event.\n\nNote: The record check mark will be automatically unchecked when a valid key or key combination has been pressed, or when leaving this tab or closing the configurator.",0,100)
 	
 	oLayout.AddRow()
 	oLayout.AddButton("AddDisplayEvent","Create new Key Event")
@@ -4584,7 +4543,7 @@ def DisplayMenuSet( MenuSetIndex ):
 							if DynaView == True:
 								#if len(oClickedMenu.Items) > 0 or : #User has clicked the dummy item that does not exist ?
 								if keyState[1] == 1: #Is Shift pressed? We want to add a menu item named after currently selected ICE node
-									ActiveContainer = oXSIView.GetAttributeValue("container") #Get the ICE Op
+									ActiveContainer = oXSIView.GetAttributeValue("container") #Get the current ICE Op
 									if ActiveContainer != "": #Without an ICE Tree we don't need to continue as there can be no nodes selected
 										SelectedNodeFullName = oXSIView.GetAttributeValue("selection")
 										if SelectedNodeFullName != "":
@@ -4627,7 +4586,7 @@ def DisplayMenuSet( MenuSetIndex ):
 																MenuItemCode += "\toView = oContext.CurrentXSIView\n"
 																MenuItemCode += "\tif (oView != None) and (oView.Type  == \"ICE Tree\"): #Are we working in an ICE Tree view?\n"
 																MenuItemCode += "\t\tActiveContainer = oView.GetAttributeValue(\"container\")\n"
-																MenuItemCode += ("\t\tApplication." + Command + "(\"" + Preset + "\",\"" + ActiveContainer + "\")")
+																MenuItemCode += ("\t\tApplication." + Command + "(\"" + Preset + "\"," + "ActiveContainer" + ")")
 																NewMenuItem.Code = MenuItemCode
 																NewMenuItem.Name = SelectedNodeName
 																NewMenuItem.Category = "ICE Nodes"
@@ -4647,7 +4606,7 @@ def DisplayMenuSet( MenuSetIndex ):
 																MenuItemCode += "\toView = oContext.CurrentXSIView\n"
 																MenuItemCode += "\tif (oView != None) and (oView.Type  == \"Render Tree\"): #Are we working in a Render Tree view?\n"
 																MenuItemCode += "\t\tActiveContainer = oView.GetAttributeValue(\"container\")\n"
-																MenuItemCode += ("\t\tApplication." + Command + "(\"" + Preset + "\",\"" + ActiveContainer + "\")")
+																MenuItemCode += ("\t\tApplication." + Command + "(\"" + Preset + "\"," + "ActiveContainer" + ")")
 																NewMenuItem.Code = MenuItemCode
 																NewMenuItem.Name = SelectedNodeName
 																NewMenuItem.Category = "Shading Nodes"
@@ -5373,7 +5332,8 @@ def InitQMenu():
 		if result:
 			Print("QMenu: Successfully loaded QMenu Config file from: \"" + str(QMenuConfigFile) + "\"", c.siVerbose)
 			try:
-				Application.SetValue("preferences.QMenu.QMenuConfigurationFile", QMenuConfigFile,"")
+				Application.Preferences.SetPreferenceValue("QMenu.QMenuConfigurationFile", QMenuConfigFile,"")
+				#Application.SetUserPref("preferences.QMenu.QMenuConfigurationFile", QMenuConfigFile)
 			except:
 				Print("QMenu: Could not set preferences.QMenu.QMenuConfigurationFile!", c.siVerbose)
 			App.Preferences.SetPrefeRenceValue("QMenu.QMenuConfigurationFile", str(QMenuConfigFile))
@@ -5418,7 +5378,7 @@ def QMenuDestroy_OnEvent (in_ctxt):
 #=========================================================================================================================
 
 
-#QMenu Menu initialisation
+#Menu initialisation
 def QMenu_Init( in_ctxt ):
 	oMenu = in_ctxt.Source
 	VersionMain = getXSIMainVersion()
