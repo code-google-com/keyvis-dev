@@ -63,6 +63,8 @@ QPMenu::QPMenu(QPNode^ argTree/*, int menuIndex*/)	// Constructor
  		Windows::Forms::ControlStyles::OptimizedDoubleBuffer |
  		Windows::Forms::ControlStyles::Opaque
 		//Windows::Forms::ControlStyles::Selectable
+
+// Check if Windows::Forms::ControlStyles::SupportsTransparentBackColor helps in speeding up drawing
 		, true);
 
 //________________________________________________________________________
