@@ -43,6 +43,15 @@ function ApplyAttachCurves_Init( in_ctxt )
 	var oArgs = oCmd.Arguments;
 	oArgs.AddWithHandler("args", "Collection");
 	
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+	
 	return true;
 }
 
@@ -143,10 +152,9 @@ function ApplyAttachCurves_Execute(args)
 			newOp.ConnectToGroup(oInCurvesKinePortGroup.Index, oCurve.Kinematics.Global);
 		}
 		
-		
+
 		// Select only the first Curve
 		SelectObj(oCurve0);
-		
 		InspectObj(newOp);
 
 		return newOp;
@@ -168,6 +176,8 @@ function AttachCurves_Define( in_ctxt )
 	oCustomOperator.AddParameter(oPDef);
 	oPDef = XSIFactory.CreateParamDef("updateWithObjectTransform",siBool,siClassifUnknown,siPersistable | siKeyable,"","",true,null,null,null,null);
 	oCustomOperator.AddParameter(oPDef);
+	//oPDef = XSIFactory.CreateParamDef("inputreadregion",siBool,siClassifUnknown,siPersistable | siKeyable,"","",true,null,null,null,null);
+	//oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
 	oCustomOperator.Debug = 0;
@@ -202,13 +212,16 @@ function AttachCurves_Update( in_ctxt )
 
 	var updateWithInputTransforms = in_ctxt.GetParameterValue("updateWithInputTransforms");
 	var updateWithObjectTransform = in_ctxt.GetParameterValue("updateWithObjectTransform");
+	//var inputreadregion = in_ctxt.GetParameterValue("inputreadregion");
+	//var oThisOp = in_ctxt.Source;
+	//oReturn = GetGeneratorInputReadPosition(oThisOp);
+	// ERROR : 2003-EDIT-GetGeneratorInputReadPosition - Interface not supported.
+	// ChangeGeneratorInputReadPosition()
 
 	var oAttachOp = in_ctxt.Source;
 
 	// Get input CurveList
 	var inCrvList0Geom = in_ctxt.GetInputValue("IN_CURVE0_PORT", "InCurve0PortGroup", 0).Geometry;
-
-// TODO: compensate Curve0 Kine.Global
 	var oCurve0Kine = in_ctxt.GetInputValue("IN_CURVE0_KINE_PORT", "InCurve0KinePortGroup", 0);
 	var KINEGLOBAL0 = oCurve0Kine.Transform.Matrix4;
 	KINEGLOBAL0.Invert(KINEGLOBAL0);
@@ -232,7 +245,8 @@ function AttachCurves_Update( in_ctxt )
 		{
 			// Get NurbsCurve data
 			var oSubCrv = oCurves(j);	// Type: NurbsCurve
-			VBdata = new VBArray(oSubCrv.Get2(siSINurbs)); aSubCrvData = VBdata.toArray();
+			VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
+			aSubCrvData = VBdata.toArray();
 
 			// Get Point data
 			var aPoints = aSubCrvData[0];	// can be 1 oder 2 dimensional for AddCurve
@@ -277,14 +291,21 @@ function AttachCurves_Update( in_ctxt )
 	var VBdata = inCrvList0Geom.Get2( siSINurbs ); var data = VBdata.toArray();
 
 	var allSubcurvesCnt = data[0];
-	var VBdata1 = new VBArray(data[1]); var aAllPoints = VBdata1.toArray();
-	var VBdata2 = new VBArray(data[2]); var aAllNumPoints =  VBdata2.toArray();
-	var VBdata3 = new VBArray(data[3]); var aAllKnots= VBdata3.toArray();
+	var VBdata1 = new VBArray(data[1]);
+	var aAllPoints = VBdata1.toArray();
+	var VBdata2 = new VBArray(data[2]);
+	var aAllNumPoints =  VBdata2.toArray();
+	var VBdata3 = new VBArray(data[3]);
+	var aAllKnots= VBdata3.toArray();
 	aAllKnots = removeUndefinedElementsFromArray(aAllKnots);
-	var VBdata4 = new VBArray(data[4]); var aAllNumKnots = VBdata4.toArray();
-	var VBdata5 = new VBArray(data[5]); var aAllIsClosed = VBdata5.toArray();
-	var VBdata6 = new VBArray(data[6]); var aAllDegree = VBdata6.toArray();
-	var VBdata7 = new VBArray(data[7]); var aAllParameterization = VBdata7.toArray();
+	var VBdata4 = new VBArray(data[4]);
+	var aAllNumKnots = VBdata4.toArray();
+	var VBdata5 = new VBArray(data[5]);
+	var aAllIsClosed = VBdata5.toArray();
+	var VBdata6 = new VBArray(data[6]);
+	var aAllDegree = VBdata6.toArray();
+	var VBdata7 = new VBArray(data[7]);
+	var aAllParameterization = VBdata7.toArray();
 
 
 	outCrvList0Geom.Set(
@@ -310,7 +331,8 @@ function removeUndefinedElementsFromArray(dirtyArr)
 	var arr = new Array();
 	for(var i = 0; i < dirtyArr.length; i++)
 	{
-		if(dirtyArr[i] != undefined) arr.push( dirtyArr[i] );
+		if(dirtyArr[i] != undefined)
+			arr.push( dirtyArr[i] );
 	}
 	
 	return arr;
