@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // BlendSubcurvesPlugin
 // 2011/03/03 by Eugen Sares
-// last updates: 2011/04/18
+// last updates: 2011/08/24
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -35,14 +35,19 @@ function ApplyBlendSubcurves_Init( in_ctxt )
 	oCmd = in_ctxt.Source;
 	oCmd.Description = "Create an instance of BlendSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
-
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
 	
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");	// ArgumentName, ArgumentHandler, DefaultValue
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
 	
 	return true;
 }
@@ -249,7 +254,7 @@ function BlendSubcurves_Define( in_ctxt )
 	var oPDef;
 	oCustomOperator = in_ctxt.Source;
 
-	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Blend Style","",1,0,2,0,3);
+	oPDef = XSIFactory.CreateParamDef("blendStyle",siInt4,siClassifUnknown,siPersistable | siKeyable,"Blend Style","",0,0,2,0,2);
 	oCustomOperator.AddParameter(oPDef);
 
 	oCustomOperator.AlwaysEvaluate = false;
@@ -278,30 +283,25 @@ function BlendSubcurves_Update( in_ctxt )
 {
 	Application.LogMessage("BlendSubcurves_Update called",siVerboseMsg);
 
-
 	// Get Params.
 	//var input0 = in_ctxt.GetInputValue(0);
 	var blendStyle = in_ctxt.GetParameterValue("blendStyle");
-
 
 	// Get Port connections.
 	var outCrvListGeom = in_ctxt.OutputTarget.Geometry;	// Type: NurbsCurveCollection, ClassName: ""
 	var cInCurves = in_ctxt.GetInputValue(0).Geometry.Curves; // Port 0: "Incrvlist"
 	var oBlendCluster = in_ctxt.GetInputValue(1); // Port 1: "InCurve_Boundary_AUTO"
-
 	var blendClsCnt = oBlendCluster.Elements.Count;
+
 	// Only consider Boundary pairs.
 	if(blendClsCnt % 2 == 1)
 		blendClsCnt -= 1;
+
 	if(blendClsCnt < 2)
 		return;
 
 
 	// 1) PREPARE ARRAYS AND OBJECTS.
-
-	// Experimental:
-	// Array to store the indices of the merged Curve Boundaries, for later selection.
-	//var aNewSubcurves = new Array();
 
 	var aNewSubCrvs = new Array();
 	// Example:
@@ -465,7 +465,6 @@ function BlendSubcurves_Update( in_ctxt )
 		aSubCrvAtBegin[ aSubCrvs[aSubCrvs.length - 1] ] = false;
 
 	}
-	
 
 // Debug sort algorithm
 /*	LogMessage("aNewSubCrvs:");
@@ -613,17 +612,18 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendSty
 		// Linear blend
 
 		// Points
-		// Begin
+		// Begin, last Point of Curve 0
 		var vb = XSIMath.CreateVector3();
 		vb.X = aPoints0[aPoints0.length - 4];
 		vb.Y = aPoints0[aPoints0.length - 3];
 		vb.Z = aPoints0[aPoints0.length - 2];
-		// End
+		// End, first Point of Curve 1
 		var ve = XSIMath.CreateVector3();
 		ve.X = aPoints1[0];
 		ve.Y = aPoints1[1];
 		ve.Z = aPoints1[2];
 
+		// Difference Vector
 		var v = XSIMath.CreateVector3();
 		v.Sub(ve, vb);
 
@@ -631,17 +631,17 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendSty
 		{
 			case 3:
 				v.Scale(1/3, v);
-				// 2nd last Point
-				ve.Sub(ve, v);
-				aPoints0.push(ve.X);
-				aPoints0.push(ve.Y);
-				aPoints0.push(ve.Z);
-				aPoints0.push(1); // weight
-				// Last Point
+				// Point at 1/3 v
 				vb.Add(vb, v);
 				aPoints0.push(vb.X);
 				aPoints0.push(vb.Y);
 				aPoints0.push(vb.Z);
+				aPoints0.push(1); // weight
+				// Point at 2/3 v
+				ve.Sub(ve, v);
+				aPoints0.push(ve.X);
+				aPoints0.push(ve.Y);
+				aPoints0.push(ve.Z);
 				aPoints0.push(1); // weight
 				break;
 

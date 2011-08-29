@@ -40,6 +40,15 @@ function ApplyDeleteSubcurves_Init( in_ctxt )	// called before ApplyDeleteSubcur
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents:
 	oArgs.AddWithHandler("args", "Collection");
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
 	
 	return true;
 }

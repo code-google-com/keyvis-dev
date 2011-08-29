@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // OpenCloseSubcurvesPlugin
 // 2010/04 by Eugen Sares
-// last update: 2011/02/20
+// last update: 2011/08/29
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -39,7 +39,16 @@ function ApplyOpenCloseSubcurves_Init( in_ctxt )	// called after _Execute
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
-	
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
@@ -319,29 +328,26 @@ function OpenCloseSubcurves_Update( in_ctxt )
 				var ret = openNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], openingMode);
 				aPoints = ret.aPoints;
 				aKnots = ret.aKnots;
-
 				aAllIsClosed[allSubcurvesCnt] = false;
-				
 			} else
 			{
 			// CLOSE the Subcurve
 				var ret = closeNurbsCurve(aPoints, aKnots, aAllDegree[allSubcurvesCnt], closingMode, 10e-10);
-				aPoints = ret.aPoints;
-				aKnots = ret.aKnots;
-
-				aAllIsClosed[allSubcurvesCnt] = true;
-				
+				if(ret)
+				{
+					aPoints = ret.aPoints;
+					aKnots = ret.aKnots;
+					aAllIsClosed[allSubcurvesCnt] = true;
+				}
 			}
 
 		aAllNumPoints[allSubcurvesCnt] = aPoints.length/4;
 		aAllNumKnots[allSubcurvesCnt] = aKnots.length;
-		
 		}
 
 		// Concatenate the Points and Knots arrays to get the complete CurveList data.
 		aAllPoints = aAllPoints.concat(aPoints);
 		aAllKnots = aAllKnots.concat(aKnots);
-
 	}
 
 
@@ -445,6 +451,7 @@ function openNurbsCurve(aPoints, aKnots, degree, openingMode)
 
 
 // This functions mimics the factory CrvOpenClose Op exactly.
+/*
 function openNurbsCurveFactory(aPoints, aKnots, degree, openingMode)
 {
 	if(!openingMode)
@@ -488,16 +495,13 @@ function openNurbsCurveFactory(aPoints, aKnots, degree, openingMode)
 	return {aPoints:aPoints,
 			aKnots:aKnots};
 }
-
+*/
 
 function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 {
+	// Close only if the Curve has more than 2 Points.
 	if(aPoints.length > 8)
 	{
-	// Curve has more than 2 Points, can be closed.
-	
-		//var tol = 10e-10;
-	
 		// Check if the first and last Point coincide
 		if(	Math.abs(aPoints[0] - aPoints[aPoints.length - 4]) < tol &&
 			Math.abs(aPoints[1] - aPoints[aPoints.length - 3]) < tol &&
@@ -554,7 +558,7 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 				ve.Y = aPoints[aPoints.length - 3];
 				ve.Z = aPoints[aPoints.length - 2];
 
-				var v = XSIMath.CreateVector3();				
+				var v = XSIMath.CreateVector3();
 				v.Sub(ve, vb);
 
 				switch(degree)
@@ -590,15 +594,14 @@ function closeNurbsCurve(aPoints, aKnots, degree, closingMode, tol)
 				
 				// Knots
 				aKnots.push( aKnots[aKnots.length - 1] + 1 );
-			
 			}
-
 		}
-
-	}
-
+		
 	return {aPoints:aPoints,
 			aKnots:aKnots};
+	}
+	
+	return false;	
 }
 
 

@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // MergeSubcurvesPlugin
 // 2010/10 by Eugen Sares
-// last update: 2011/03/03
+// last update: 2011/08/29
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -39,7 +39,16 @@ function ApplyMergeSubcurves_Init( in_ctxt )
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");	// ArgumentName, ArgumentHandler, DefaultValue
-	
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
@@ -327,16 +336,8 @@ function MergeSubcurves_Update( in_ctxt )
 		aBnds[ oMergeCluster.Elements(i) ].selected = true;
 
 
-	// aSubcurveUsed:
-	// Is a Subcurve used?
+	// aSubcurveUsed: array of booleans
 	// A "used" Subcurve will be ignored when creating aMergedCrvs (see below).
-	//
-	// Idx	used
-	// ----------
-	// 0	false
-	// 1	false
-	// 2	true
-	// ...
 
 	var aSubcurveUsed = new Array(cInCurves.Count);
 
@@ -690,13 +691,14 @@ function MergeSubcurves_Update( in_ctxt )
 
 		if(aMergedCrvs[allSubCrvsCnt].close)
 		{
-		// Close the merged Subcurves.
+		// Close the merged Subcurves (if it has enough Points).
 			var ret = closeNurbsCurve(aMergedPoints, aMergedKnots, degree);
-			aMergedPoints = ret.aPoints;
-			aMergedKnots = ret.aKnots;
-
-			var isClosed = true;
-
+			if(ret)
+			{
+				aMergedPoints = ret.aPoints;
+				aMergedKnots = ret.aKnots;
+				var isClosed = true;
+			}
 		}
 
 		// Add merged Subcurve data to CurveList.
@@ -755,11 +757,12 @@ function closeNurbsCurve(aPoints, aKnots, degree)
 		// Truncate Knot Vector.
 		// On closed Curves: K = P + 1 (numKnots = numPoints + 1)
 		aKnots.length = aPoints.length / 4 + 1;	// /4: x,y,z,w
-
+		
+		return {aPoints:aPoints,
+			aKnots:aKnots};
 	}
 
-	return {aPoints:aPoints,
-			aKnots:aKnots};
+	return false;
 }
 
 

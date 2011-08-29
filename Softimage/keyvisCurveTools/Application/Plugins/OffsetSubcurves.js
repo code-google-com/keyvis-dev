@@ -1,7 +1,7 @@
 //______________________________________________________________________________
 // OffsetSubcurvesPlugin
 // 2010/11 by Eugen Sares
-// last update: 2011/04/20
+// last update: 2011/08/27
 //______________________________________________________________________________
 
 function XSILoadPlugin( in_reg )
@@ -41,7 +41,16 @@ function ApplyOffsetSubcurves_Init( in_ctxt )
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
-	
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
@@ -88,7 +97,7 @@ function ApplyOffsetSubcurves_Execute(args)
 			}
 			
 		}
-
+LogMessage("cSubcurveClusters.Count: " + cSubcurveClusters.Count);
 		// If nothing usable was selected, start a Pick Session.
 		if(cSubcurveClusters.Count == 0)
 		{
@@ -285,6 +294,7 @@ function OffsetSubcurves_Update( in_ctxt )
 	var aAllDegree = new Array();
 	var aAllParameterization = new Array();
 
+
 	// Create boolean array which Subcurves to offset.
 	var aSel = new Array(cInCurves.Count);
 
@@ -404,14 +414,15 @@ function OffsetSubcurves_Update( in_ctxt )
 
 	// PREPARE ARRAYS.
 
+		var bAddCurve = false;
+
 		if(aSel[subCrv]) // && offset > 0)
 		{
 			// Copy this Subcurve for offsetting.
 			var aPointsOffset = aPoints.slice(0); // copy by value
 			//var aPointsProj = aPoints.slice(0); // projected to Curve Plane
 			var aKnotsOffset = aKnots.slice(0);
-			var bAddCurve = true;
-
+			bAddCurve = true;
 			var vPP = XSIMath.CreateVector3();
 			var vPN = XSIMath.CreateVector3();
 			var vPNPrev = XSIMath.CreateVector3();
@@ -634,6 +645,7 @@ function OffsetSubcurves_Update( in_ctxt )
 		aAllParameterization.push(parameterization);
 		allSubcurvesCnt++;
 
+		// Add offset Subcurve.
 		if(bAddCurve)
 		{
 			aAllPoints = aAllPoints.concat(aPointsOffset);
@@ -647,7 +659,6 @@ function OffsetSubcurves_Update( in_ctxt )
 		}
 
 	} // end for subCrv
-
 
 	outCrvListGeom.Set(
 		allSubcurvesCnt,
@@ -759,17 +770,17 @@ function blendNurbsCurves(aPoints0, aPoints1, aKnots0, aKnots1, degree, blendSty
 		{
 			case 3:
 				v.Scale(1/3, v);
-				// 2nd last Point
-				ve.Sub(ve, v);
-				aPoints0.push(ve.X);
-				aPoints0.push(ve.Y);
-				aPoints0.push(ve.Z);
-				aPoints0.push(1); // weight
-				// Last Point
+				// Point at 1/3 v
 				vb.Add(vb, v);
 				aPoints0.push(vb.X);
 				aPoints0.push(vb.Y);
 				aPoints0.push(vb.Z);
+				aPoints0.push(1); // weight
+				// Point at 2/3 v
+				ve.Sub(ve, v);
+				aPoints0.push(ve.X);
+				aPoints0.push(ve.Y);
+				aPoints0.push(ve.Z);
 				aPoints0.push(1); // weight
 				break;
 

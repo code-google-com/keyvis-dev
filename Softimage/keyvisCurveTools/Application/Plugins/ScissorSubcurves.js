@@ -39,7 +39,16 @@ function ApplyScissorSubcurves_Init( in_ctxt )
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");	// ArgumentName, ArgumentHandler, DefaultValue
-	
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
@@ -71,16 +80,17 @@ function ApplyScissorSubcurves_Execute( args )
 			} else if( cSel(i).Type == "isopntSubComponent")
 			{
 				// Isopoints selected.
-
 				// Insert Bezier-Knots at selected Isopoints using InsertCurveKnot().
-				// To create a Cluster of these new Knots, their indices have to be
-				// calculated first.
+				// Unfortunately, this function does not return the indices of the new Knots,
+				// so to create the input Cluster containing them, their indices have to be
+				// calculated before they even exist.
 
 				var oObject = cSel(i).SubComponent.Parent3DObject;
 
-				var aElements = cSel(i).SubElements.toArray();
+				// aElements: unsorted array of subCrvIdx/u-value pairs
 				// [SubCrv, Value(0.0 - 1.0), SubCrv, Value, ...]
 				// Note: the % value is correct even if the Knot vector does not start with 0.
+				var aElements = cSel(i).SubElements.toArray();
 
 				// Create percentage arrays for all Subcurves.
 				var aAllPercentages = [];
@@ -94,7 +104,6 @@ function ApplyScissorSubcurves_Execute( args )
 						aAllPercentages[subCrv] = [];
 						
 					aAllPercentages[subCrv].push(percentage);
-				
 				}
 
 				// Sort them.
@@ -103,7 +112,6 @@ function ApplyScissorSubcurves_Execute( args )
 				{
 					if(aAllPercentages[j] != undefined)
 						aAllPercentages[j] = aAllPercentages[j].sort();
-
 				}
 
 
@@ -137,9 +145,9 @@ function ApplyScissorSubcurves_Execute( args )
 
 						for(var p = 0; p < aPercentages.length; p++)
 						{
-							var U = aPercentages[p] * knotInterval + aKnots[0];
-							// This is the exact U value as shown during selection.
-							// Note: multiply by Knot interval, not Knot count!!!
+							var U = aKnots[0] + aPercentages[p] * knotInterval;
+							// This is the exact U value as shown next to an Isopoint when it gets selected.
+							// Note: multiply by Knot interval (max-min), not Knot count!!!
 
 							// Get corresponding Knot index.
 							for(; newKnot < knotCnt; newKnot++)
@@ -158,15 +166,11 @@ function ApplyScissorSubcurves_Execute( args )
 									break;
 
 								}
-									
 							}
-
 						}
-						
 					}
 					
 					prevKnotCntAll = prevKnotCntAll + knotCnt + addedKnotsOnSubCrv;
-
 				}
 
 
@@ -200,6 +204,8 @@ function ApplyScissorSubcurves_Execute( args )
 				var cOps = InsertCurveKnot(sCnx, 3, siPersistentOperation); //( cSel(i), 3, siPersistentOperation );
 
 				// Create Knot Cluster.
+// ERROR : 2110 - The input array contains duplicates ???
+
 				var oCluster = oObject.ActivePrimitive.Geometry.AddCluster( siKnotCluster, "Knot_AUTO", aAllNewKnots );
 				cKnotClusters.Add(oCluster);
 				cCurveLists.Add(oObject);
@@ -397,10 +403,10 @@ function ScissorSubcurves_Update( in_ctxt )
 
 	// Explanation 
 	// Example CurveList, one open and one closed Subcurve
-	// Knots 3 and 12 were selected (one on each Subcurve):
+	// Knots 3 and 12 (first Knot on SubCrv 2: 8) were selected (one on each Subcurve):
 
 	// oKnotCluster =		[               3,                                            12            ]
-	// aSubCrvSlices =		[0,             3,             6      ],[0,                   5,          7 ] 
+	// aSubCrvSlices =		[0,             3,                   6],[0,                   5,          7 ] 
 	// aKnots =				[0, 0, 0, 1, 2, 3, 3, 3, 4, 5, 6, 6, 6] [0, 0, 0, 1, 2, 3, 4, 5, 5, 5, 6, 7 ]
 	// aKnotIsOnSubCrv =	[0,       0, 0, 0,       0, 0, 0,		 1,       1, 1, 1, 1, 1,       1,  1]
 	// aLastKnots =			[                             10,										  11]
@@ -414,16 +420,16 @@ function ScissorSubcurves_Update( in_ctxt )
 	// Loop through all Subcurves.
 	for(var subCrv = 0; subCrv < cInCurves.Count; subCrv++)
 	{
-		// Get input Subcurve.
+		// Get Subcurve data.
 		var oSubCrv = cInCurves.item(subCrv);
 		VBdata = new VBArray(oSubCrv.Get2(siSINurbs));
 		var aSubCrvData = VBdata.toArray();
 		
-		// Get Control Points array.
+		// Get Point data.
 		var VBdata0 = new VBArray(aSubCrvData[0]);
 		var aPoints = VBdata0.toArray();
 		
-		// Get KnotVector.
+		// Get Knot data.
 		var VBdata1 = new VBArray(aSubCrvData[1]);
 		var aKnots = VBdata1.toArray();
 
@@ -443,11 +449,8 @@ function ScissorSubcurves_Update( in_ctxt )
 				aKnotIsOnSubCrv.push(subCrv);
 				aLastKnots[subCrv] += 1;
 				aKnotIndices.push(knot++);
-
 			}
-			
 		}
-		
 	}
 
 
@@ -477,11 +480,8 @@ function ScissorSubcurves_Update( in_ctxt )
 
 				} else if(j == length - 1)
 					aSubCrvSlices.push(knotIdx);
-
 			}
-
 		}
-
 	}
 
 
@@ -509,7 +509,6 @@ function ScissorSubcurves_Update( in_ctxt )
 		var isClosed = aSubCrvData[2];
 		var degree = aSubCrvData[3];
 		var parameterization = aSubCrvData[4];
-
 
 		// Get slice array for this Subcurve.
 		var aSubCrvSlices = aAllSubCrvSlices[subCrv];
@@ -606,9 +605,7 @@ function ScissorSubcurves_Update( in_ctxt )
 			aAllParameterization[allSubcurvesCnt] = parameterization;
 
 			allSubcurvesCnt++;
-
 		}
-
 	}
 
 
@@ -678,11 +675,9 @@ function getKnotVectorIdx(aKnots, knot)
 
 		if(idx == knot)
 			return i;
-
 	}
 
 	return -1;
-
 }
 
 
@@ -704,7 +699,6 @@ function shiftNurbsCurve(aPoints, aKnots, knot)
 
 	return {aPoints:aPoints,
 			aKnots:aKnots};
-
 }
 
 
@@ -829,7 +823,6 @@ function logControlPointsArray(logString, aPoints, dp)
 									"; z = " + Math.round(z*dp)/dp ); // + "; w = " + Math.round(w*dp)/dp );
 
 	}
-
 }
 
 
@@ -845,7 +838,6 @@ function logKnotsArray(logString, aKnots, dp)
 	}
 	
 	LogMessage( sKnotArray );
-	
 }
 
 

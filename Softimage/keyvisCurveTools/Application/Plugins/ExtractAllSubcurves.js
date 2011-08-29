@@ -39,6 +39,15 @@ function ExtractAllSubcurves_Init( in_ctxt )
 	// To get a collection of subcomponents, or the current selection of subcomponents:
 	oArgs.AddWithHandler("args", "Collection");
 
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
@@ -57,7 +66,8 @@ function ExtractAllSubcurves_Execute( args )
 	{
 		var buttonPressed = XSIUIToolkit.Msgbox( "Keep modelling relations?", 
 			siMsgYesNo | siMsgQuestion, "Extract All Subcurves" ) ;
-		if (buttonPressed == siMsgNo) immed = true;
+		if (buttonPressed == siMsgNo)
+			immed = true;
 	}
 	
 	LogMessage("immed: " + immed);

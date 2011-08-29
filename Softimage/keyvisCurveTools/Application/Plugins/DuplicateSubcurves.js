@@ -38,14 +38,19 @@ function ApplyDuplicateSubcurves_Init( in_ctxt )
 	oCmd.Description = "Create an instance of DuplicateSubcurves operator";
 	oCmd.SetFlag(siNoLogging,false);
 
-	// TODO: You may want to add some arguments to this command so that the operator
-	// can be applied to objects without depending on their specific names.
-	// Tip: the Collection ArgumentHandler is very useful
-
 	var oArgs = oCmd.Arguments;
 	// To get a collection of subcomponents, or the current selection of subcomponents: 
 	oArgs.AddWithHandler("args", "Collection");
-	
+
+	// Make sure the Immediate Mode Preference exists.
+	try
+	{
+		var ImmediateMode = Application.Preferences.GetPreferenceValue("xsiprivate_unclassified.OperationMode");
+	} catch (e)
+	{
+		Application.SetUserPref("OperationMode", false);
+	}
+
 	return true;
 }
 
